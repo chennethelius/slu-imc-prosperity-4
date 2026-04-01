@@ -1,0 +1,6 @@
+[submodule "visualizer"]
+	path = visualizer
+	url = https://github.com/kevin-fu1/imc-prosperity-4-visualizer.git
+[submodule "backtester"]
+	path = backtester
+	url = https://github.com/GeyzsoN/prosperity_rust_backtester.git

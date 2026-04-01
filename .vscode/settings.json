@@ -1,0 +1,22 @@
+{
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+  "editor.formatOnSave": true,
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/.DS_Store": true,
+    "**/node_modules": true,
+    "runs/*/backtest.log": true
+  },
+  "search.exclude": {
+    "runs/**": true,
+    "visualizer/node_modules/**": true,
+    "backtester/target/**": true
+  },
+  "files.associations": {
+    "*.py": "python"
+  },
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter",
+    "editor.tabSize": 4
+  }
+}

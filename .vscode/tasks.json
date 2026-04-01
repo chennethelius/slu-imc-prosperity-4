@@ -1,0 +1,133 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Backtest: Run Current Strategy",
+      "type": "shell",
+      "command": "./scripts/run_backtest.sh ${file} ${input:datasetDir} --open",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Backtest: Run Current Strategy (No Visualizer)",
+      "type": "shell",
+      "command": "./scripts/run_backtest.sh ${file} ${input:datasetDir}",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Analyze: Latest Run",
+      "type": "shell",
+      "command": "python scripts/analyze.py runs/latest",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Analyze: Export Charts",
+      "type": "shell",
+      "command": "python scripts/export_charts.py runs/latest",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Compare: Pick Two Runs",
+      "type": "shell",
+      "command": "python scripts/compare.py runs/${input:runA} runs/${input:runB}",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Visualizer: Start Dev Server",
+      "type": "shell",
+      "command": "cd visualizer && pnpm dev",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Server: Serve Runs",
+      "type": "shell",
+      "command": "python scripts/serve_runs.py",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Server: Watch Runs (Auto-Reload)",
+      "type": "shell",
+      "command": "python scripts/watch_runs.py",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Start All Services",
+      "dependsOn": [
+        "Visualizer: Start Dev Server",
+        "Server: Serve Runs",
+        "Server: Watch Runs (Auto-Reload)"
+      ],
+      "dependsOrder": "parallel",
+      "problemMatcher": []
+    },
+    {
+      "label": "Discord Bot: Start",
+      "type": "shell",
+      "command": "cd discord-bot && python bot.py",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "datasetDir",
+      "type": "promptString",
+      "description": "Path to dataset directory (e.g., datasets/round1/)",
+      "default": "datasets/round1/"
+    },
+    {
+      "id": "runA",
+      "type": "promptString",
+      "description": "Run A directory name (baseline)"
+    },
+    {
+      "id": "runB",
+      "type": "promptString",
+      "description": "Run B directory name (new)"
+    }
+  ]
+}

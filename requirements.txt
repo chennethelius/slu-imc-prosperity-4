@@ -1,0 +1,4 @@
+matplotlib>=3.7.0
+watchdog>=3.0.0
+websockets>=12.0
+jupyter>=1.0.0

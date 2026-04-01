@@ -1,0 +1,50 @@
+# Backtest outputs (large, regenerable)
+runs/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+build/
+*.so
+.venv/
+venv/
+env/
+
+# Node (visualizer)
+node_modules/
+.pnpm-store/
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+credentials.json
+*.pem
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.swp
+*.swo
+
+# Rust backtester build artifacts
+backtester/target/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Discord bot
+discord-bot/storage/*.json
+!discord-bot/storage/.gitkeep
+
+# Datasets (large, downloaded separately)
+datasets/**/*.csv
+datasets/**/*.json
+!datasets/README.md
+!datasets/**/README.md
