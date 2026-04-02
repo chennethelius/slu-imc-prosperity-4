@@ -74,11 +74,23 @@ Tutorial data (EMERALDS + TOMATOES) is already bundled.
 ### Submission Constraints (CRITICAL)
 
 1. **Single file**: Your `Trader` class + all helpers must be in ONE Python file
-2. **Standard library only**: No numpy, pandas, scipy, or any third-party imports
-3. **No network access**: Pure computation only
-4. **Time limit**: ~100ms per tick (soft limit, varies)
-5. **No persistent state** except via `trader_data` string (serialized between ticks)
-6. **Import whitelist**: `json`, `math`, `statistics`, `collections`, `typing`, `copy`, `itertools`, `functools`, `string`, `re`, `abc`, `enum`, `dataclasses`, `operator`
+2. **No network access**: Pure computation only
+3. **Time limit**: ~900ms per tick hard limit, target ≤100ms average
+4. **No persistent state** except via `trader_data` string — serialized between ticks, capped at 50,000 characters
+5. **`bid()` method required**: Every `Trader` class must define `bid(self)` — used in Round 2, ignored in all others
+6. **Position limit enforcement**: If aggregated buy (sell) orders across a tick would breach the long (short) limit, **ALL orders for that product are rejected** — not just the excess
+
+### Supported Libraries
+
+numpy, pandas, and all Python 3.12 standard library modules are available. Also: `jsonpickle`.
+
+```python
+import numpy as np
+import pandas as pd
+import json, math, statistics, collections
+```
+
+> scipy is NOT available — implement Black-Scholes and similar from scratch using math/numpy.
 
 ### The Trader Class Interface
 
@@ -88,6 +100,9 @@ from typing import List
 import json
 
 class Trader:
+    def bid(self):
+        return 15  # Required in every submission; only used in Round 2
+
     def run(self, state: TradingState) -> tuple[dict[str, List[Order]], int, str]:
         """
         Called once per timestamp (tick).
@@ -333,12 +348,13 @@ class Trader:
 
 ### Common Pitfalls
 
-1. **Exceeding position limits silently** — orders are just dropped, no error
+1. **All-or-nothing position limit rejection** — if total buy OR sell qty across all orders in a tick would breach limits, ALL orders for that product are cancelled. Always track a local `pos` variable and cap each order against remaining capacity.
 2. **sell_orders volumes are NEGATIVE** — always use `abs()` when computing quantities
-3. **trader_data must be a string** — use `json.dumps()`/`json.loads()` for structured state
+3. **trader_data must be a string** — use `json.dumps()`/`json.loads()` for structured state; capped at 50,000 chars
 4. **No order persistence** — every tick starts fresh, no GTC orders
 5. **Integer prices** — the exchange uses int prices, don't submit floats
 6. **Self-trade** — if you place a buy at 100 and sell at 100, they can match
+7. **Missing `bid()` method** — every submission needs `def bid(self): return 15`
 
 ---
 
