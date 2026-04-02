@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Prosperity Terminal</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'JetBrains Mono',monospace;background:#0a0e14;color:#b3b1ad;font-size:13px}
+
+  .topbar{background:#0d1117;border-bottom:1px solid #1a1f29;padding:10px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+  .topbar-left{display:flex;align-items:center;gap:14px}
+  .topbar-left h1{color:#e6b450;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+  .dot{width:6px;height:6px;border-radius:50%;background:#91e05e;display:inline-block;animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  .topbar-right{display:flex;gap:10px;align-items:center}
+  .search{background:#0a0e14;border:1px solid #1a1f29;border-radius:3px;padding:5px 10px;color:#b3b1ad;font-family:inherit;font-size:12px;width:200px;outline:none}
+  .search:focus{border-color:#e6b450}
+  .search::placeholder{color:#444b58}
+  .count{color:#444b58;font-size:11px}
+
+  .toolbar{display:flex;gap:6px;padding:8px 24px;border-bottom:1px solid #1a1f29;background:#0d1117;align-items:center;flex-wrap:wrap}
+  .pill{background:transparent;border:1px solid #1a1f29;border-radius:3px;padding:3px 10px;font-size:11px;color:#444b58;cursor:pointer;font-family:inherit;transition:all .15s}
+  .pill:hover{border-color:#444b58;color:#b3b1ad}
+  .pill.active{border-color:#e6b450;color:#e6b450}
+  .toolbar-sep{width:1px;height:18px;background:#1a1f29;margin:0 4px}
+  .view-toggle{margin-left:auto;display:flex;gap:0}
+  .view-btn{background:transparent;border:1px solid #1a1f29;padding:4px 12px;font-size:11px;color:#444b58;cursor:pointer;font-family:inherit;transition:all .15s}
+  .view-btn:first-child{border-radius:3px 0 0 3px}
+  .view-btn:last-child{border-radius:0 3px 3px 0;border-left:none}
+  .view-btn:hover{color:#b3b1ad}
+  .view-btn.active{background:#1a1f29;color:#e6b450;border-color:#e6b450}
+
+  .content{padding:16px 24px}
+
+  /* Commit cards — feed view */
+  .commit-card{border:1px solid #1a1f29;border-radius:4px;margin-bottom:10px;background:#0d1117;overflow:hidden;transition:border-color .15s}
+  .commit-card:hover{border-color:#2a303a}
+  .commit-header{display:flex;align-items:center;padding:12px 16px;cursor:pointer;gap:16px;transition:background .1s}
+  .commit-header:hover{background:#111820}
+  .commit-arrow{color:#444b58;font-size:9px;transition:transform .2s;width:12px;flex-shrink:0}
+  .commit-card.expanded .commit-arrow{transform:rotate(90deg)}
+  .commit-info{flex:1;min-width:0}
+  .commit-title{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .commit-author{color:#59c2ff;font-weight:600;font-size:13px}
+  .commit-strat{color:#d2a6ff;font-size:13px}
+  .commit-hash{color:#444b58;font-size:11px}
+  .commit-time{color:#444b58;font-size:11px;white-space:nowrap}
+  .commit-runs{display:flex;gap:8px;margin-top:4px}
+  .run-chip{background:#111820;border:1px solid #1a1f29;border-radius:3px;padding:2px 8px;font-size:10px;display:flex;gap:6px;align-items:center}
+  .run-chip .label{color:#444b58}
+  .run-chip .val{font-weight:600}
+  .commit-total{text-align:right;min-width:100px}
+  .commit-total .sub-label{font-size:10px;color:#444b58;text-transform:uppercase}
+  .commit-total .sub-pnl{font-size:16px;font-weight:700}
+
+  .commit-detail{display:none;border-top:1px solid #1a1f29;background:#0a0e14}
+  .commit-card.expanded .commit-detail{display:block}
+
+  /* Day tabs */
+  .day-tabs{display:flex;gap:0;border-bottom:1px solid #1a1f29;padding:0 16px}
+  .day-tab{padding:8px 16px;font-size:12px;color:#444b58;cursor:pointer;border:none;border-bottom:2px solid transparent;font-family:inherit;background:transparent;transition:all .15s}
+  .day-tab:hover{color:#b3b1ad}
+  .day-tab.active{color:#e6b450;border-bottom-color:#e6b450}
+  .day-panel{display:none;padding:16px}
+  .day-panel.active{display:block}
+
+  .stats{display:flex;gap:20px;margin-bottom:14px;flex-wrap:wrap}
+  .stat-label{font-size:10px;color:#444b58;text-transform:uppercase}
+  .stat-value{font-size:14px;font-weight:700}
+
+  .charts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+  .chart-box{background:#0d1117;border:1px solid #1a1f29;border-radius:4px;padding:12px}
+  .chart-box.wide{grid-column:1/-1}
+  .chart-box h3{color:#444b58;font-size:10px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+
+  .trades-box{background:#0d1117;border:1px solid #1a1f29;border-radius:4px;padding:12px;max-height:250px;overflow-y:auto;margin-bottom:14px}
+  .trades-box h3{color:#444b58;font-size:10px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+  .trades-box table{width:100%;border-collapse:collapse;font-size:11px}
+  .trades-box th{text-align:left;padding:3px 8px;color:#444b58;border-bottom:1px solid #1a1f29;font-weight:500}
+  .trades-box td{padding:3px 8px;border-bottom:1px solid #0d1117}
+
+  .code-box{background:#0d1117;border:1px solid #1a1f29;border-radius:4px;padding:12px;margin:0 16px 16px}
+  .code-box h3{color:#444b58;font-size:10px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+  .code-box pre{color:#b3b1ad;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.6;overflow-x:auto;white-space:pre;max-height:400px;overflow-y:auto}
+  .copy-btn{background:#1a1f29;border:1px solid #2a303a;border-radius:3px;color:#444b58;font-size:10px;padding:2px 8px;cursor:pointer;font-family:inherit;transition:all .15s}
+  .copy-btn:hover{color:#b3b1ad}
+
+  /* Leaderboard view */
+  .lb{display:none}
+  .lb.active{display:block}
+  .lb table{width:100%;border-collapse:collapse;font-size:13px}
+  .lb th{text-align:left;padding:8px 12px;border-bottom:2px solid #1a1f29;color:#444b58;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;transition:color .15s}
+  .lb th:hover{color:#b3b1ad}
+  .lb th .arr{margin-left:4px;font-size:9px}
+  .lb td{padding:8px 12px;border-bottom:1px solid #1a1f29}
+  .lb tr:hover{background:#111820}
+  .lb .rank{color:#444b58;width:30px}
+  .lb .rank.g{color:#e6b450;font-weight:700}
+  .lb .rank.s{color:#c0c0c0;font-weight:600}
+  .lb .rank.b{color:#cd7f32;font-weight:600}
+  .lb .author{color:#59c2ff;font-weight:600}
+  .lb .strat{color:#d2a6ff}
+  .lb .pnl{font-weight:700;font-size:14px}
+  .lb .meta{color:#444b58;font-size:11px}
+
+  .feed{display:block}
+  .feed.hidden{display:none}
+
+  .pos{color:#91e05e}
+  .neg{color:#f07178}
+  .buy{color:#91e05e}
+  .sell{color:#f07178}
+  .empty{color:#444b58;text-align:center;padding:60px}
+  .no-results{color:#444b58;text-align:center;padding:40px;display:none}
+
+  @media(max-width:900px){
+    .topbar,.toolbar,.content{padding-left:12px;padding-right:12px}
+    .search{width:140px}
+    .charts{grid-template-columns:1fr}
+    .commit-header{flex-wrap:wrap}
+    .commit-total{min-width:auto}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left"><span class="dot"></span><h1>Prosperity Terminal</h1></div>
+  <div class="topbar-right">
+    <span class="count" id="run-count"></span>
+    <input class="search" id="search" type="text" placeholder="filter...">
+  </div>
+</div>
+
+<div class="toolbar" id="toolbar">
+  <div class="view-toggle">
+    <button class="view-btn active" id="btn-feed" onclick="setView('feed')">Feed</button>
+    <button class="view-btn" id="btn-lb" onclick="setView('lb')">Leaderboard</button>
+  </div>
+</div>
+
+<div class="content">
+  <div class="no-results" id="no-results">No matching submissions.</div>
+  <div class="feed" id="feed"></div>
+  <div class="lb" id="lb"></div>
+</div>
+
+<script>
+const BASE='./runs';
+let RUNS=[],groups=[],filtered=[];
+const allCharts={};
+let activeFilters={author:null,strategy:null};
+let currentView='feed';
+let lbSort={key:'pnl',desc:true};
+
+const pc=v=>v>=0?'pos':'neg';
+const fp=v=>(v>=0?'+':'')+v.toLocaleString(undefined,{minimumFractionDigits:1,maximumFractionDigits:1});
+
+async function init(){
+  try{const r=await fetch('./results.json');if(!r.ok)throw 0;RUNS=await r.json()}
+  catch{document.getElementById('feed').innerHTML='<div class="empty">No submissions yet. Push a strategy to get started.</div>';return}
+
+  // Group by commit (author+strategy+commit)
+  const gm={};
+  for(const r of RUNS){
+    const k=`${r.author}|${r.strategy}|${r.commit}`;
+    if(!gm[k])gm[k]={author:r.author,strategy:r.strategy,commit:r.commit,timestamp:r.timestamp,runs:[]};
+    gm[k].runs.push(r);
+  }
+  groups=Object.values(gm);
+  for(const g of groups){
+    const sub=g.runs.find(r=>String(r.dataset).includes('submission'));
+    g.sub_pnl=sub?sub.pnl:null;
+    g.total_pnl=g.runs.reduce((s,r)=>s+(r.pnl||0),0);
+    g.total_trades=g.runs.reduce((s,r)=>s+(r.trades||0),0);
+  }
+
+  // Filter pills
+  const authors=[...new Set(groups.map(g=>g.author))];
+  const strategies=[...new Set(groups.map(g=>g.strategy))];
+  const tb=document.getElementById('toolbar');
+  const sep=document.createElement('span');sep.className='toolbar-sep';
+  tb.insertBefore(sep,tb.querySelector('.view-toggle'));
+  const addPills=(vals,key)=>vals.forEach(v=>{
+    const p=document.createElement('span');p.className='pill';p.textContent=v;
+    p.onclick=()=>{
+      if(activeFilters[key]===v){activeFilters[key]=null;p.classList.remove('active')}
+      else{tb.querySelectorAll('.pill').forEach(x=>x.classList.remove('active'));activeFilters[key]=v;p.classList.add('active')}
+      applyFilters();
+    };
+    tb.insertBefore(p,sep);
+  });
+  if(authors.length>1)addPills(authors,'author');
+  if(strategies.length>1)addPills(strategies,'strategy');
+
+  document.getElementById('search').addEventListener('input',applyFilters);
+  applyFilters();
+}
+
+function setView(v){
+  currentView=v;
+  document.getElementById('btn-feed').classList.toggle('active',v==='feed');
+  document.getElementById('btn-lb').classList.toggle('active',v==='lb');
+  document.getElementById('feed').classList.toggle('hidden',v!=='feed');
+  document.getElementById('lb').classList.toggle('active',v==='lb');
+}
+
+function applyFilters(){
+  const q=document.getElementById('search').value.toLowerCase().trim();
+  filtered=groups.filter(g=>{
+    if(activeFilters.author&&g.author!==activeFilters.author)return false;
+    if(activeFilters.strategy&&g.strategy!==activeFilters.strategy)return false;
+    if(q&&!(g.author.toLowerCase().includes(q)||g.strategy.toLowerCase().includes(q)||(g.commit||'').toLowerCase().includes(q)))return false;
+    return true;
+  });
+  renderFeed();
+  renderLb();
+  document.getElementById('run-count').textContent=`${filtered.length} submissions`;
+  document.getElementById('no-results').style.display=filtered.length===0?'block':'none';
+}
+
+// ── FEED VIEW (grouped by commit, sorted by most recent) ──
+function renderFeed(){
+  Object.values(allCharts).flat().forEach(c=>c.destroy());
+  for(const k in allCharts)delete allCharts[k];
+  const fd=document.getElementById('feed');
+  fd.innerHTML='';
+
+  // Sort by time (most recent first)
+  const sorted=[...filtered].sort((a,b)=>{
+    const ta=new Date(a.timestamp||0).getTime(),tb_=new Date(b.timestamp||0).getTime();
+    return tb_-ta;
+  });
+
+  sorted.forEach((g,gi)=>{
+    const subPnl=g.sub_pnl!=null?g.sub_pnl:g.total_pnl;
+    const time=g.timestamp?new Date(g.timestamp).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'';
+
+    const card=document.createElement('div');
+    card.className='commit-card';card.id=`card-${gi}`;
+
+    const chips=g.runs.map(r=>{
+      const lbl=String(r.dataset).includes('submission')?'SUB':`D${r.day}`;
+      return `<span class="run-chip"><span class="label">${lbl}</span><span class="val ${pc(r.pnl)}">${fp(r.pnl)}</span></span>`;
+    }).join('');
+
+    card.innerHTML=`
+      <div class="commit-header" onclick="toggleCard(${gi})">
+        <span class="commit-arrow">&#9654;</span>
+        <div class="commit-info">
+          <div class="commit-title">
+            <span class="commit-author">${g.author}</span>
+            <span class="commit-strat">${g.strategy}</span>
+            <span class="commit-hash">${g.commit||''}</span>
+            <span class="commit-time">${time}</span>
+          </div>
+          <div class="commit-runs">${chips}</div>
+        </div>
+        <div class="commit-total">
+          <div class="sub-label">SUB PnL</div>
+          <div class="sub-pnl ${pc(subPnl)}">${fp(subPnl)}</div>
+        </div>
+      </div>
+      <div class="commit-detail" id="detail-${gi}"></div>
+    `;
+    fd.appendChild(card);
+  });
+}
+
+async function toggleCard(gi){
+  const card=document.getElementById(`card-${gi}`);
+  const detail=document.getElementById(`detail-${gi}`);
+  if(card.classList.contains('expanded')){
+    card.classList.remove('expanded');
+    (allCharts[gi]||[]).forEach(c=>c.destroy());allCharts[gi]=[];
+    detail.innerHTML='';return;
+  }
+  card.classList.add('expanded');
+  detail.innerHTML='<div style="padding:16px;color:#444b58">Loading...</div>';
+  allCharts[gi]=[];
+
+  // Sort by most recent feed order
+  const sorted=[...filtered].sort((a,b)=>new Date(b.timestamp||0)-new Date(a.timestamp||0));
+  const g=sorted[gi];
+
+  const runData=await Promise.all(g.runs.map(async r=>({
+    ...r,pnlCsv:await fetchCsv(`${BASE}/${r.id}/pnl_by_product.csv`),
+    tradesCsv:await fetchCsv(`${BASE}/${r.id}/trades.csv`),
+  })));
+  const code=await fetchText(`${BASE}/${g.runs[0].id}/strategy.py`);
+
+  detail.innerHTML='';
+
+  // Day tabs
+  const tabs=document.createElement('div');tabs.className='day-tabs';
+  runData.forEach((r,ri)=>{
+    const lbl=String(r.dataset).includes('submission')?'Submission':`Day ${r.day}`;
+    const t=document.createElement('button');t.className='day-tab'+(ri===0?' active':'');
+    t.textContent=`${lbl}  ${fp(r.pnl)}`;
+    t.onclick=e=>{e.stopPropagation();tabs.querySelectorAll('.day-tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');
+      detail.querySelectorAll('.day-panel').forEach(x=>x.classList.remove('active'));document.getElementById(`p-${gi}-${ri}`).classList.add('active');};
+    tabs.appendChild(t);
+  });
+  detail.appendChild(tabs);
+
+  runData.forEach((r,ri)=>{
+    const p=document.createElement('div');p.className='day-panel'+(ri===0?' active':'');p.id=`p-${gi}-${ri}`;
+
+    const prods=Object.entries(r.pnl_by_product||{}).map(([k,v])=>`<div><span class="stat-label">${k}</span><div class="stat-value ${pc(v)}">${fp(v)}</div></div>`).join('');
+    p.innerHTML=`<div class="stats"><div><span class="stat-label">PnL</span><div class="stat-value ${pc(r.pnl)}">${fp(r.pnl)}</div></div><div><span class="stat-label">Trades</span><div class="stat-value">${r.trades||'?'}</div></div><div><span class="stat-label">Ticks</span><div class="stat-value">${(r.ticks||0).toLocaleString()}</div></div>${prods}</div>`;
+
+    if(r.pnlCsv.length>0){
+      const cd=document.createElement('div');cd.className='charts';
+      const box=mkChart('Cumulative PnL',true);cd.appendChild(box);p.appendChild(cd);
+      const products=Object.keys(r.pnlCsv[0]).filter(k=>k!=='timestamp'&&k!=='total');
+      const sam=ds(r.pnlCsv,400);
+      const colors=['#59c2ff','#91e05e','#e6b450','#d2a6ff','#f07178','#95e6cb'];
+      setTimeout(()=>{allCharts[gi].push(new Chart(box.querySelector('canvas'),{type:'line',
+        data:{datasets:[{label:'Total',data:sam.map(x=>({x:+x.timestamp,y:+x.total})),borderColor:'#b3b1ad',borderWidth:2,pointRadius:0,tension:.1},
+          ...products.map((q,i)=>({label:q,data:sam.map(x=>({x:+x.timestamp,y:+(x[q]||0)})),borderColor:colors[i%colors.length],borderWidth:1.5,pointRadius:0,tension:.1}))]},
+        options:co()}))},50);
+    }
+
+    if(r.tradesCsv&&r.tradesCsv.length>0){
+      const tb=document.createElement('div');tb.className='trades-box';
+      tb.innerHTML=`<h3>Trades (${r.tradesCsv.length})</h3><table><thead><tr><th>Tick</th><th>Symbol</th><th>Side</th><th>Price</th><th>Qty</th></tr></thead><tbody>${r.tradesCsv.map(t=>{const b=t.buyer==='SUBMISSION';return`<tr><td>${t.timestamp}</td><td>${t.symbol}</td><td class="${b?'buy':'sell'}">${b?'BUY':'SELL'}</td><td>${t.price}</td><td>${t.quantity}</td></tr>`}).join('')}</tbody></table>`;
+      p.appendChild(tb);
+    }
+    detail.appendChild(p);
+  });
+
+  if(code){
+    const box=document.createElement('div');box.className='code-box';
+    const esc=code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const cid=`cp-${gi}`;
+    box.innerHTML=`<h3><span>${g.strategy}.py</span><button class="copy-btn" id="${cid}">Copy</button></h3><pre>${esc}</pre>`;
+    detail.appendChild(box);
+    document.getElementById(cid).addEventListener('click',e=>{e.stopPropagation();navigator.clipboard.writeText(code);e.target.textContent='Copied!';setTimeout(()=>e.target.textContent='Copy',1500)});
+  }
+}
+
+// ── LEADERBOARD VIEW ──
+function renderLb(){
+  // Deduplicate: best submission PnL per (author, strategy)
+  const best={};
+  for(const g of filtered){
+    if(g.sub_pnl==null)continue;
+    const k=`${g.author}|${g.strategy}`;
+    if(!best[k]||g.sub_pnl>best[k].sub_pnl)best[k]=g;
+  }
+  let rows=Object.values(best);
+  const key=lbSort.key,dir=lbSort.desc?-1:1;
+  rows.sort((a,b)=>{
+    let av=key==='pnl'?(a.sub_pnl||0):key==='trades'?(a.total_trades||0):String(a[key]||'');
+    let bv=key==='pnl'?(b.sub_pnl||0):key==='trades'?(b.total_trades||0):String(b[key]||'');
+    return typeof av==='number'?(av<bv?dir:av>bv?-dir:0):(av<bv?dir:av>bv?-dir:0);
+  });
+
+  const lbd=document.getElementById('lb');
+  const arrow=k=>k===lbSort.key?(lbSort.desc?'\u25BC':'\u25B2'):'';
+  lbd.innerHTML=`<table><thead><tr>
+    <th>#</th>
+    <th class="sortable" onclick="lbSortBy('author')">Author <span class="arr">${arrow('author')}</span></th>
+    <th class="sortable" onclick="lbSortBy('strategy')">Strategy <span class="arr">${arrow('strategy')}</span></th>
+    <th class="sortable" onclick="lbSortBy('pnl')">Sub PnL <span class="arr">${arrow('pnl')}</span></th>
+    <th class="sortable" onclick="lbSortBy('trades')">Trades <span class="arr">${arrow('trades')}</span></th>
+    <th>Commit</th>
+  </tr></thead><tbody>${rows.map((r,i)=>{
+    const rank=i+1;
+    const rc=rank===1?'g':rank===2?'s':rank===3?'b':'';
+    return`<tr><td class="rank ${rc}">${rank}</td><td class="author">${r.author}</td><td class="strat">${r.strategy}</td><td class="pnl ${pc(r.sub_pnl)}">${fp(r.sub_pnl)}</td><td class="meta">${r.total_trades}</td><td class="meta">${r.commit||''}</td></tr>`;
+  }).join('')}</tbody></table>`;
+}
+function lbSortBy(k){if(lbSort.key===k)lbSort.desc=!lbSort.desc;else{lbSort.key=k;lbSort.desc=k==='pnl'||k==='trades'}renderLb()}
+
+// ── Helpers ──
+function mkChart(t,w){const b=document.createElement('div');b.className='chart-box'+(w?' wide':'');b.innerHTML=`<h3>${t}</h3><canvas></canvas>`;return b}
+function co(){return{responsive:true,plugins:{legend:{labels:{color:'#444b58',font:{size:10,family:'JetBrains Mono'}}}},scales:{x:{type:'linear',grid:{color:'#1a1f29'},ticks:{color:'#444b58',maxTicksLimit:8,font:{size:10}}},y:{grid:{color:'#1a1f29'},ticks:{color:'#444b58',font:{size:10}}}},interaction:{intersect:false,mode:'index'}}}
+function ds(d,m){if(d.length<=m)return d;const s=Math.floor(d.length/m);return d.filter((_,i)=>i%s===0||i===d.length-1)}
+async function fetchText(u){try{const r=await fetch(u);return r.ok?await r.text():null}catch{return null}}
+async function fetchCsv(u){try{const r=await fetch(u);if(!r.ok)return[];const t=await r.text();const l=t.trim().split('\n');if(l.length<2)return[];const h=l[0].split(';');return l.slice(1).map(x=>{const v=x.split(';');const o={};h.forEach((k,i)=>o[k]=v[i]||'');return o})}catch{return[]}}
+
+init();
+</script>
+</body>
+</html>

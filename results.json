@@ -1,0 +1,482 @@
+[
+  {
+    "id": "chennethelius_reference_mm_tutorial_backtest-1775165250924-tutorial-submission-day-1",
+    "author": "chennethelius",
+    "strategy": "reference_mm",
+    "dataset": "submission.json",
+    "day": -1,
+    "pnl": 2467.0,
+    "pnl_by_product": {
+      "EMERALDS": 1050.0,
+      "TOMATOES": 1417.0
+    },
+    "trades": 99,
+    "ticks": 2000,
+    "timestamp": "2026-04-02T16:27:14-05:00",
+    "commit": "522cbd3"
+  },
+  {
+    "id": "chennethelius_reference_mm_tutorial_backtest-1775165250924-tutorial-day-2",
+    "author": "chennethelius",
+    "strategy": "reference_mm",
+    "dataset": "prices_round_0_day_-2.csv",
+    "day": -2,
+    "pnl": 15200.5,
+    "pnl_by_product": {
+      "EMERALDS": 6958.0,
+      "TOMATOES": 8242.5
+    },
+    "trades": 580,
+    "ticks": 10000,
+    "timestamp": "2026-04-02T16:27:14-05:00",
+    "commit": "522cbd3"
+  },
+  {
+    "id": "chennethelius_reference_mm_tutorial_backtest-1775165250924-tutorial-day-1",
+    "author": "chennethelius",
+    "strategy": "reference_mm",
+    "dataset": "prices_round_0_day_-1.csv",
+    "day": -1,
+    "pnl": 14343.0,
+    "pnl_by_product": {
+      "EMERALDS": 7567.0,
+      "TOMATOES": 6776.0
+    },
+    "trades": 613,
+    "ticks": 10000,
+    "timestamp": "2026-04-02T16:27:14-05:00",
+    "commit": "522cbd3"
+  },
+  {
+    "id": "chennethelius_emeralds_mm_tutorial_backtest-1775165140841-tutorial-submission-day-1",
+    "author": "chennethelius",
+    "strategy": "emeralds_mm",
+    "dataset": "submission.json",
+    "day": -1,
+    "pnl": 300.0,
+    "pnl_by_product": {
+      "EMERALDS": 300.0,
+      "TOMATOES": 0.0
+    },
+    "trades": 29,
+    "ticks": 2000,
+    "timestamp": "",
+    "commit": "37e178e"
+  },
+  {
+    "id": "chennethelius_emeralds_mm_tutorial_backtest-1775165140841-tutorial-day-2",
+    "author": "chennethelius",
+    "strategy": "emeralds_mm",
+    "dataset": "prices_round_0_day_-2.csv",
+    "day": -2,
+    "pnl": 1988.0,
+    "pnl_by_product": {
+      "EMERALDS": 1988.0,
+      "TOMATOES": 0.0
+    },
+    "trades": 183,
+    "ticks": 10000,
+    "timestamp": "",
+    "commit": "37e178e"
+  },
+  {
+    "id": "chennethelius_emeralds_mm_tutorial_backtest-1775165140841-tutorial-day-1",
+    "author": "chennethelius",
+    "strategy": "emeralds_mm",
+    "dataset": "prices_round_0_day_-1.csv",
+    "day": -1,
+    "pnl": 2162.0,
+    "pnl_by_product": {
+      "EMERALDS": 2162.0,
+      "TOMATOES": 0.0
+    },
+    "trades": 197,
+    "ticks": 10000,
+    "timestamp": "",
+    "commit": "37e178e"
+  },
+  {
+    "id": "chennethelius_tutorial_mm_tutorial_backtest-1775165142539-tutorial-submission-day-1",
+    "author": "chennethelius",
+    "strategy": "tutorial_mm",
+    "dataset": "submission.json",
+    "day": -1,
+    "pnl": 2313.0,
+    "pnl_by_product": {
+      "EMERALDS": 896.0,
+      "TOMATOES": 1417.0
+    },
+    "trades": 99,
+    "ticks": 2000,
+    "timestamp": "",
+    "commit": "37e178e"
+  },
+  {
+    "id": "chennethelius_tutorial_mm_tutorial_backtest-1775165142539-tutorial-day-2",
+    "author": "chennethelius",
+    "strategy": "tutorial_mm",
+    "dataset": "prices_round_0_day_-2.csv",
+    "day": -2,
+    "pnl": 13967.0,
+    "pnl_by_product": {
+      "EMERALDS": 5748.0,
+      "TOMATOES": 8219.0
+    },
+    "trades": 584,
+    "ticks": 10000,
+    "timestamp": "",
+    "commit": "37e178e"
+  },
+  {
+    "id": "chennethelius_tutorial_mm_tutorial_backtest-1775165142539-tutorial-day-1",
+    "author": "chennethelius",
+    "strategy": "tutorial_mm",
+    "dataset": "prices_round_0_day_-1.csv",
+    "day": -1,
+    "pnl": 13083.0,
+    "pnl_by_product": {
+      "EMERALDS": 6348.0,
+      "TOMATOES": 6735.0
+    },
+    "trades": 623,
+    "ticks": 10000,
+    "timestamp": "",
+    "commit": "37e178e"
+  },
+  {
+    "id": "chennethelius_aggressive_mm_tutorial_backtest-1775165144427-tutorial-submission-day-1",
+    "author": "chennethelius",
+    "strategy": "aggressive_mm",
+    "dataset": "submission.json",
+    "day": -1,
+    "pnl": 2856.5,
+    "pnl_by_product": {
+      "EMERALDS": 1050.0,
+      "TOMATOES": 1806.5
+    },
+    "trades": 106,
+    "ticks": 2000,
+    "timestamp": "",
+    "commit": "37e178e"
+  },
+  {
+    "id": "chennethelius_aggressive_mm_tutorial_backtest-1775165144427-tutorial-day-2",
+    "author": "chennethelius",
+    "strategy": "aggressive_mm",
+    "dataset": "prices_round_0_day_-2.csv",
+    "day": -2,
+    "pnl": 15414.0,
+    "pnl_by_product": {
+      "EMERALDS": 6958.0,
+      "TOMATOES": 8456.0
+    },
+    "trades": 571,
+    "ticks": 10000,
+    "timestamp": "",
+    "commit": "37e178e"
+  },
+  {
+    "id": "chennethelius_aggressive_mm_tutorial_backtest-1775165144427-tutorial-day-1",
+    "author": "chennethelius",
+    "strategy": "aggressive_mm",
+    "dataset": "prices_round_0_day_-1.csv",
+    "day": -1,
+    "pnl": 12399.0,
+    "pnl_by_product": {
+      "EMERALDS": 7567.0,
+      "TOMATOES": 4832.0
+    },
+    "trades": 600,
+    "ticks": 10000,
+    "timestamp": "",
+    "commit": "37e178e"
+  },
+  {
+    "id": "chennethelius_optimized_mm_tutorial_backtest-1775165146507-tutorial-submission-day-1",
+    "author": "chennethelius",
+    "strategy": "optimized_mm",
+    "dataset": "submission.json",
+    "day": -1,
+    "pnl": 2186.5,
+    "pnl_by_product": {
+      "EMERALDS": 1050.0,
+      "TOMATOES": 1136.5
+    },
+    "trades": 163,
+    "ticks": 2000,
+    "timestamp": "",
+    "commit": "37e178e"
+  },
+  {
+    "id": "chennethelius_optimized_mm_tutorial_backtest-1775165146507-tutorial-day-2",
+    "author": "chennethelius",
+    "strategy": "optimized_mm",
+    "dataset": "prices_round_0_day_-2.csv",
+    "day": -2,
+    "pnl": 19474.0,
+    "pnl_by_product": {
+      "EMERALDS": 7182.0,
+      "TOMATOES": 12292.0
+    },
+    "trades": 911,
+    "ticks": 10000,
+    "timestamp": "",
+    "commit": "37e178e"
+  },
+  {
+    "id": "chennethelius_optimized_mm_tutorial_backtest-1775165146507-tutorial-day-1",
+    "author": "chennethelius",
+    "strategy": "optimized_mm",
+    "dataset": "prices_round_0_day_-1.csv",
+    "day": -1,
+    "pnl": 17261.0,
+    "pnl_by_product": {
+      "EMERALDS": 7763.0,
+      "TOMATOES": 9498.0
+    },
+    "trades": 974,
+    "ticks": 10000,
+    "timestamp": "",
+    "commit": "37e178e"
+  },
+  {
+    "id": "chennethelius_mm_tomatoes_tutorial_backtest-1775165148784-tutorial-submission-day-1",
+    "author": "chennethelius",
+    "strategy": "mm_tomatoes",
+    "dataset": "submission.json",
+    "day": -1,
+    "pnl": 915.0,
+    "pnl_by_product": {
+      "EMERALDS": 300.0,
+      "TOMATOES": 615.0
+    },
+    "trades": 98,
+    "ticks": 2000,
+    "timestamp": "",
+    "commit": "37e178e"
+  },
+  {
+    "id": "chennethelius_mm_tomatoes_tutorial_backtest-1775165148784-tutorial-day-2",
+    "author": "chennethelius",
+    "strategy": "mm_tomatoes",
+    "dataset": "prices_round_0_day_-2.csv",
+    "day": -2,
+    "pnl": 5310.0,
+    "pnl_by_product": {
+      "EMERALDS": 1988.0,
+      "TOMATOES": 3322.0
+    },
+    "trades": 579,
+    "ticks": 10000,
+    "timestamp": "",
+    "commit": "37e178e"
+  },
+  {
+    "id": "chennethelius_mm_tomatoes_tutorial_backtest-1775165148784-tutorial-day-1",
+    "author": "chennethelius",
+    "strategy": "mm_tomatoes",
+    "dataset": "prices_round_0_day_-1.csv",
+    "day": -1,
+    "pnl": 4167.0,
+    "pnl_by_product": {
+      "EMERALDS": 2162.0,
+      "TOMATOES": 2005.0
+    },
+    "trades": 610,
+    "ticks": 10000,
+    "timestamp": "",
+    "commit": "37e178e"
+  },
+  {
+    "id": "jonathan-cheng19_optimized_mm_tutorial_backtest-1775164590906-tutorial-submission-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "optimized_mm",
+    "dataset": "submission.json",
+    "day": -1,
+    "pnl": 2186.5,
+    "pnl_by_product": {
+      "EMERALDS": 1050.0,
+      "TOMATOES": 1136.5
+    },
+    "trades": 163,
+    "ticks": 2000,
+    "timestamp": "2026-04-02T16:16:02-05:00",
+    "commit": "56fa924"
+  },
+  {
+    "id": "jonathan-cheng19_optimized_mm_tutorial_backtest-1775164590906-tutorial-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "optimized_mm",
+    "dataset": "prices_round_0_day_-2.csv",
+    "day": -2,
+    "pnl": 19474.0,
+    "pnl_by_product": {
+      "EMERALDS": 7182.0,
+      "TOMATOES": 12292.0
+    },
+    "trades": 911,
+    "ticks": 10000,
+    "timestamp": "2026-04-02T16:16:02-05:00",
+    "commit": "56fa924"
+  },
+  {
+    "id": "jonathan-cheng19_optimized_mm_tutorial_backtest-1775164590906-tutorial-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "optimized_mm",
+    "dataset": "prices_round_0_day_-1.csv",
+    "day": -1,
+    "pnl": 17261.0,
+    "pnl_by_product": {
+      "EMERALDS": 7763.0,
+      "TOMATOES": 9498.0
+    },
+    "trades": 974,
+    "ticks": 10000,
+    "timestamp": "2026-04-02T16:16:02-05:00",
+    "commit": "56fa924"
+  },
+  {
+    "id": "TommySailami_optimized_mm_tutorial_backtest-1775159351927-tutorial-submission-day-1",
+    "author": "TommySailami",
+    "strategy": "optimized_mm",
+    "dataset": "submission.json",
+    "day": -1,
+    "pnl": 2327.0,
+    "pnl_by_product": {
+      "EMERALDS": 868.0,
+      "TOMATOES": 1459.0
+    },
+    "trades": 92,
+    "ticks": 2000,
+    "timestamp": "2026-04-02T14:48:47-05:00",
+    "commit": "9e8dc50"
+  },
+  {
+    "id": "TommySailami_optimized_mm_tutorial_backtest-1775159351927-tutorial-day-2",
+    "author": "TommySailami",
+    "strategy": "optimized_mm",
+    "dataset": "prices_round_0_day_-2.csv",
+    "day": -2,
+    "pnl": 14065.0,
+    "pnl_by_product": {
+      "EMERALDS": 6178.0,
+      "TOMATOES": 7887.0
+    },
+    "trades": 549,
+    "ticks": 10000,
+    "timestamp": "2026-04-02T14:48:47-05:00",
+    "commit": "9e8dc50"
+  },
+  {
+    "id": "TommySailami_optimized_mm_tutorial_backtest-1775159351927-tutorial-day-1",
+    "author": "TommySailami",
+    "strategy": "optimized_mm",
+    "dataset": "prices_round_0_day_-1.csv",
+    "day": -1,
+    "pnl": 13574.0,
+    "pnl_by_product": {
+      "EMERALDS": 6651.0,
+      "TOMATOES": 6923.0
+    },
+    "trades": 564,
+    "ticks": 10000,
+    "timestamp": "2026-04-02T14:48:47-05:00",
+    "commit": "9e8dc50"
+  },
+  {
+    "id": "jonathan-cheng19_emeralds_mm_tutorial_backtest-1775157673539-tutorial-submission-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "emeralds_mm",
+    "dataset": "submission.json",
+    "day": -1,
+    "pnl": 300.0,
+    "pnl_by_product": {
+      "EMERALDS": 300.0,
+      "TOMATOES": 0.0
+    },
+    "trades": 29,
+    "ticks": 2000,
+    "timestamp": "2026-04-02T14:20:38-05:00",
+    "commit": "b4d70fb"
+  },
+  {
+    "id": "jonathan-cheng19_emeralds_mm_tutorial_backtest-1775157673539-tutorial-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "emeralds_mm",
+    "dataset": "prices_round_0_day_-2.csv",
+    "day": -2,
+    "pnl": 1988.0,
+    "pnl_by_product": {
+      "EMERALDS": 1988.0,
+      "TOMATOES": 0.0
+    },
+    "trades": 183,
+    "ticks": 10000,
+    "timestamp": "2026-04-02T14:20:38-05:00",
+    "commit": "b4d70fb"
+  },
+  {
+    "id": "jonathan-cheng19_emeralds_mm_tutorial_backtest-1775157673539-tutorial-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "emeralds_mm",
+    "dataset": "prices_round_0_day_-1.csv",
+    "day": -1,
+    "pnl": 2162.0,
+    "pnl_by_product": {
+      "EMERALDS": 2162.0,
+      "TOMATOES": 0.0
+    },
+    "trades": 197,
+    "ticks": 10000,
+    "timestamp": "2026-04-02T14:20:38-05:00",
+    "commit": "b4d70fb"
+  },
+  {
+    "id": "jonathan-cheng19_mm_tomatoes_tutorial_backtest-1775157675226-tutorial-submission-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "mm_tomatoes",
+    "dataset": "submission.json",
+    "day": -1,
+    "pnl": 915.0,
+    "pnl_by_product": {
+      "EMERALDS": 300.0,
+      "TOMATOES": 615.0
+    },
+    "trades": 98,
+    "ticks": 2000,
+    "timestamp": "2026-04-02T14:20:38-05:00",
+    "commit": "b4d70fb"
+  },
+  {
+    "id": "jonathan-cheng19_mm_tomatoes_tutorial_backtest-1775157675226-tutorial-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "mm_tomatoes",
+    "dataset": "prices_round_0_day_-2.csv",
+    "day": -2,
+    "pnl": 5310.0,
+    "pnl_by_product": {
+      "EMERALDS": 1988.0,
+      "TOMATOES": 3322.0
+    },
+    "trades": 579,
+    "ticks": 10000,
+    "timestamp": "2026-04-02T14:20:38-05:00",
+    "commit": "b4d70fb"
+  },
+  {
+    "id": "jonathan-cheng19_mm_tomatoes_tutorial_backtest-1775157675226-tutorial-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "mm_tomatoes",
+    "dataset": "prices_round_0_day_-1.csv",
+    "day": -1,
+    "pnl": 4167.0,
+    "pnl_by_product": {
+      "EMERALDS": 2162.0,
+      "TOMATOES": 2005.0
+    },
+    "trades": 610,
+    "ticks": 10000,
+    "timestamp": "2026-04-02T14:20:38-05:00",
+    "commit": "b4d70fb"
+  }
+]
