@@ -115,6 +115,8 @@ jobs:
           # Push to gh-pages
           cd "$DEPLOY_DIR"
           git init
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git checkout -b gh-pages
           git add -A
           git commit -m "Results: ${{ github.actor }} @ ${{ github.sha }}"
