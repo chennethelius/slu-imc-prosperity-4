@@ -13,10 +13,11 @@ strategies/         Python Trader class files (one per strategy)
   round1-5/         Organized by round
   lib/              Shared utility code (copied into strategy at submission)
 backtester/         Git submodule: GeyzsoN/prosperity_rust_backtester
+  datasets/         Round data goes here (prices/trades CSVs, submission logs)
+  runs/             Backtester output (metrics, logs, artifacts)
 visualizer/         Git submodule: kevin-fu1/imc-prosperity-4-visualizer
-datasets/           Historical round data (CSV/JSON, gitignored)
-runs/               Backtest outputs (gitignored, auto-generated)
-scripts/            Pipeline tooling (backtest, analyze, compare, serve)
+runs/               Symlinked/copied backtest outputs for easy access
+scripts/            Pipeline tooling (backtest, analyze, compare, visualize)
 discord-bot/        Discord scraper for community intel
 notebooks/          Jupyter notebooks for data exploration
 ```
@@ -24,8 +25,15 @@ notebooks/          Jupyter notebooks for data exploration
 ## Quick Commands
 
 ```bash
-# Run a backtest
-./scripts/run_backtest.sh strategies/round1/my_strategy.py datasets/round1/
+# Run a backtest (wraps the Rust backtester CLI)
+./scripts/run_backtest.sh strategies/round1/my_strategy.py tutorial
+./scripts/run_backtest.sh strategies/round1/my_strategy.py round1
+./scripts/run_backtest.sh strategies/round1/my_strategy.py round1 --day=-1
+
+# Or use the backtester directly (auto-picks trader + dataset)
+cd backtester && make backtest
+cd backtester && make tutorial
+cd backtester && make round1 TRADER=../strategies/round1/my_strategy.py
 
 # Compare two runs
 python scripts/compare.py runs/<run_a> runs/<run_b>
@@ -33,12 +41,19 @@ python scripts/compare.py runs/<run_a> runs/<run_b>
 # Start visualizer (keep running in background)
 cd visualizer && pnpm dev
 
-# Start file server for runs (keep running in background)
-python scripts/serve_runs.py
-
 # Analyze a run (prints summary Claude can read)
 python scripts/analyze.py runs/<run_id>
 ```
+
+### Dataset Setup
+
+Round data goes in `backtester/datasets/roundN/` as CSV pairs:
+- `prices_round_N_day_D.csv` — order book snapshots
+- `trades_round_N_day_D.csv` — executed trades
+
+Download these from the IMC Prosperity portal after each round opens.
+The backtester also accepts `submission.log` files from the portal.
+Tutorial data (EMERALDS + TOMATOES) is bundled in `backtester/datasets/tutorial/`.
 
 ---
 
@@ -102,7 +117,7 @@ class TradingState:
     observations: Observation                          # External signals
 
 class Listing:
-    symbol: str                                        # e.g. "AMETHYSTS"
+    symbol: str                                        # e.g. "EMERALDS"
     product: str                                       # Usually same as symbol
     denomination: str                                  # Usually "SEASHELLS"
 
@@ -144,6 +159,8 @@ These are HARD LIMITS. Orders that would exceed them are rejected silently.
 
 | Product | Position Limit |
 |---------|---------------|
+| EMERALDS | 80 |
+| TOMATOES | 80 |
 | RAINFOREST_RESIN | 50 |
 | KELP | 50 |
 | SQUID_INK | 50 |
@@ -303,6 +320,7 @@ class Trader:
 
 | Pattern | Products | Strategy Approach |
 |---------|----------|-------------------|
+| Tutorial | EMERALDS (~10000), TOMATOES (~5000) | Market making basics |
 | Stable fair value | RAINFOREST_RESIN (~10000) | Market make around known fair value |
 | Mean-reverting | KELP, SQUID_INK | EMA/regression, fade deviations |
 | Basket/ETF arb | PICNIC_BASKET = weighted sum of components | Stat arb on spread vs NAV |

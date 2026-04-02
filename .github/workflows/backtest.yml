@@ -1,0 +1,122 @@
+name: Backtest & Deploy Results
+
+on:
+  push:
+    paths:
+      - 'strategies/**'
+      - 'backtester/datasets/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 2
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            backtester/target
+          key: rust-${{ runner.os }}-${{ hashFiles('backtester/Cargo.lock') }}
+          restore-keys: rust-${{ runner.os }}-
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Build backtester
+        working-directory: backtester
+        run: cargo build --release
+
+      - name: Detect changed strategies
+        id: changes
+        run: |
+          CHANGED=$(git diff --name-only HEAD~1 HEAD -- 'strategies/**/*.py' 2>/dev/null || true)
+          if [ -z "$CHANGED" ]; then
+            CHANGED=$(find strategies -name '*.py' -not -path '*/lib/*' 2>/dev/null || true)
+          fi
+          echo "files<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGED" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Run backtests
+        env:
+          STRATEGIES: ${{ steps.changes.outputs.files }}
+          AUTHOR: ${{ github.actor }}
+          COMMIT: ${{ github.sha }}
+          TIMESTAMP: ${{ github.event.head_commit.timestamp }}
+          REPO_ROOT: ${{ github.workspace }}
+        run: python3 .github/collect_results.py
+
+      - name: Deploy to gh-pages
+        run: |
+          RESULTS_DIR="${{ github.workspace }}/backtest-results"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git fetch origin gh-pages:gh-pages 2>/dev/null || true
+
+          DEPLOY_DIR=$(mktemp -d)
+
+          if git rev-parse --verify gh-pages >/dev/null 2>&1; then
+            git archive gh-pages | tar -x -C "$DEPLOY_DIR"
+          fi
+
+          mkdir -p "$DEPLOY_DIR/runs"
+
+          # Copy new run data
+          if [ -d "$RESULTS_DIR" ]; then
+            for RUN_DIR in "$RESULTS_DIR"/*/; do
+              [ -d "$RUN_DIR" ] || continue
+              RUN_NAME=$(basename "$RUN_DIR")
+              cp -r "$RUN_DIR" "$DEPLOY_DIR/runs/$RUN_NAME"
+            done
+          fi
+
+          # Merge manifests
+          python3 -c "
+          import json, os
+          deploy = '$DEPLOY_DIR'
+          results = '$RESULTS_DIR'
+          manifest_path = os.path.join(deploy, 'results.json')
+          existing = []
+          if os.path.exists(manifest_path):
+              with open(manifest_path) as f:
+                  existing = json.load(f)
+          new_path = os.path.join(results, 'new_results.json')
+          if os.path.exists(new_path):
+              with open(new_path) as f:
+                  new = json.load(f)
+              existing = new + existing
+          with open(manifest_path, 'w') as f:
+              json.dump(existing, f, indent=2)
+          print(f'Manifest: {len(existing)} total submissions')
+          "
+
+          # Copy dashboard
+          cp .github/dashboard.html "$DEPLOY_DIR/index.html"
+
+          # Push to gh-pages
+          cd "$DEPLOY_DIR"
+          git init
+          git checkout -b gh-pages
+          git add -A
+          git commit -m "Results: ${{ github.actor }} @ ${{ github.sha }}"
+          git remote add origin "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"
+          git push -f origin gh-pages

@@ -1,68 +1,13 @@
-#!/usr/bin/env python3
-"""
-serve_runs.py — Self-contained backtest dashboard with expandable run details.
-
-Usage:
-    python scripts/serve_runs.py [--port 8080]
-
-Single page at http://localhost:8080/ — table of all runs with key stats,
-click any row to expand inline charts and trades.
-"""
-
-import argparse
-import json
-from http.server import HTTPServer, SimpleHTTPRequestHandler
-from pathlib import Path
-
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-BACKTESTER_RUNS = PROJECT_ROOT / "backtester" / "runs"
-DEFAULT_PORT = 8080
-
-
-def find_runs(runs_dir: Path) -> list[dict]:
-    runs = []
-    if not runs_dir.exists():
-        return runs
-    for entry in sorted(runs_dir.iterdir(), reverse=True):
-        if not entry.is_dir() or not entry.name.startswith("backtest-"):
-            continue
-        metrics_file = entry / "metrics.json"
-        if not metrics_file.exists():
-            continue
-        try:
-            metrics = json.loads(metrics_file.read_text())
-        except (json.JSONDecodeError, OSError):
-            continue
-        # Get file modification time for "submitted" timestamp
-        mtime = metrics_file.stat().st_mtime
-        runs.append({
-            "id": entry.name,
-            "pnl": metrics.get("final_pnl_total", 0),
-            "pnl_by_product": metrics.get("final_pnl_by_product", {}),
-            "trader": Path(metrics.get("trader_path", "?")).name,
-            "dataset": Path(metrics.get("dataset_path", "?")).name,
-            "day": metrics.get("day", "?"),
-            "ticks": metrics.get("tick_count", 0),
-            "trades": metrics.get("own_trade_count", 0),
-            "mtime": mtime,
-            "has_pnl": (entry / "pnl_by_product.csv").exists(),
-            "has_activity": (entry / "activity.csv").exists(),
-            "has_trades": (entry / "trades.csv").exists(),
-        })
-    return runs
-
-
-DASHBOARD_HTML = r"""<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
-<title>Prosperity Dashboard</title>
+<title>Prosperity Team Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: -apple-system, system-ui, sans-serif; background: #0d1117; color: #c9d1d9; padding: 24px 32px; }
 
-  /* Header */
   .header { display: flex; align-items: baseline; gap: 16px; margin-bottom: 6px; }
   h1 { color: #58a6ff; font-size: 22px; }
   .count { color: #484f58; font-size: 13px; }
@@ -78,35 +23,40 @@ DASHBOARD_HTML = r"""<!DOCTYPE html>
   .expand-indicator { color: #484f58; font-size: 10px; width: 20px; transition: transform 0.2s; display: inline-block; }
   .run-row.active .expand-indicator { transform: rotate(90deg); }
 
-  /* Cell styles */
-  .cell-id { font-family: monospace; font-size: 11px; color: #8b949e; max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .cell-trader { color: #c9d1d9; }
+  .cell-author { font-weight: 600; }
+  .cell-strategy { color: #d2a8ff; font-family: monospace; }
   .cell-dataset { color: #8b949e; }
   .cell-pnl { font-family: monospace; font-weight: 700; }
   .cell-products { font-family: monospace; font-size: 11px; }
   .cell-time { color: #8b949e; font-size: 12px; white-space: nowrap; }
   .cell-trades { color: #8b949e; font-family: monospace; }
+  .cell-commit { font-family: monospace; font-size: 11px; color: #8b949e; }
   .pos { color: #3fb950; }
   .neg { color: #f85149; }
 
-  /* Expanded detail row */
+  /* Author colors */
+  .author-0 { color: #58a6ff; }
+  .author-1 { color: #3fb950; }
+  .author-2 { color: #f0883e; }
+  .author-3 { color: #bc8cff; }
+  .author-4 { color: #f85149; }
+  .author-5 { color: #79c0ff; }
+
+  /* Detail */
   .detail-row td { padding: 0; border-bottom: 1px solid #21262d; background: #0d1117; }
   .detail-content { padding: 16px 12px 20px 32px; display: none; }
   .detail-row.open .detail-content { display: block; }
 
-  /* Charts inside detail */
   .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
   .chart-box { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 14px; }
   .chart-box.wide { grid-column: 1 / -1; }
   .chart-box h3 { color: #8b949e; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
 
-  /* Stats pills */
   .stats { display: flex; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
   .stat { background: #161b22; border: 1px solid #21262d; border-radius: 6px; padding: 8px 14px; }
   .stat-label { font-size: 10px; color: #484f58; text-transform: uppercase; letter-spacing: 0.5px; }
   .stat-value { font-size: 16px; font-weight: 700; font-family: monospace; margin-top: 1px; }
 
-  /* Trades table inside detail */
   .trades-box { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 14px; max-height: 300px; overflow-y: auto; }
   .trades-box h3 { color: #8b949e; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
   .trades-box table { font-size: 12px; }
@@ -114,26 +64,30 @@ DASHBOARD_HTML = r"""<!DOCTYPE html>
   .trades-box td { padding: 4px 8px; border-bottom: 1px solid #161b22; }
   .buy { color: #3fb950; }
   .sell { color: #f85149; }
+
+  .loading { color: #484f58; text-align: center; padding: 60px; font-size: 14px; }
+  .empty { color: #484f58; text-align: center; padding: 60px; }
 </style>
 </head>
 <body>
 <div class="header">
-  <h1>Prosperity Dashboard</h1>
+  <h1>Prosperity Team Dashboard</h1>
   <span class="count" id="run-count"></span>
 </div>
-<p class="subtitle">Click any row to expand charts and trade details. Refresh page to see new runs.</p>
+<p class="subtitle">Push strategies to git — backtests run automatically. Click any row to expand.</p>
 
 <table>
   <thead>
     <tr>
       <th></th>
-      <th>Run</th>
-      <th>Trader</th>
+      <th>Author</th>
+      <th>Strategy</th>
       <th>Dataset</th>
       <th>Day</th>
       <th>PnL</th>
       <th>Products</th>
       <th>Trades</th>
+      <th>Commit</th>
       <th>Time</th>
     </tr>
   </thead>
@@ -141,55 +95,67 @@ DASHBOARD_HTML = r"""<!DOCTYPE html>
 </table>
 
 <script>
-const RUNS = __RUNS_JSON__;
-const tbody = document.getElementById('tbody');
-document.getElementById('run-count').textContent = RUNS.length + ' runs';
-
-// Track expanded state and chart instances per run
-const expanded = {};
+// Base URL for fetching run data (relative to gh-pages root)
+const BASE = './runs';
+let RUNS = [];
+const authorColors = {};
+let authorCount = 0;
 const runCharts = {};
 
 function pnlClass(v) { return v >= 0 ? 'pos' : 'neg'; }
 function fmtPnl(v) { return (v >= 0 ? '+' : '') + v.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
-function fmtTime(ts) {
-  const d = new Date(ts * 1000);
-  const pad = n => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+function getAuthorClass(author) {
+  if (!(author in authorColors)) authorColors[author] = `author-${authorCount++ % 6}`;
+  return authorColors[author];
 }
 
-RUNS.forEach((run, i) => {
-  // Summary row
-  const tr = document.createElement('tr');
-  tr.className = 'run-row';
-  tr.dataset.index = i;
+async function init() {
+  const tbody = document.getElementById('tbody');
+  try {
+    const res = await fetch('./results.json');
+    if (!res.ok) throw new Error('No results yet');
+    RUNS = await res.json();
+  } catch {
+    tbody.innerHTML = '<tr><td colspan="10" class="empty">No submissions yet. Push a strategy to get started!</td></tr>';
+    return;
+  }
 
-  const prods = Object.entries(run.pnl_by_product || {})
-    .map(([k, v]) => `<span class="${pnlClass(v)}">${k}: ${fmtPnl(v)}</span>`)
-    .join(' &nbsp;|&nbsp; ');
+  document.getElementById('run-count').textContent = `${RUNS.length} submissions`;
 
-  tr.innerHTML = `
-    <td><span class="expand-indicator">&#9654;</span></td>
-    <td class="cell-id" title="${run.id}">${run.id}</td>
-    <td class="cell-trader">${run.trader}</td>
-    <td class="cell-dataset">${run.dataset}</td>
-    <td>${run.day}</td>
-    <td class="cell-pnl ${pnlClass(run.pnl)}">${fmtPnl(run.pnl)}</td>
-    <td class="cell-products">${prods}</td>
-    <td class="cell-trades">${run.trades}</td>
-    <td class="cell-time">${fmtTime(run.mtime)}</td>
-  `;
-  tbody.appendChild(tr);
+  RUNS.forEach((run, i) => {
+    const tr = document.createElement('tr');
+    tr.className = 'run-row';
+    tr.dataset.index = i;
 
-  // Detail row (hidden by default)
-  const detailTr = document.createElement('tr');
-  detailTr.className = 'detail-row';
-  detailTr.id = `detail-${i}`;
-  detailTr.innerHTML = `<td colspan="9"><div class="detail-content" id="content-${i}"></div></td>`;
-  tbody.appendChild(detailTr);
+    const prods = Object.entries(run.pnl_by_product || {})
+      .map(([k, v]) => `<span class="${pnlClass(v)}">${k}: ${fmtPnl(v)}</span>`)
+      .join(' &nbsp;|&nbsp; ');
 
-  // Click handler
-  tr.addEventListener('click', () => toggleRun(run, i));
-});
+    const timeStr = run.timestamp ? new Date(run.timestamp).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+
+    tr.innerHTML = `
+      <td><span class="expand-indicator">&#9654;</span></td>
+      <td class="cell-author ${getAuthorClass(run.author)}">${run.author || '?'}</td>
+      <td class="cell-strategy">${run.strategy || '?'}</td>
+      <td class="cell-dataset">${run.dataset || '?'}</td>
+      <td>${run.day ?? '?'}</td>
+      <td class="cell-pnl ${pnlClass(run.pnl)}">${fmtPnl(run.pnl || 0)}</td>
+      <td class="cell-products">${prods}</td>
+      <td class="cell-trades">${run.trades || 0}</td>
+      <td class="cell-commit">${run.commit || ''}</td>
+      <td class="cell-time">${timeStr}</td>
+    `;
+    tbody.appendChild(tr);
+
+    const detailTr = document.createElement('tr');
+    detailTr.className = 'detail-row';
+    detailTr.id = `detail-${i}`;
+    detailTr.innerHTML = `<td colspan="10"><div class="detail-content" id="content-${i}"></div></td>`;
+    tbody.appendChild(detailTr);
+
+    tr.addEventListener('click', () => toggleRun(run, i));
+  });
+}
 
 async function toggleRun(run, index) {
   const detailRow = document.getElementById(`detail-${index}`);
@@ -197,56 +163,49 @@ async function toggleRun(run, index) {
   const isOpen = detailRow.classList.contains('open');
 
   if (isOpen) {
-    // Collapse
     detailRow.classList.remove('open');
     summaryRow.classList.remove('active');
     detailRow.querySelector('.detail-content').style.display = 'none';
-    // Destroy charts
     (runCharts[index] || []).forEach(c => c.destroy());
     runCharts[index] = [];
     return;
   }
 
-  // Expand
   detailRow.classList.add('open');
   summaryRow.classList.add('active');
   const content = document.getElementById(`content-${index}`);
   content.style.display = 'block';
   content.innerHTML = '<span style="color:#484f58">Loading...</span>';
 
-  // Destroy old charts if any
   (runCharts[index] || []).forEach(c => c.destroy());
   runCharts[index] = [];
 
-  // Fetch data in parallel
-  const [pnlData, activityData, tradesData] = await Promise.all([
-    run.has_pnl ? fetchCsv(`/${run.id}/pnl_by_product.csv`) : [],
-    run.has_activity ? fetchCsv(`/${run.id}/activity.csv`) : [],
-    run.has_trades ? fetchCsv(`/${run.id}/trades.csv`) : [],
+  const [pnlData, tradesData] = await Promise.all([
+    fetchCsv(`${BASE}/${run.id}/pnl_by_product.csv`),
+    fetchCsv(`${BASE}/${run.id}/trades.csv`),
   ]);
 
   content.innerHTML = '';
 
-  // Stats pills
+  // Stats
   const stats = document.createElement('div');
   stats.className = 'stats';
   stats.innerHTML = `
-    <div class="stat"><div class="stat-label">Total PnL</div><div class="stat-value ${pnlClass(run.pnl)}">${fmtPnl(run.pnl)}</div></div>
-    <div class="stat"><div class="stat-label">Trades</div><div class="stat-value">${run.trades}</div></div>
+    <div class="stat"><div class="stat-label">Total PnL</div><div class="stat-value ${pnlClass(run.pnl)}">${fmtPnl(run.pnl || 0)}</div></div>
+    <div class="stat"><div class="stat-label">Trades</div><div class="stat-value">${run.trades || 0}</div></div>
     <div class="stat"><div class="stat-label">Ticks</div><div class="stat-value">${(run.ticks || 0).toLocaleString()}</div></div>
-    <div class="stat"><div class="stat-label">Trader</div><div class="stat-value" style="font-size:12px">${run.trader}</div></div>
-    <div class="stat"><div class="stat-label">Dataset</div><div class="stat-value" style="font-size:12px">${run.dataset}</div></div>
+    <div class="stat"><div class="stat-label">Author</div><div class="stat-value ${getAuthorClass(run.author)}" style="font-size:13px">${run.author}</div></div>
+    <div class="stat"><div class="stat-label">Commit</div><div class="stat-value" style="font-size:13px">${run.commit || '?'}</div></div>
   `;
   content.appendChild(stats);
 
-  // Charts grid
   const chartsDiv = document.createElement('div');
   chartsDiv.className = 'charts';
   content.appendChild(chartsDiv);
 
   const colors = ['#58a6ff', '#3fb950', '#f0883e', '#bc8cff', '#f85149', '#79c0ff', '#d2a8ff'];
 
-  // PnL over time (wide)
+  // PnL chart
   if (pnlData.length > 0) {
     const box = mkChart('Cumulative PnL', true);
     chartsDiv.appendChild(box);
@@ -265,26 +224,8 @@ async function toggleRun(run, index) {
     }));
   }
 
-  // Mid-price per product
-  if (activityData.length > 0) {
-    const products = [...new Set(activityData.map(r => r.product))];
-    products.forEach((product, pi) => {
-      const box = mkChart(`${product} Mid Price`);
-      chartsDiv.appendChild(box);
-      const rows = downsample(activityData.filter(r => r.product === product), 300);
-      runCharts[index].push(new Chart(box.querySelector('canvas'), {
-        type: 'line',
-        data: { datasets: [{
-          label: 'Mid', data: rows.map(r => ({x:+r.timestamp, y:+r.mid_price})),
-          borderColor: colors[pi % colors.length], borderWidth: 1.5, pointRadius: 0, tension: 0.1,
-        }]},
-        options: lineOpts(),
-      }));
-    });
-  }
-
   // PnL bar chart
-  if (Object.keys(run.pnl_by_product).length > 0) {
+  if (Object.keys(run.pnl_by_product || {}).length > 0) {
     const box = mkChart('PnL by Product');
     chartsDiv.appendChild(box);
     const labels = Object.keys(run.pnl_by_product);
@@ -294,8 +235,7 @@ async function toggleRun(run, index) {
       data: { labels, datasets: [{
         data: values,
         backgroundColor: values.map(v => v >= 0 ? 'rgba(63,185,80,0.7)' : 'rgba(248,81,73,0.7)'),
-        borderColor: values.map(v => v >= 0 ? '#3fb950' : '#f85149'),
-        borderWidth: 1,
+        borderColor: values.map(v => v >= 0 ? '#3fb950' : '#f85149'), borderWidth: 1,
       }]},
       options: { responsive: true, plugins: { legend: { display: false } },
         scales: { y: { grid: { color: '#21262d' }, ticks: { color: '#8b949e' } }, x: { grid: { color: '#21262d' }, ticks: { color: '#8b949e' } } },
@@ -323,7 +263,6 @@ function mkChart(title, wide) {
   box.innerHTML = `<h3>${title}</h3><canvas></canvas>`;
   return box;
 }
-
 function lineOpts() {
   return {
     responsive: true,
@@ -335,13 +274,11 @@ function lineOpts() {
     interaction: { intersect: false, mode: 'index' },
   };
 }
-
 function downsample(data, max) {
   if (data.length <= max) return data;
   const step = Math.floor(data.length / max);
   return data.filter((_, i) => i % step === 0 || i === data.length - 1);
 }
-
 async function fetchCsv(url) {
   try {
     const res = await fetch(url);
@@ -358,60 +295,8 @@ async function fetchCsv(url) {
     });
   } catch { return []; }
 }
+
+init();
 </script>
 </body>
-</html>"""
-
-
-class RunsHandler(SimpleHTTPRequestHandler):
-    def __init__(self, *args, port=DEFAULT_PORT, **kwargs):
-        self._port = port
-        super().__init__(*args, directory=str(BACKTESTER_RUNS), **kwargs)
-
-    def end_headers(self):
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "*")
-        super().end_headers()
-
-    def do_OPTIONS(self):
-        self.send_response(200)
-        self.end_headers()
-
-    def do_GET(self):
-        if self.path == "/" or self.path == "/index.html":
-            runs = find_runs(BACKTESTER_RUNS)
-            runs_json = json.dumps(runs)
-            html = DASHBOARD_HTML.replace("__RUNS_JSON__", runs_json)
-            self.send_response(200)
-            self.send_header("Content-Type", "text/html; charset=utf-8")
-            self.end_headers()
-            self.wfile.write(html.encode())
-        else:
-            super().do_GET()
-
-    def log_message(self, format, *args):
-        pass
-
-
-def main():
-    parser = argparse.ArgumentParser(description="Backtest dashboard")
-    parser.add_argument("--port", type=int, default=DEFAULT_PORT)
-    args = parser.parse_args()
-    BACKTESTER_RUNS.mkdir(parents=True, exist_ok=True)
-
-    def handler_factory(*handler_args, **handler_kwargs):
-        return RunsHandler(*handler_args, port=args.port, **handler_kwargs)
-
-    server = HTTPServer(("localhost", args.port), handler_factory)
-    print(f"Dashboard: http://localhost:{args.port}/")
-    print(f"Serving:   {BACKTESTER_RUNS}/")
-    print()
-    try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        print("\nStopped.")
-
-
-if __name__ == "__main__":
-    main()
+</html>

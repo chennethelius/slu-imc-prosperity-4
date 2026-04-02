@@ -4,7 +4,7 @@
     {
       "label": "Backtest: Run Current Strategy",
       "type": "shell",
-      "command": "./scripts/run_backtest.sh ${file} ${input:datasetDir} --open",
+      "command": "./scripts/run_backtest.sh ${file} ${input:datasetDir}",
       "group": {
         "kind": "build",
         "isDefault": true
@@ -17,9 +17,19 @@
       "problemMatcher": []
     },
     {
-      "label": "Backtest: Run Current Strategy (No Visualizer)",
+      "label": "Analyze: Latest Run",
       "type": "shell",
-      "command": "./scripts/run_backtest.sh ${file} ${input:datasetDir}",
+      "command": "python3 scripts/analyze.py runs/latest",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Visualize: Latest Run (Terminal)",
+      "type": "shell",
+      "command": "python3 scripts/visualize.py runs/latest",
       "presentation": {
         "reveal": "always",
         "panel": "dedicated",
@@ -28,29 +38,31 @@
       "problemMatcher": []
     },
     {
-      "label": "Analyze: Latest Run",
+      "label": "Visualize: Latest Run — PnL Only",
       "type": "shell",
-      "command": "python scripts/analyze.py runs/latest",
+      "command": "python3 scripts/visualize.py runs/latest --pnl",
       "presentation": {
         "reveal": "always",
-        "panel": "shared"
+        "panel": "dedicated",
+        "clear": true
       },
       "problemMatcher": []
     },
     {
-      "label": "Analyze: Export Charts",
+      "label": "Visualize: Latest Run — Single Product",
       "type": "shell",
-      "command": "python scripts/export_charts.py runs/latest",
+      "command": "python3 scripts/visualize.py runs/latest --product ${input:productName}",
       "presentation": {
         "reveal": "always",
-        "panel": "shared"
+        "panel": "dedicated",
+        "clear": true
       },
       "problemMatcher": []
     },
     {
       "label": "Compare: Pick Two Runs",
       "type": "shell",
-      "command": "python scripts/compare.py runs/${input:runA} runs/${input:runB}",
+      "command": "python3 scripts/compare.py runs/${input:runA} runs/${input:runB}",
       "presentation": {
         "reveal": "always",
         "panel": "shared"
@@ -58,56 +70,12 @@
       "problemMatcher": []
     },
     {
-      "label": "Visualizer: Start Dev Server",
+      "label": "Analyze: Export Chart PNGs",
       "type": "shell",
-      "command": "cd visualizer && pnpm dev",
-      "isBackground": true,
+      "command": "python3 scripts/export_charts.py runs/latest",
       "presentation": {
         "reveal": "always",
-        "panel": "dedicated"
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "Server: Serve Runs",
-      "type": "shell",
-      "command": "python scripts/serve_runs.py",
-      "isBackground": true,
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated"
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "Server: Watch Runs (Auto-Reload)",
-      "type": "shell",
-      "command": "python scripts/watch_runs.py",
-      "isBackground": true,
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated"
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "Start All Services",
-      "dependsOn": [
-        "Visualizer: Start Dev Server",
-        "Server: Serve Runs",
-        "Server: Watch Runs (Auto-Reload)"
-      ],
-      "dependsOrder": "parallel",
-      "problemMatcher": []
-    },
-    {
-      "label": "Discord Bot: Start",
-      "type": "shell",
-      "command": "cd discord-bot && python bot.py",
-      "isBackground": true,
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated"
+        "panel": "shared"
       },
       "problemMatcher": []
     }
@@ -118,6 +86,11 @@
       "type": "promptString",
       "description": "Path to dataset directory (e.g., datasets/round1/)",
       "default": "datasets/round1/"
+    },
+    {
+      "id": "productName",
+      "type": "promptString",
+      "description": "Product name (e.g., TOMATOES, EMERALDS)"
     },
     {
       "id": "runA",

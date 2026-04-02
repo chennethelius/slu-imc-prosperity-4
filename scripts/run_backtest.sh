@@ -2,120 +2,97 @@
 set -euo pipefail
 
 # ============================================================================
-# run_backtest.sh — Execute a strategy against a dataset and collect results
+# run_backtest.sh — Run a strategy against a dataset via the Rust backtester
 #
 # Usage:
-#   ./scripts/run_backtest.sh <strategy.py> <dataset_dir> [--open]
+#   ./scripts/run_backtest.sh <strategy.py> [dataset] [extra args...]
 #
 # Examples:
-#   ./scripts/run_backtest.sh strategies/round1/mm.py datasets/round1/
-#   ./scripts/run_backtest.sh strategies/round1/mm.py datasets/round1/ --open
+#   ./scripts/run_backtest.sh strategies/round1/mm.py tutorial
+#   ./scripts/run_backtest.sh strategies/round1/mm.py round1 --persist
+#   ./scripts/run_backtest.sh strategies/round1/mm.py round2 --day=-1
+#   ./scripts/run_backtest.sh strategies/round1/mm.py  # defaults to tutorial
 #
-# The --open flag auto-opens the visualizer with the result.
+# Dataset can be an alias (tutorial, round1, r1, etc.) or a path.
+# Extra args are passed through to rust_backtester.
 # ============================================================================
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-BACKTESTER_DIR="$PROJECT_ROOT/backtester/prosperity_rust_backtester"
+BACKTESTER_DIR="$PROJECT_ROOT/backtester"
 
 # --- Args ---
-STRATEGY="${1:?Usage: run_backtest.sh <strategy.py> <dataset_dir> [--open]}"
-DATASET="${2:?Usage: run_backtest.sh <strategy.py> <dataset_dir> [--open]}"
-OPEN_VIZ="${3:-}"
+STRATEGY="${1:?Usage: run_backtest.sh <strategy.py> [dataset] [extra args...]}"
+DATASET="${2:-tutorial}"
+shift 2 2>/dev/null || shift 1 2>/dev/null || true
+EXTRA_ARGS=("$@")
 
-STRATEGY_NAME="$(basename "$STRATEGY" .py)"
-RUN_ID="$(date +%Y%m%d_%H%M%S)_${STRATEGY_NAME}"
-RUN_DIR="$PROJECT_ROOT/runs/$RUN_ID"
-
-mkdir -p "$RUN_DIR"
-
-# --- Resolve absolute paths ---
+# Resolve strategy to absolute path
 STRATEGY_ABS="$(cd "$(dirname "$STRATEGY")" && pwd)/$(basename "$STRATEGY")"
-DATASET_ABS="$(cd "$DATASET" && pwd)"
+STRATEGY_NAME="$(basename "$STRATEGY" .py)"
 
 echo "============================================"
-echo "  Backtest: $STRATEGY_NAME"
+echo "  Strategy: $STRATEGY_NAME"
 echo "  Dataset:  $DATASET"
-echo "  Run ID:   $RUN_ID"
 echo "============================================"
 echo ""
-
-# --- Check backtester exists ---
-if [ ! -d "$BACKTESTER_DIR" ]; then
-    echo "ERROR: Rust backtester not found at $BACKTESTER_DIR"
-    echo "Run: git submodule update --init --recursive"
-    exit 1
-fi
 
 # --- Run backtester ---
-echo "[1/3] Running backtester..."
-START_TIME=$(date +%s)
-
 cd "$BACKTESTER_DIR"
 
-# Copy strategy to backtester's expected location
-cp "$STRATEGY_ABS" ./trader.py
+# Use the backtester's cargo wrapper for macOS compatibility
+./scripts/cargo_local.sh run -- \
+    --trader "$STRATEGY_ABS" \
+    --dataset "$DATASET" \
+    --persist \
+    "${EXTRA_ARGS[@]}"
 
-# Run the backtester (adjust command based on actual backtester CLI)
-if [ -f "Makefile" ]; then
-    make backtest 2>&1 | tee "$RUN_DIR/backtest.log"
-elif [ -f "Cargo.toml" ]; then
-    cargo run --release -- --trader ./trader.py --data "$DATASET_ABS" 2>&1 | tee "$RUN_DIR/backtest.log"
-else
-    python -m backtester ./trader.py "$DATASET_ABS" 2>&1 | tee "$RUN_DIR/backtest.log"
+# Find the latest run directory the backtester created
+LATEST_RUN="$(ls -td runs/backtest-* 2>/dev/null | head -1)"
+
+if [ -z "$LATEST_RUN" ]; then
+    echo "Warning: No run output found in backtester/runs/"
+    exit 0
 fi
 
-END_TIME=$(date +%s)
-ELAPSED=$((END_TIME - START_TIME))
+# Copy/link to project-level runs/ for easy access
+RUN_ID="$(date +%Y%m%d_%H%M%S)_${STRATEGY_NAME}"
+PROJECT_RUN_DIR="$PROJECT_ROOT/runs/$RUN_ID"
+cp -r "$LATEST_RUN" "$PROJECT_RUN_DIR"
 
-cd "$PROJECT_ROOT"
+# Symlink latest
+ln -sfn "$PROJECT_RUN_DIR" "$PROJECT_ROOT/runs/latest"
 
-# --- Collect outputs ---
-echo ""
-echo "[2/3] Collecting outputs..."
-
-# Move any generated output files to the run directory
-for f in submission.log metrics.json pnl_by_product.csv trades.csv activity.csv; do
-    if [ -f "$BACKTESTER_DIR/$f" ]; then
-        cp "$BACKTESTER_DIR/$f" "$RUN_DIR/"
-    fi
-done
-
-# Also check for outputs in common alternative locations
-for f in output/*.log output/*.csv output/*.json results/*.log results/*.csv results/*.json; do
-    if [ -f "$BACKTESTER_DIR/$f" ]; then
-        cp "$BACKTESTER_DIR/$f" "$RUN_DIR/"
-    fi
-done
-
-# Clean up copied strategy
-rm -f "$BACKTESTER_DIR/trader.py"
-
-# --- Generate analysis ---
-echo "[3/3] Generating analysis..."
-python "$SCRIPT_DIR/analyze.py" "$RUN_DIR" > "$RUN_DIR/summary.txt" 2>&1 || true
-
-# --- Symlink latest ---
-ln -sfn "$RUN_DIR" "$PROJECT_ROOT/runs/latest"
-
-# --- Report ---
 echo ""
 echo "============================================"
-echo "  COMPLETE in ${ELAPSED}s"
 echo "  Output:  runs/$RUN_ID/"
-echo "  Latest:  runs/latest -> $RUN_ID"
+echo "  Latest:  runs/latest"
 echo "============================================"
-echo ""
 
-if [ -f "$RUN_DIR/summary.txt" ]; then
-    cat "$RUN_DIR/summary.txt"
+# --- Generate analysis if available ---
+if [ -f "$SCRIPT_DIR/analyze.py" ] && [ -f "$PROJECT_RUN_DIR/metrics.json" ]; then
+    echo ""
+    python3 "$SCRIPT_DIR/analyze.py" "$PROJECT_RUN_DIR" 2>/dev/null || true
 fi
 
-# --- Auto-open visualizer ---
-if [ "$OPEN_VIZ" = "--open" ]; then
-    SERVE_PORT=8080
-    VIZ_PORT=5173
+# --- Auto-open visualizer if serve_runs is running ---
+SERVE_PORT=8080
+if curl -s -o /dev/null -w "" "http://localhost:$SERVE_PORT/" 2>/dev/null; then
+    # Find all per-day runs with submission.log (skip bundles)
+    cd "$BACKTESTER_DIR"
+    for RUN in $(ls -td runs/backtest-* 2>/dev/null); do
+        if [ -f "$RUN/submission.log" ] && [ -f "$RUN/metrics.json" ]; then
+            LOG_URL="http://localhost:${SERVE_PORT}/$(basename "$RUN")/submission.log"
+            VIZ_URL="http://localhost:5173/?open=$(python3 -c "from urllib.parse import quote; print(quote('$LOG_URL', safe=''))")"
+            echo ""
+            echo "  Visualize: $VIZ_URL"
+            # Open the first (most recent) one
+            open "$VIZ_URL" 2>/dev/null || true
+            break
+        fi
+    done
+else
     echo ""
-    echo "Opening visualizer..."
-    open "http://localhost:${VIZ_PORT}/?open=http://localhost:${SERVE_PORT}/${RUN_ID}/submission.log"
+    echo "  Tip: Run 'python scripts/serve_runs.py' for auto-visualization"
+    echo "  Dashboard: http://localhost:$SERVE_PORT/"
 fi
