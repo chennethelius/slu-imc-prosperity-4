@@ -2,58 +2,61 @@
 
 ## What This Is
 
-Automated development workflow for the IMC Prosperity 4 algorithmic trading challenge.
-Strategies go in `strategies/`, get backtested via the Rust backtester, and results are
-visualized locally or read directly by Claude for analysis.
+Team workspace for IMC Prosperity 4 algorithmic trading.
+Write strategies in `strategies/`, backtest locally, push to share results on the team dashboard.
 
-## Project Layout
+**Team Dashboard**: https://chennethelius.github.io/slu-imc-prosperity-4/
+
+## Workflow
 
 ```
-strategies/         Python Trader class files (one per strategy)
-  round1-5/         Organized by round
-  lib/              Shared utility code (copied into strategy at submission)
-backtester/         Git submodule: GeyzsoN/prosperity_rust_backtester
-  datasets/         Round data goes here (prices/trades CSVs, submission logs)
-  runs/             Backtester output (metrics, logs, artifacts)
-visualizer/         Git submodule: kevin-fu1/imc-prosperity-4-visualizer
-runs/               Symlinked/copied backtest outputs for easy access
-scripts/            Pipeline tooling (backtest, analyze, compare, visualize)
-discord-bot/        Discord scraper for community intel
-notebooks/          Jupyter notebooks for data exploration
+ 1. cp strategies/template.py strategies/round1/my_strat.py
+ 2. Edit strategy (Claude helps here)
+ 3. cd backtester && make tutorial TRADER=../strategies/round1/my_strat.py
+ 4. Iterate: tweak → re-run → check PnL
+ 5. git add && git commit && git push
+ 6. CI runs backtest automatically, results appear on dashboard
+```
+
+## Strategy Folders
+
+The folder name determines which dataset CI runs the strategy against:
+
+```
+strategies/
+  template.py        ← starting point
+  tutorial/*.py      ← tutorial data (EMERALDS, TOMATOES)
+  round1/*.py        ← round1 data
+  round2/*.py        ← round2 data
+  ...
 ```
 
 ## Quick Commands
 
 ```bash
-# Run a backtest (wraps the Rust backtester CLI)
-./scripts/run_backtest.sh strategies/round1/my_strategy.py tutorial
-./scripts/run_backtest.sh strategies/round1/my_strategy.py round1
-./scripts/run_backtest.sh strategies/round1/my_strategy.py round1 --day=-1
+# Backtest locally
+cd backtester && make tutorial TRADER=../strategies/tutorial/my_strat.py
+cd backtester && make round1 TRADER=../strategies/round1/my_strat.py
+cd backtester && make round1 TRADER=../strategies/round1/my_strat.py DAY=-1
 
-# Or use the backtester directly (auto-picks trader + dataset)
-cd backtester && make backtest
-cd backtester && make tutorial
-cd backtester && make round1 TRADER=../strategies/round1/my_strategy.py
+# Analyze a run
+python scripts/analyze.py backtester/runs/<run_id>/
+
+# Local dashboard with charts
+python scripts/serve_runs.py    # http://localhost:8080
 
 # Compare two runs
 python scripts/compare.py runs/<run_a> runs/<run_b>
-
-# Start visualizer (keep running in background)
-cd visualizer && pnpm dev
-
-# Analyze a run (prints summary Claude can read)
-python scripts/analyze.py runs/<run_id>
 ```
 
-### Dataset Setup
+## Dataset Setup
 
 Round data goes in `backtester/datasets/roundN/` as CSV pairs:
 - `prices_round_N_day_D.csv` — order book snapshots
 - `trades_round_N_day_D.csv` — executed trades
 
-Download these from the IMC Prosperity portal after each round opens.
-The backtester also accepts `submission.log` files from the portal.
-Tutorial data (EMERALDS + TOMATOES) is bundled in `backtester/datasets/tutorial/`.
+Download from the IMC Prosperity portal after each round opens.
+Tutorial data (EMERALDS + TOMATOES) is already bundled.
 
 ---
 
