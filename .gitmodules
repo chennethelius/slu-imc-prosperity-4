@@ -1,6 +1,8 @@
 [submodule "visualizer"]
 	path = visualizer
 	url = https://github.com/kevin-fu1/imc-prosperity-4-visualizer.git
+	ignore = dirty
 [submodule "backtester"]
 	path = backtester
 	url = https://github.com/GeyzsoN/prosperity_rust_backtester.git
+	ignore = dirty
