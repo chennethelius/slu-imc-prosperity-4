@@ -4,9 +4,6 @@ import json
 
 class Trader:
 
-    TOMATOES_POSITION_LIMIT = 80
-    TOMATOES_SPREAD = 2
-
     EMERALDS_FAIR_VALUE = 10000
     EMERALDS_POSITION_LIMIT = 80
     EMERALDS_SPREAD = 2
@@ -19,28 +16,7 @@ class Trader:
             order_depth: OrderDepth = state.order_depths[product]
             orders: List[Order] = []
 
-            if product == "TOMATOES":
-                if not order_depth.buy_orders or not order_depth.sell_orders:
-                    result[product] = orders
-                    continue
-
-                best_bid = max(order_depth.buy_orders.keys())
-                best_ask = min(order_depth.sell_orders.keys())
-                mid_price = (best_bid + best_ask) / 2
-
-                bid_price = int(round(mid_price - self.TOMATOES_SPREAD))
-                ask_price = int(round(mid_price + self.TOMATOES_SPREAD))
-
-                position = state.position.get(product, 0)
-                buy_capacity = self.TOMATOES_POSITION_LIMIT - position
-                sell_capacity = self.TOMATOES_POSITION_LIMIT + position
-
-                if buy_capacity > 0:
-                    orders.append(Order(product, bid_price, buy_capacity))
-                if sell_capacity > 0:
-                    orders.append(Order(product, ask_price, -sell_capacity))
-
-            elif product == "EMERALDS":
+            if product == "EMERALDS":
                 position = state.position.get(product, 0)
                 limit = self.EMERALDS_POSITION_LIMIT
 
