@@ -42,7 +42,27 @@ def main():
             continue
         strat_name = strategy_path.stem
 
-        for ds in datasets:
+        # Match strategy to its round's dataset
+        # strategies/round1/foo.py → only run against round1
+        # strategies/round0/foo.py or strategies/tutorial/foo.py → tutorial
+        # strategies/foo.py (no round folder) → all available datasets
+        parent = strategy_path.parent.name
+        if parent.startswith("round"):
+            round_num = parent.replace("round", "")
+            if round_num == "0":
+                target_datasets = [d for d in datasets if "tutorial" in d]
+            else:
+                target_datasets = [d for d in datasets if d == parent]
+        elif parent == "tutorial":
+            target_datasets = [d for d in datasets if "tutorial" in d]
+        else:
+            target_datasets = datasets
+
+        if not target_datasets:
+            print(f"No matching dataset for {strategy_rel} (round={parent}), skipping")
+            continue
+
+        for ds in target_datasets:
             print(f"=== {strat_name} vs {ds} ===")
 
             # Clean previous runs
