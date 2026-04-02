@@ -117,6 +117,9 @@ def main():
                     if src.exists():
                         shutil.copy2(src, sub_dir / fname)
 
+                # Save strategy source code with the result
+                shutil.copy2(strategy_path, sub_dir / "strategy.py")
+
                 manifest.append({
                     "id": sub_id,
                     "author": author,

@@ -62,6 +62,9 @@
   .trades-box table { font-size: 12px; }
   .trades-box th { position: static; background: transparent; }
   .trades-box td { padding: 4px 8px; border-bottom: 1px solid #161b22; }
+  .code-box { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 14px; margin-bottom: 16px; }
+  .code-box h3 { color: #8b949e; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+  .code-box pre { color: #c9d1d9; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; line-height: 1.5; overflow-x: auto; white-space: pre; max-height: 400px; overflow-y: auto; }
   .buy { color: #3fb950; }
   .sell { color: #f85149; }
 
@@ -180,9 +183,10 @@ async function toggleRun(run, index) {
   (runCharts[index] || []).forEach(c => c.destroy());
   runCharts[index] = [];
 
-  const [pnlData, tradesData] = await Promise.all([
+  const [pnlData, tradesData, strategyCode] = await Promise.all([
     fetchCsv(`${BASE}/${run.id}/pnl_by_product.csv`),
     fetchCsv(`${BASE}/${run.id}/trades.csv`),
+    fetchText(`${BASE}/${run.id}/strategy.py`),
   ]);
 
   content.innerHTML = '';
@@ -255,6 +259,15 @@ async function toggleRun(run, index) {
       }).join('')}</tbody></table>`;
     content.appendChild(box);
   }
+
+  // Strategy source code
+  if (strategyCode) {
+    const box = document.createElement('div');
+    box.className = 'code-box';
+    const escaped = strategyCode.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    box.innerHTML = `<h3>Strategy: ${run.strategy}.py</h3><pre>${escaped}</pre>`;
+    content.appendChild(box);
+  }
 }
 
 function mkChart(title, wide) {
@@ -279,6 +292,14 @@ function downsample(data, max) {
   const step = Math.floor(data.length / max);
   return data.filter((_, i) => i % step === 0 || i === data.length - 1);
 }
+async function fetchText(url) {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    return await res.text();
+  } catch { return null; }
+}
+
 async function fetchCsv(url) {
   try {
     const res = await fetch(url);
