@@ -2,122 +2,122 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Prosperity Team Dashboard</title>
+<title>Prosperity Terminal</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap');
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: -apple-system, system-ui, sans-serif; background: #0d1117; color: #c9d1d9; }
+  body { font-family: 'JetBrains Mono', monospace; background: #0a0e14; color: #b3b1ad; font-size: 13px; }
 
-  /* Top bar */
-  .topbar { background: #161b22; border-bottom: 1px solid #21262d; padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
-  .topbar h1 { color: #58a6ff; font-size: 20px; }
-  .topbar-right { display: flex; gap: 12px; align-items: center; }
+  /* Terminal top bar */
+  .topbar { background: #0d1117; border-bottom: 1px solid #1a1f29; padding: 10px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+  .topbar-left { display: flex; align-items: center; gap: 16px; }
+  .topbar-left h1 { color: #e6b450; font-size: 14px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  .topbar-left .dot { width: 6px; height: 6px; border-radius: 50%; background: #3fb950; display: inline-block; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .topbar-right { display: flex; gap: 10px; align-items: center; }
+  .search { background: #0a0e14; border: 1px solid #1a1f29; border-radius: 3px; padding: 5px 10px; color: #b3b1ad; font-family: inherit; font-size: 12px; width: 200px; outline: none; }
+  .search:focus { border-color: #e6b450; }
+  .search::placeholder { color: #444b58; }
+  .count { color: #444b58; font-size: 11px; }
 
-  /* Search */
-  .search { background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 6px 12px; color: #c9d1d9; font-size: 13px; width: 220px; outline: none; }
-  .search:focus { border-color: #58a6ff; }
-  .search::placeholder { color: #484f58; }
+  /* Filter bar */
+  .filters { display: flex; gap: 6px; padding: 8px 24px; border-bottom: 1px solid #1a1f29; background: #0d1117; flex-wrap: wrap; }
+  .pill { background: transparent; border: 1px solid #1a1f29; border-radius: 3px; padding: 3px 10px; font-size: 11px; color: #444b58; cursor: pointer; font-family: inherit; }
+  .pill:hover { border-color: #444b58; color: #b3b1ad; }
+  .pill.active { border-color: #e6b450; color: #e6b450; }
 
-  /* Filter pills */
-  .filters { display: flex; gap: 6px; flex-wrap: wrap; padding: 12px 32px 0; }
-  .pill { background: #21262d; border: 1px solid #30363d; border-radius: 20px; padding: 4px 14px; font-size: 12px; color: #8b949e; cursor: pointer; transition: all 0.15s; }
-  .pill:hover { border-color: #58a6ff; color: #c9d1d9; }
-  .pill.active { background: #1f6feb33; border-color: #58a6ff; color: #58a6ff; }
+  /* Summary strip */
+  .summary { display: flex; gap: 24px; padding: 12px 24px; border-bottom: 1px solid #1a1f29; background: #0d1117; }
+  .summary-item { display: flex; gap: 6px; align-items: baseline; }
+  .summary-item .label { color: #444b58; font-size: 10px; text-transform: uppercase; }
+  .summary-item .value { font-size: 14px; font-weight: 700; }
 
-  /* Summary cards */
-  .summary { display: flex; gap: 16px; padding: 16px 32px; flex-wrap: wrap; }
-  .summary-card { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 14px 20px; min-width: 160px; }
-  .summary-card .label { font-size: 11px; color: #484f58; text-transform: uppercase; letter-spacing: 0.5px; }
-  .summary-card .value { font-size: 22px; font-weight: 700; font-family: monospace; margin-top: 2px; }
+  /* Content */
+  .content { padding: 16px 24px; }
 
-  /* Main content */
-  .content { padding: 0 32px 32px; }
+  /* Strategy cards (grouped) */
+  .strat-card { border: 1px solid #1a1f29; border-radius: 4px; margin-bottom: 8px; background: #0d1117; overflow: hidden; }
+  .strat-card.expanded { border-color: #1a1f29; }
+  .strat-header { display: grid; grid-template-columns: 30px 1fr 120px 100px 80px 140px; align-items: center; padding: 12px 16px; cursor: pointer; transition: background 0.1s; gap: 12px; }
+  .strat-header:hover { background: #111820; }
+  .strat-rank { font-size: 11px; color: #444b58; text-align: center; }
+  .strat-rank.r1 { color: #e6b450; font-weight: 700; }
+  .strat-rank.r2 { color: #c0c0c0; font-weight: 600; }
+  .strat-rank.r3 { color: #cd7f32; font-weight: 600; }
+  .strat-info { display: flex; flex-direction: column; gap: 2px; }
+  .strat-name { color: #e6b450; font-weight: 700; font-size: 14px; }
+  .strat-meta { color: #444b58; font-size: 11px; }
+  .strat-meta .author { color: #59c2ff; }
+  .strat-pnl { text-align: right; font-weight: 700; font-size: 16px; }
+  .strat-trades { text-align: right; color: #444b58; font-size: 12px; }
+  .strat-time { text-align: right; color: #444b58; font-size: 11px; }
 
-  /* Table */
-  table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 12px; }
-  thead th { text-align: left; padding: 8px 12px; border-bottom: 2px solid #21262d; color: #484f58; font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; cursor: pointer; user-select: none; position: sticky; top: 56px; background: #0d1117; z-index: 5; }
-  thead th:hover { color: #8b949e; }
-  thead th .sort-arrow { margin-left: 4px; font-size: 9px; }
-  .run-row { cursor: pointer; transition: background 0.1s; }
-  .run-row:hover { background: #161b22; }
-  .run-row.active { background: #161b22; }
-  .run-row td { padding: 10px 12px; border-bottom: 1px solid #21262d; }
-  .run-row.hidden { display: none; }
-  .expand-indicator { color: #484f58; font-size: 10px; width: 20px; transition: transform 0.2s; display: inline-block; }
-  .run-row.active .expand-indicator { transform: rotate(90deg); }
+  /* Day breakdown in header */
+  .strat-days { display: flex; gap: 8px; }
+  .day-chip { background: #111820; border: 1px solid #1a1f29; border-radius: 3px; padding: 2px 8px; font-size: 10px; }
+  .day-chip .day-label { color: #444b58; }
+  .day-chip .day-pnl { margin-left: 4px; font-weight: 600; }
 
-  .cell-rank { color: #484f58; font-size: 12px; width: 30px; }
-  .cell-rank.top1 { color: #f0883e; font-weight: 700; }
-  .cell-rank.top3 { color: #d2a8ff; font-weight: 600; }
-  .cell-author { font-weight: 600; }
-  .cell-strategy { color: #d2a8ff; font-family: monospace; }
-  .cell-dataset { color: #8b949e; }
-  .cell-pnl { font-family: monospace; font-weight: 700; font-size: 14px; }
-  .cell-products { font-family: monospace; font-size: 11px; }
-  .cell-time { color: #8b949e; font-size: 12px; white-space: nowrap; }
-  .cell-trades { color: #8b949e; font-family: monospace; }
-  .cell-commit { font-family: monospace; font-size: 11px; color: #8b949e; }
-  .pos { color: #3fb950; }
-  .neg { color: #f85149; }
+  /* Expanded detail */
+  .strat-detail { display: none; border-top: 1px solid #1a1f29; padding: 16px; background: #0a0e14; }
+  .strat-card.expanded .strat-detail { display: block; }
 
-  .author-0 { color: #58a6ff; }
-  .author-1 { color: #3fb950; }
-  .author-2 { color: #f0883e; }
-  .author-3 { color: #bc8cff; }
-  .author-4 { color: #f85149; }
-  .author-5 { color: #79c0ff; }
+  /* Day tabs */
+  .day-tabs { display: flex; gap: 0; margin-bottom: 16px; border-bottom: 1px solid #1a1f29; }
+  .day-tab { padding: 8px 16px; font-size: 12px; color: #444b58; cursor: pointer; border-bottom: 2px solid transparent; font-family: inherit; background: transparent; border-top: none; border-left: none; border-right: none; }
+  .day-tab:hover { color: #b3b1ad; }
+  .day-tab.active { color: #e6b450; border-bottom-color: #e6b450; }
 
-  /* Detail */
-  .detail-row td { padding: 0; border-bottom: 1px solid #21262d; background: #0d1117; }
-  .detail-row.hidden td { display: none; }
-  .detail-content { padding: 16px 12px 20px 32px; display: none; }
-  .detail-row.open .detail-content { display: block; }
+  .day-panel { display: none; }
+  .day-panel.active { display: block; }
 
-  .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
-  .chart-box { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 14px; }
+  .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+  .chart-box { background: #0d1117; border: 1px solid #1a1f29; border-radius: 4px; padding: 12px; }
   .chart-box.wide { grid-column: 1 / -1; }
-  .chart-box h3 { color: #8b949e; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+  .chart-box h3 { color: #444b58; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; font-family: inherit; }
 
-  .stats { display: flex; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
-  .stat { background: #161b22; border: 1px solid #21262d; border-radius: 6px; padding: 8px 14px; }
-  .stat-label { font-size: 10px; color: #484f58; text-transform: uppercase; letter-spacing: 0.5px; }
-  .stat-value { font-size: 16px; font-weight: 700; font-family: monospace; margin-top: 1px; }
+  .stats { display: flex; gap: 16px; margin-bottom: 12px; flex-wrap: wrap; }
+  .stat { }
+  .stat-label { font-size: 10px; color: #444b58; text-transform: uppercase; }
+  .stat-value { font-size: 14px; font-weight: 700; }
 
-  .trades-box { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 14px; max-height: 300px; overflow-y: auto; margin-bottom: 16px; }
-  .trades-box h3 { color: #8b949e; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
-  .trades-box table { font-size: 12px; }
-  .trades-box th { position: static; background: transparent; cursor: default; }
-  .trades-box td { padding: 4px 8px; border-bottom: 1px solid #161b22; }
+  .trades-box { background: #0d1117; border: 1px solid #1a1f29; border-radius: 4px; padding: 12px; max-height: 250px; overflow-y: auto; margin-bottom: 16px; }
+  .trades-box h3 { color: #444b58; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .trades-box table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .trades-box th { text-align: left; padding: 4px 8px; color: #444b58; border-bottom: 1px solid #1a1f29; font-weight: 500; }
+  .trades-box td { padding: 3px 8px; border-bottom: 1px solid #0d1117; }
 
-  .code-box { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 14px; }
-  .code-box h3 { color: #8b949e; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-  .code-box pre { color: #c9d1d9; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; line-height: 1.5; overflow-x: auto; white-space: pre; max-height: 400px; overflow-y: auto; }
-  .copy-btn { background: #21262d; border: 1px solid #30363d; border-radius: 4px; color: #8b949e; font-size: 11px; padding: 2px 8px; cursor: pointer; }
-  .copy-btn:hover { color: #c9d1d9; border-color: #484f58; }
+  .code-box { background: #0d1117; border: 1px solid #1a1f29; border-radius: 4px; padding: 12px; }
+  .code-box h3 { color: #444b58; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .code-box pre { color: #b3b1ad; font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.6; overflow-x: auto; white-space: pre; max-height: 400px; overflow-y: auto; }
+  .copy-btn { background: #1a1f29; border: 1px solid #2a303a; border-radius: 3px; color: #444b58; font-size: 10px; padding: 2px 8px; cursor: pointer; font-family: inherit; }
+  .copy-btn:hover { color: #b3b1ad; }
 
-  .buy { color: #3fb950; }
-  .sell { color: #f85149; }
-  .empty { color: #484f58; text-align: center; padding: 60px; }
-
-  /* No results message */
-  .no-results { color: #484f58; text-align: center; padding: 40px; font-size: 13px; display: none; }
+  .pos { color: #91e05e; }
+  .neg { color: #f07178; }
+  .buy { color: #91e05e; }
+  .sell { color: #f07178; }
+  .empty { color: #444b58; text-align: center; padding: 60px; }
+  .no-results { color: #444b58; text-align: center; padding: 40px; display: none; }
 
   @media (max-width: 900px) {
-    .topbar { padding: 12px 16px; }
-    .filters, .summary, .content { padding-left: 16px; padding-right: 16px; }
-    .search { width: 160px; }
+    .strat-header { grid-template-columns: 30px 1fr 100px 80px; }
+    .strat-days, .strat-time { display: none; }
     .charts { grid-template-columns: 1fr; }
-    .cell-products, .cell-commit { display: none; }
   }
 </style>
 </head>
 <body>
 
 <div class="topbar">
-  <h1>Prosperity Dashboard</h1>
+  <div class="topbar-left">
+    <span class="dot"></span>
+    <h1>Prosperity Terminal</h1>
+  </div>
   <div class="topbar-right">
-    <span class="count" id="run-count" style="color:#484f58;font-size:13px"></span>
-    <input class="search" id="search" type="text" placeholder="Search strategy, author...">
+    <span class="count" id="run-count"></span>
+    <input class="search" id="search" type="text" placeholder="filter...">
   </div>
 </div>
 
@@ -126,41 +126,19 @@
 
 <div class="content">
   <div class="no-results" id="no-results">No matching submissions.</div>
-  <table>
-    <thead>
-      <tr>
-        <th data-sort="rank"># <span class="sort-arrow"></span></th>
-        <th data-sort="author">Author <span class="sort-arrow"></span></th>
-        <th data-sort="strategy">Strategy <span class="sort-arrow"></span></th>
-        <th data-sort="dataset">Dataset <span class="sort-arrow"></span></th>
-        <th data-sort="day">Day <span class="sort-arrow"></span></th>
-        <th data-sort="pnl">PnL <span class="sort-arrow"></span></th>
-        <th>Products</th>
-        <th data-sort="trades">Trades <span class="sort-arrow"></span></th>
-        <th data-sort="commit">Commit <span class="sort-arrow"></span></th>
-        <th data-sort="timestamp">Time <span class="sort-arrow"></span></th>
-      </tr>
-    </thead>
-    <tbody id="tbody"></tbody>
-  </table>
+  <div id="cards"></div>
 </div>
 
 <script>
 const BASE = './runs';
 let RUNS = [];
-let filtered = [];
-const authorColors = {};
-let authorCount = 0;
-const runCharts = {};
-let currentSort = { key: 'pnl', desc: true };
-let activeFilters = { author: null, strategy: null, dataset: null };
+let groups = [];
+let filteredGroups = [];
+const allCharts = {};
+let activeFilters = { author: null, strategy: null };
 
-function pnlClass(v) { return v >= 0 ? 'pos' : 'neg'; }
-function fmtPnl(v) { return (v >= 0 ? '+' : '') + v.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
-function getAuthorClass(a) {
-  if (!(a in authorColors)) authorColors[a] = `author-${authorCount++ % 6}`;
-  return authorColors[a];
-}
+function pc(v) { return v >= 0 ? 'pos' : 'neg'; }
+function fp(v) { return (v >= 0 ? '+' : '') + v.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1}); }
 
 async function init() {
   try {
@@ -168,267 +146,239 @@ async function init() {
     if (!res.ok) throw new Error();
     RUNS = await res.json();
   } catch {
-    document.getElementById('tbody').innerHTML = '<tr><td colspan="10" class="empty">No submissions yet. Push a strategy to get started!</td></tr>';
+    document.getElementById('cards').innerHTML = '<div class="empty">No submissions yet. Push a strategy to get started.</div>';
     return;
   }
 
-  // Build filter pills
-  const authors = [...new Set(RUNS.map(r => r.author))];
-  const strategies = [...new Set(RUNS.map(r => r.strategy))];
-  const datasets = [...new Set(RUNS.map(r => r.dataset))];
-  const filtersDiv = document.getElementById('filters');
-
-  const addPills = (label, values, filterKey) => {
-    values.forEach(v => {
-      const pill = document.createElement('span');
-      pill.className = 'pill';
-      pill.dataset.key = filterKey;
-      pill.dataset.value = v;
-      pill.textContent = v;
-      pill.onclick = () => toggleFilter(filterKey, v, pill);
-      filtersDiv.appendChild(pill);
-    });
-  };
-  if (authors.length > 1) addPills('Author', authors, 'author');
-  if (strategies.length > 1) addPills('Strategy', strategies, 'strategy');
-  if (datasets.length > 1) addPills('Dataset', datasets, 'dataset');
-
-  // Search
-  document.getElementById('search').addEventListener('input', e => { applyFilters(); });
-
-  // Sort headers
-  document.querySelectorAll('th[data-sort]').forEach(th => {
-    th.addEventListener('click', () => {
-      const key = th.dataset.sort;
-      if (currentSort.key === key) currentSort.desc = !currentSort.desc;
-      else { currentSort.key = key; currentSort.desc = key === 'pnl' || key === 'trades'; }
-      render();
-    });
-  });
-
-  applyFilters();
-}
-
-function toggleFilter(key, value, pill) {
-  if (activeFilters[key] === value) {
-    activeFilters[key] = null;
-    pill.classList.remove('active');
-  } else {
-    document.querySelectorAll(`.pill[data-key="${key}"]`).forEach(p => p.classList.remove('active'));
-    activeFilters[key] = value;
-    pill.classList.add('active');
+  // Group by (author, strategy, commit)
+  const gmap = {};
+  for (const r of RUNS) {
+    const key = `${r.author}|${r.strategy}|${r.commit}`;
+    if (!gmap[key]) gmap[key] = { author: r.author, strategy: r.strategy, commit: r.commit, timestamp: r.timestamp, runs: [] };
+    gmap[key].runs.push(r);
   }
+  groups = Object.values(gmap);
+
+  // For each group, compute totals
+  for (const g of groups) {
+    const sub = g.runs.find(r => String(r.dataset).includes('submission'));
+    g.submission_pnl = sub ? sub.pnl : null;
+    g.total_pnl = g.runs.reduce((s, r) => s + (r.pnl || 0), 0);
+    g.total_trades = g.runs.reduce((s, r) => s + (r.trades || 0), 0);
+    // Merge products
+    g.pnl_by_product = {};
+    for (const r of g.runs) {
+      if (r.dataset && String(r.dataset).includes('submission')) {
+        g.pnl_by_product = r.pnl_by_product || {};
+      }
+    }
+  }
+
+  // Filters
+  const authors = [...new Set(groups.map(g => g.author))];
+  const strategies = [...new Set(groups.map(g => g.strategy))];
+  const fd = document.getElementById('filters');
+  const addPills = (vals, key) => vals.forEach(v => {
+    const p = document.createElement('span');
+    p.className = 'pill';
+    p.textContent = v;
+    p.onclick = () => {
+      if (activeFilters[key] === v) { activeFilters[key] = null; p.classList.remove('active'); }
+      else { fd.querySelectorAll('.pill').forEach(x => { if (x.textContent === activeFilters[key]) x.classList.remove('active'); }); activeFilters[key] = v; p.classList.add('active'); }
+      applyFilters();
+    };
+    fd.appendChild(p);
+  });
+  if (authors.length > 1) addPills(authors, 'author');
+  if (strategies.length > 1) addPills(strategies, 'strategy');
+
+  document.getElementById('search').addEventListener('input', applyFilters);
   applyFilters();
 }
 
 function applyFilters() {
   const q = document.getElementById('search').value.toLowerCase().trim();
-  filtered = RUNS.filter(r => {
-    if (activeFilters.author && r.author !== activeFilters.author) return false;
-    if (activeFilters.strategy && r.strategy !== activeFilters.strategy) return false;
-    if (activeFilters.dataset && r.dataset !== activeFilters.dataset) return false;
-    if (q && !(
-      (r.author || '').toLowerCase().includes(q) ||
-      (r.strategy || '').toLowerCase().includes(q) ||
-      (r.dataset || '').toLowerCase().includes(q) ||
-      (r.commit || '').toLowerCase().includes(q)
-    )) return false;
+  filteredGroups = groups.filter(g => {
+    if (activeFilters.author && g.author !== activeFilters.author) return false;
+    if (activeFilters.strategy && g.strategy !== activeFilters.strategy) return false;
+    if (q && !(g.author.toLowerCase().includes(q) || g.strategy.toLowerCase().includes(q) || (g.commit||'').toLowerCase().includes(q))) return false;
     return true;
   });
+  // Sort by submission PnL desc
+  filteredGroups.sort((a, b) => (b.submission_pnl || b.total_pnl) - (a.submission_pnl || a.total_pnl));
   render();
 }
 
 function render() {
-  // Sort
-  const key = currentSort.key;
-  const dir = currentSort.desc ? -1 : 1;
-  filtered.sort((a, b) => {
-    let av = a[key], bv = b[key];
-    if (key === 'pnl' || key === 'trades' || key === 'day' || key === 'rank') {
-      av = Number(av) || 0; bv = Number(bv) || 0;
-    } else {
-      av = String(av || '').toLowerCase(); bv = String(bv || '').toLowerCase();
-    }
-    return av < bv ? dir : av > bv ? -dir : 0;
-  });
-
-  // Update sort arrows
-  document.querySelectorAll('th[data-sort]').forEach(th => {
-    const arrow = th.querySelector('.sort-arrow');
-    if (th.dataset.sort === currentSort.key) {
-      arrow.textContent = currentSort.desc ? '\u25BC' : '\u25B2';
-    } else {
-      arrow.textContent = '';
-    }
-  });
-
-  // Summary cards
-  const summaryDiv = document.getElementById('summary');
-  if (filtered.length > 0) {
-    const bestPnl = Math.max(...filtered.map(r => r.pnl || 0));
-    const avgPnl = filtered.reduce((s, r) => s + (r.pnl || 0), 0) / filtered.length;
-    const totalTrades = filtered.reduce((s, r) => s + (r.trades || 0), 0);
-    const uniqueAuthors = new Set(filtered.map(r => r.author)).size;
-    summaryDiv.innerHTML = `
-      <div class="summary-card"><div class="label">Best PnL</div><div class="value pos">${fmtPnl(bestPnl)}</div></div>
-      <div class="summary-card"><div class="label">Avg PnL</div><div class="value ${pnlClass(avgPnl)}">${fmtPnl(avgPnl)}</div></div>
-      <div class="summary-card"><div class="label">Total Trades</div><div class="value">${totalTrades.toLocaleString()}</div></div>
-      <div class="summary-card"><div class="label">Authors</div><div class="value">${uniqueAuthors}</div></div>
+  // Summary
+  const sd = document.getElementById('summary');
+  if (filteredGroups.length > 0) {
+    const bestSub = Math.max(...filteredGroups.map(g => g.submission_pnl || 0));
+    const avgSub = filteredGroups.filter(g => g.submission_pnl != null).reduce((s, g) => s + g.submission_pnl, 0) / (filteredGroups.filter(g => g.submission_pnl != null).length || 1);
+    const uAuthors = new Set(filteredGroups.map(g => g.author)).size;
+    sd.innerHTML = `
+      <div class="summary-item"><span class="label">Best Sub</span><span class="value pos">${fp(bestSub)}</span></div>
+      <div class="summary-item"><span class="label">Avg Sub</span><span class="value ${pc(avgSub)}">${fp(avgSub)}</span></div>
+      <div class="summary-item"><span class="label">Strategies</span><span class="value">${filteredGroups.length}</span></div>
+      <div class="summary-item"><span class="label">Authors</span><span class="value">${uAuthors}</span></div>
     `;
-  } else {
-    summaryDiv.innerHTML = '';
-  }
+  } else { sd.innerHTML = ''; }
 
-  // Count
-  document.getElementById('run-count').textContent = `${filtered.length} of ${RUNS.length}`;
-  document.getElementById('no-results').style.display = filtered.length === 0 ? 'block' : 'none';
+  document.getElementById('run-count').textContent = `${filteredGroups.length} strategies`;
+  document.getElementById('no-results').style.display = filteredGroups.length === 0 ? 'block' : 'none';
 
-  // Table
-  const tbody = document.getElementById('tbody');
-  tbody.innerHTML = '';
+  // Cards
+  const cd = document.getElementById('cards');
+  // Destroy old charts
+  Object.values(allCharts).flat().forEach(c => c.destroy());
+  for (const k in allCharts) delete allCharts[k];
+  cd.innerHTML = '';
 
-  filtered.forEach((run, i) => {
-    const rank = i + 1;
-    const tr = document.createElement('tr');
-    tr.className = 'run-row';
-    tr.dataset.index = i;
+  filteredGroups.forEach((g, gi) => {
+    const rank = gi + 1;
+    const rc = rank === 1 ? 'r1' : rank === 2 ? 'r2' : rank === 3 ? 'r3' : '';
+    const pnl = g.submission_pnl != null ? g.submission_pnl : g.total_pnl;
+    const time = g.timestamp ? new Date(g.timestamp).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
 
-    const prods = Object.entries(run.pnl_by_product || {})
-      .map(([k, v]) => `<span class="${pnlClass(v)}">${k}: ${fmtPnl(v)}</span>`)
-      .join(' &nbsp;|&nbsp; ');
+    const card = document.createElement('div');
+    card.className = 'strat-card';
+    card.id = `card-${gi}`;
 
-    const timeStr = run.timestamp ? new Date(run.timestamp).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
-    const rankClass = rank === 1 ? 'top1' : rank <= 3 ? 'top3' : '';
+    // Day chips
+    const dayChips = g.runs.map(r => {
+      const label = String(r.dataset).includes('submission') ? 'SUB' : `D${r.day}`;
+      return `<span class="day-chip"><span class="day-label">${label}</span><span class="day-pnl ${pc(r.pnl)}">${fp(r.pnl)}</span></span>`;
+    }).join('');
 
-    tr.innerHTML = `
-      <td class="cell-rank ${rankClass}">${rank}</td>
-      <td class="cell-author ${getAuthorClass(run.author)}">${run.author || '?'}</td>
-      <td class="cell-strategy">${run.strategy || '?'}</td>
-      <td class="cell-dataset">${run.dataset || '?'}</td>
-      <td>${run.day ?? '?'}</td>
-      <td class="cell-pnl ${pnlClass(run.pnl)}">${fmtPnl(run.pnl || 0)}</td>
-      <td class="cell-products">${prods}</td>
-      <td class="cell-trades">${run.trades || 0}</td>
-      <td class="cell-commit">${run.commit || ''}</td>
-      <td class="cell-time">${timeStr}</td>
+    card.innerHTML = `
+      <div class="strat-header" onclick="toggleCard(${gi})">
+        <div class="strat-rank ${rc}">#${rank}</div>
+        <div class="strat-info">
+          <div class="strat-name">${g.strategy}</div>
+          <div class="strat-meta"><span class="author">${g.author}</span> &middot; ${g.commit || '?'}</div>
+        </div>
+        <div class="strat-pnl ${pc(pnl)}">${fp(pnl)}</div>
+        <div class="strat-days">${dayChips}</div>
+        <div class="strat-trades">${g.total_trades} trades</div>
+        <div class="strat-time">${time}</div>
+      </div>
+      <div class="strat-detail" id="detail-${gi}"></div>
     `;
-    tbody.appendChild(tr);
-
-    const detailTr = document.createElement('tr');
-    detailTr.className = 'detail-row';
-    detailTr.id = `detail-${i}`;
-    detailTr.innerHTML = `<td colspan="10"><div class="detail-content" id="content-${i}"></div></td>`;
-    tbody.appendChild(detailTr);
-
-    tr.addEventListener('click', () => toggleRun(run, i));
+    cd.appendChild(card);
   });
 }
 
-async function toggleRun(run, index) {
-  const detailRow = document.getElementById(`detail-${index}`);
-  const summaryRow = document.querySelector(`.run-row[data-index="${index}"]`);
-  const isOpen = detailRow.classList.contains('open');
+async function toggleCard(gi) {
+  const card = document.getElementById(`card-${gi}`);
+  const detail = document.getElementById(`detail-${gi}`);
 
-  if (isOpen) {
-    detailRow.classList.remove('open');
-    summaryRow.classList.remove('active');
-    detailRow.querySelector('.detail-content').style.display = 'none';
-    (runCharts[index] || []).forEach(c => c.destroy());
-    runCharts[index] = [];
+  if (card.classList.contains('expanded')) {
+    card.classList.remove('expanded');
+    (allCharts[gi] || []).forEach(c => c.destroy());
+    allCharts[gi] = [];
+    detail.innerHTML = '';
     return;
   }
 
-  detailRow.classList.add('open');
-  summaryRow.classList.add('active');
-  const content = document.getElementById(`content-${index}`);
-  content.style.display = 'block';
-  content.innerHTML = '<span style="color:#484f58">Loading...</span>';
+  card.classList.add('expanded');
+  detail.innerHTML = '<span style="color:#444b58">Loading...</span>';
+  allCharts[gi] = [];
 
-  (runCharts[index] || []).forEach(c => c.destroy());
-  runCharts[index] = [];
+  const g = filteredGroups[gi];
 
-  const [pnlData, tradesData, strategyCode] = await Promise.all([
-    fetchCsv(`${BASE}/${run.id}/pnl_by_product.csv`),
-    fetchCsv(`${BASE}/${run.id}/trades.csv`),
-    fetchText(`${BASE}/${run.id}/strategy.py`),
-  ]);
+  // Load data for all runs
+  const runData = await Promise.all(g.runs.map(async r => ({
+    ...r,
+    pnlCsv: await fetchCsv(`${BASE}/${r.id}/pnl_by_product.csv`),
+    trades: await fetchCsv(`${BASE}/${r.id}/trades.csv`),
+  })));
+  const strategyCode = await fetchText(`${BASE}/${g.runs[0].id}/strategy.py`);
 
-  content.innerHTML = '';
+  detail.innerHTML = '';
 
-  // Stats
-  const stats = document.createElement('div');
-  stats.className = 'stats';
-  stats.innerHTML = `
-    <div class="stat"><div class="stat-label">Total PnL</div><div class="stat-value ${pnlClass(run.pnl)}">${fmtPnl(run.pnl || 0)}</div></div>
-    <div class="stat"><div class="stat-label">Trades</div><div class="stat-value">${run.trades || 0}</div></div>
-    <div class="stat"><div class="stat-label">Ticks</div><div class="stat-value">${(run.ticks || 0).toLocaleString()}</div></div>
-    <div class="stat"><div class="stat-label">Author</div><div class="stat-value ${getAuthorClass(run.author)}" style="font-size:13px">${run.author}</div></div>
-    <div class="stat"><div class="stat-label">Commit</div><div class="stat-value" style="font-size:13px">${run.commit || '?'}</div></div>
-  `;
-  content.appendChild(stats);
+  // Day tabs
+  const tabBar = document.createElement('div');
+  tabBar.className = 'day-tabs';
+  runData.forEach((r, ri) => {
+    const label = String(r.dataset).includes('submission') ? 'Submission' : `Day ${r.day}`;
+    const tab = document.createElement('button');
+    tab.className = 'day-tab' + (ri === 0 ? ' active' : '');
+    tab.textContent = `${label}  ${fp(r.pnl)}`;
+    tab.onclick = e => {
+      e.stopPropagation();
+      tabBar.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      detail.querySelectorAll('.day-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById(`panel-${gi}-${ri}`).classList.add('active');
+    };
+    tabBar.appendChild(tab);
+  });
+  detail.appendChild(tabBar);
 
-  const chartsDiv = document.createElement('div');
-  chartsDiv.className = 'charts';
-  content.appendChild(chartsDiv);
+  // Day panels
+  runData.forEach((r, ri) => {
+    const panel = document.createElement('div');
+    panel.className = 'day-panel' + (ri === 0 ? ' active' : '');
+    panel.id = `panel-${gi}-${ri}`;
 
-  const colors = ['#58a6ff', '#3fb950', '#f0883e', '#bc8cff', '#f85149', '#79c0ff', '#d2a8ff'];
+    // Stats
+    const prods = Object.entries(r.pnl_by_product || {}).map(([k,v]) => `<div class="stat"><div class="stat-label">${k}</div><div class="stat-value ${pc(v)}">${fp(v)}</div></div>`).join('');
+    panel.innerHTML = `<div class="stats">
+      <div class="stat"><div class="stat-label">PnL</div><div class="stat-value ${pc(r.pnl)}">${fp(r.pnl)}</div></div>
+      <div class="stat"><div class="stat-label">Trades</div><div class="stat-value">${r.own_trade_count || r.trades_count || r.trades?.length || '?'}</div></div>
+      <div class="stat"><div class="stat-label">Ticks</div><div class="stat-value">${(r.ticks||0).toLocaleString()}</div></div>
+      ${prods}
+    </div>`;
 
-  if (pnlData.length > 0) {
-    const box = mkChart('Cumulative PnL', true);
-    chartsDiv.appendChild(box);
-    const products = Object.keys(pnlData[0]).filter(k => k !== 'timestamp' && k !== 'total');
-    const sampled = downsample(pnlData, 500);
-    runCharts[index].push(new Chart(box.querySelector('canvas'), {
-      type: 'line',
-      data: { datasets: [
-        { label: 'Total', data: sampled.map(r => ({x:+r.timestamp, y:+r.total})), borderColor: '#e6edf3', borderWidth: 2, pointRadius: 0, tension: 0.1 },
-        ...products.map((p, i) => ({
-          label: p, data: sampled.map(r => ({x:+r.timestamp, y:+(r[p]||0)})),
-          borderColor: colors[i % colors.length], borderWidth: 1.5, pointRadius: 0, tension: 0.1,
-        })),
-      ]},
-      options: lineOpts(),
-    }));
-  }
+    // PnL chart
+    if (r.pnlCsv.length > 0) {
+      const chartsDiv = document.createElement('div');
+      chartsDiv.className = 'charts';
+      const box = mkChart('Cumulative PnL', true);
+      chartsDiv.appendChild(box);
+      panel.appendChild(chartsDiv);
 
-  if (Object.keys(run.pnl_by_product || {}).length > 0) {
-    const box = mkChart('PnL by Product');
-    chartsDiv.appendChild(box);
-    const labels = Object.keys(run.pnl_by_product);
-    const values = Object.values(run.pnl_by_product);
-    runCharts[index].push(new Chart(box.querySelector('canvas'), {
-      type: 'bar',
-      data: { labels, datasets: [{
-        data: values,
-        backgroundColor: values.map(v => v >= 0 ? 'rgba(63,185,80,0.7)' : 'rgba(248,81,73,0.7)'),
-        borderColor: values.map(v => v >= 0 ? '#3fb950' : '#f85149'), borderWidth: 1,
-      }]},
-      options: { responsive: true, plugins: { legend: { display: false } },
-        scales: { y: { grid: { color: '#21262d' }, ticks: { color: '#8b949e' } }, x: { grid: { color: '#21262d' }, ticks: { color: '#8b949e' } } },
-      },
-    }));
-  }
+      const products = Object.keys(r.pnlCsv[0]).filter(k => k !== 'timestamp' && k !== 'total');
+      const sampled = downsample(r.pnlCsv, 400);
+      const colors = ['#59c2ff', '#91e05e', '#e6b450', '#d2a6ff', '#f07178', '#95e6cb'];
+      setTimeout(() => {
+        const chart = new Chart(box.querySelector('canvas'), {
+          type: 'line',
+          data: { datasets: [
+            { label: 'Total', data: sampled.map(x => ({x:+x.timestamp,y:+x.total})), borderColor: '#b3b1ad', borderWidth: 2, pointRadius: 0, tension: 0.1 },
+            ...products.map((p,i) => ({ label: p, data: sampled.map(x => ({x:+x.timestamp,y:+(x[p]||0)})), borderColor: colors[i%colors.length], borderWidth: 1.5, pointRadius: 0, tension: 0.1 })),
+          ]},
+          options: chartOpts(),
+        });
+        allCharts[gi].push(chart);
+      }, 50);
+    }
 
-  if (tradesData.length > 0) {
-    const box = document.createElement('div');
-    box.className = 'trades-box';
-    box.innerHTML = `<h3>Trades (${tradesData.length})</h3>
-      <table><thead><tr><th>Tick</th><th>Symbol</th><th>Side</th><th>Price</th><th>Qty</th></tr></thead>
-      <tbody>${tradesData.map(t => {
-        const isBuy = t.buyer === 'SUBMISSION';
-        return `<tr><td>${t.timestamp}</td><td>${t.symbol}</td><td class="${isBuy?'buy':'sell'}">${isBuy?'BUY':'SELL'}</td><td>${t.price}</td><td>${t.quantity}</td></tr>`;
-      }).join('')}</tbody></table>`;
-    content.appendChild(box);
-  }
+    // Trades
+    if (r.trades && r.trades.length > 0) {
+      const tb = document.createElement('div');
+      tb.className = 'trades-box';
+      tb.innerHTML = `<h3>Trades (${r.trades.length})</h3>
+        <table><thead><tr><th>Tick</th><th>Symbol</th><th>Side</th><th>Price</th><th>Qty</th></tr></thead>
+        <tbody>${r.trades.map(t => {
+          const isBuy = t.buyer === 'SUBMISSION';
+          return `<tr><td>${t.timestamp}</td><td>${t.symbol}</td><td class="${isBuy?'buy':'sell'}">${isBuy?'BUY':'SELL'}</td><td>${t.price}</td><td>${t.quantity}</td></tr>`;
+        }).join('')}</tbody></table>`;
+      panel.appendChild(tb);
+    }
 
+    detail.appendChild(panel);
+  });
+
+  // Strategy code (shared across days)
   if (strategyCode) {
     const box = document.createElement('div');
     box.className = 'code-box';
     const escaped = strategyCode.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    const copyId = `copy-${index}`;
-    box.innerHTML = `<h3><span>Strategy: ${run.strategy}.py</span><button class="copy-btn" id="${copyId}">Copy</button></h3><pre>${escaped}</pre>`;
-    content.appendChild(box);
-    document.getElementById(copyId).addEventListener('click', e => {
+    const cid = `copy-${gi}`;
+    box.innerHTML = `<h3><span>${g.strategy}.py</span><button class="copy-btn" id="${cid}">Copy</button></h3><pre>${escaped}</pre>`;
+    detail.appendChild(box);
+    document.getElementById(cid).addEventListener('click', e => {
       e.stopPropagation();
       navigator.clipboard.writeText(strategyCode);
       e.target.textContent = 'Copied!';
@@ -438,45 +388,26 @@ async function toggleRun(run, index) {
 }
 
 function mkChart(title, wide) {
-  const box = document.createElement('div');
-  box.className = 'chart-box' + (wide ? ' wide' : '');
-  box.innerHTML = `<h3>${title}</h3><canvas></canvas>`;
-  return box;
+  const b = document.createElement('div');
+  b.className = 'chart-box' + (wide ? ' wide' : '');
+  b.innerHTML = `<h3>${title}</h3><canvas></canvas>`;
+  return b;
 }
-function lineOpts() {
+function chartOpts() {
   return {
     responsive: true,
-    plugins: { legend: { labels: { color: '#8b949e', font: { size: 11 } } } },
+    plugins: { legend: { labels: { color: '#444b58', font: { size: 10, family: 'JetBrains Mono' } } } },
     scales: {
-      x: { type: 'linear', grid: { color: '#21262d' }, ticks: { color: '#8b949e', maxTicksLimit: 10 } },
-      y: { grid: { color: '#21262d' }, ticks: { color: '#8b949e' } },
+      x: { type: 'linear', grid: { color: '#1a1f29' }, ticks: { color: '#444b58', maxTicksLimit: 8, font: { size: 10 } } },
+      y: { grid: { color: '#1a1f29' }, ticks: { color: '#444b58', font: { size: 10 } } },
     },
     interaction: { intersect: false, mode: 'index' },
   };
 }
-function downsample(data, max) {
-  if (data.length <= max) return data;
-  const step = Math.floor(data.length / max);
-  return data.filter((_, i) => i % step === 0 || i === data.length - 1);
-}
-async function fetchText(url) {
-  try { const r = await fetch(url); return r.ok ? await r.text() : null; } catch { return null; }
-}
-async function fetchCsv(url) {
-  try {
-    const res = await fetch(url);
-    if (!res.ok) return [];
-    const text = await res.text();
-    const lines = text.trim().split('\n');
-    if (lines.length < 2) return [];
-    const headers = lines[0].split(';');
-    return lines.slice(1).map(line => {
-      const vals = line.split(';');
-      const obj = {};
-      headers.forEach((h, i) => obj[h] = vals[i] || '');
-      return obj;
-    });
-  } catch { return []; }
+function downsample(d, max) { if (d.length <= max) return d; const s = Math.floor(d.length/max); return d.filter((_,i) => i%s===0 || i===d.length-1); }
+async function fetchText(u) { try { const r = await fetch(u); return r.ok ? await r.text() : null; } catch { return null; } }
+async function fetchCsv(u) {
+  try { const r = await fetch(u); if (!r.ok) return []; const t = await r.text(); const l = t.trim().split('\n'); if (l.length<2) return []; const h = l[0].split(';'); return l.slice(1).map(x => { const v=x.split(';'); const o={}; h.forEach((k,i) => o[k]=v[i]||''); return o; }); } catch { return []; }
 }
 
 init();
