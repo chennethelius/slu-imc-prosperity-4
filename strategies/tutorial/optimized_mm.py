@@ -5,20 +5,20 @@ import json
 
 class Trader:
     """
-    Optimal MM with EMA-smoothed fair value.
+    Optimal MM with slow EMA fair value + full-capacity penny-jumping.
 
     1. Take all favorable liquidity (buy below FV, sell above FV)
-    2. Flatten inventory at FV when position skewed (zero-edge to free capacity)
-    3. Penny-jump: overbid best bid, undercut best ask (while keeping edge)
-    4. Multi-level passive quoting with full capacity deployment
+    2. Zero-edge flatten when position > 10 to free capacity
+    3. Full capacity penny-jump (bb+1 / ba-1) with edge guard
+    4. Backup layer at FV +/- 3 for remaining capacity
 
     EMERALDS: fixed FV at 10000
-    TOMATOES: EMA-smoothed mid price (alpha=0.39) for stable FV estimate
+    TOMATOES: slow EMA (alpha=0.027) for stable FV that captures drift
     """
 
     LIMITS = {"EMERALDS": 80, "TOMATOES": 80}
     FAIR = {"EMERALDS": 10000}
-    EMA_ALPHA = 0.39
+    EMA_ALPHA = 0.027
 
     def run(self, state: TradingState) -> tuple[dict[str, list[Order]], int, str]:
         try:
@@ -92,17 +92,17 @@ class Trader:
             else:
                 break
 
-        # Step 2: Zero-edge inventory flattening when skewed
-        if pos > 20 and fv_int in depth.buy_orders and sell_room > 0:
+        # Step 2: Zero-edge inventory flattening at low threshold
+        if pos > 10 and fv_int in depth.buy_orders and sell_room > 0:
             vol = min(depth.buy_orders[fv_int], sell_room)
             orders.append(Order(symbol, fv_int, -vol))
             sell_room -= vol
-        elif pos < -20 and fv_int in depth.sell_orders and buy_room > 0:
+        elif pos < -10 and fv_int in depth.sell_orders and buy_room > 0:
             vol = min(-depth.sell_orders[fv_int], buy_room)
             orders.append(Order(symbol, fv_int, vol))
             buy_room -= vol
 
-        # Step 3: Penny-jump passive quotes with edge preservation
+        # Step 3: Full capacity penny-jump with edge guard
         bid1 = best_bid + 1
         ask1 = best_ask - 1
 
@@ -111,29 +111,19 @@ class Trader:
         if ask1 <= fv_int:
             ask1 = fv_int + 1
 
-        sz = min(30, buy_room)
+        sz = min(80, buy_room)
         if sz > 0:
             orders.append(Order(symbol, bid1, sz))
             buy_room -= sz
-        sz = min(30, sell_room)
+        sz = min(80, sell_room)
         if sz > 0:
             orders.append(Order(symbol, ask1, -sz))
             sell_room -= sz
 
-        # Level 2: wider passive
-        sz = min(25, buy_room)
-        if sz > 0:
-            orders.append(Order(symbol, fv_int - 2, sz))
-            buy_room -= sz
-        sz = min(25, sell_room)
-        if sz > 0:
-            orders.append(Order(symbol, fv_int + 2, -sz))
-            sell_room -= sz
-
-        # Level 3: remaining capacity further out
+        # Backup layer for remaining capacity
         if buy_room > 0:
-            orders.append(Order(symbol, fv_int - 4, buy_room))
+            orders.append(Order(symbol, fv_int - 3, buy_room))
         if sell_room > 0:
-            orders.append(Order(symbol, fv_int + 4, -sell_room))
+            orders.append(Order(symbol, fv_int + 3, -sell_room))
 
         return orders
