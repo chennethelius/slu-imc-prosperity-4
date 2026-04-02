@@ -45,7 +45,7 @@ cd "$BACKTESTER_DIR"
     --trader "$STRATEGY_ABS" \
     --dataset "$DATASET" \
     --persist \
-    "${EXTRA_ARGS[@]}"
+    "${EXTRA_ARGS[@]+"${EXTRA_ARGS[@]}"}"
 
 # Find the latest run directory the backtester created
 LATEST_RUN="$(ls -td runs/backtest-* 2>/dev/null | head -1)"
