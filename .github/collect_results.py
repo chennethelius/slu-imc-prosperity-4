@@ -41,6 +41,9 @@ def main():
             print(f"Skipping missing: {strategy_rel}")
             continue
         strat_name = strategy_path.stem
+        if strat_name == "template":
+            print(f"Skipping template: {strategy_rel}")
+            continue
 
         # Match strategy to its round's dataset
         # strategies/round1/foo.py → only run against round1

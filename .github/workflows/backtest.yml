@@ -89,7 +89,7 @@ jobs:
             done
           fi
 
-          # Merge manifests
+          # Merge manifests (dedup by author+strategy+dataset+day, keep newest)
           python3 -c "
           import json, os
           deploy = '$DEPLOY_DIR'
@@ -104,9 +104,17 @@ jobs:
               with open(new_path) as f:
                   new = json.load(f)
               existing = new + existing
+          # Deduplicate: keep first (newest) per (author, strategy, dataset, day)
+          seen = set()
+          deduped = []
+          for r in existing:
+              key = (r.get('author',''), r.get('strategy',''), r.get('dataset',''), str(r.get('day','')))
+              if key not in seen:
+                  seen.add(key)
+                  deduped.append(r)
           with open(manifest_path, 'w') as f:
-              json.dump(existing, f, indent=2)
-          print(f'Manifest: {len(existing)} total submissions')
+              json.dump(deduped, f, indent=2)
+          print(f'Manifest: {len(deduped)} submissions ({len(existing) - len(deduped)} duplicates removed)')
           "
 
           # Copy dashboard
