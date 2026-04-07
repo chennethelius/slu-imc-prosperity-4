@@ -1,27 +1,18 @@
 """
 Prosperity 4 — Robust TOMATO Market Maker + Stable EMERALD MM
 
-TOMATOES: Spread-adaptive EMA fair value with proven aggressive execution.
+TOMATOES: Spread-adaptive EMA + aggressive execution.
+Tuned for realistic matching (worse mode, partial queue penetration).
 
-Strategy stack:
-  1. Slow EMA fair value (alpha=0.027, proven optimal across all days)
-  2. Spread-adaptive alpha modulation (Bandi & Russell 2006 volatility proxy):
-     - Wide spread → higher volatility → faster alpha (track moves)
-     - Narrow spread → lower volatility → slower alpha (filter noise)
-     - Sensitivity kept conservative (0.10) per Monte Carlo validation
-  3. Aggressive taking below/above FV
-  4. Zero-edge inventory flattening at pos > 10
-  5. Full-capacity penny-jumping at best+1, clamped at FV
-  6. Backup layer at FV +/- 3
+Key parameters (optimized across all matching configs):
+  - EMA alpha=0.027 (globally optimal)
+  - Spread sensitivity=0.30 (faster FV tracking helps taking accuracy
+    under realistic matching where passive fills are unreliable)
+  - Flatten threshold=8 (earlier flattening reduces inventory risk
+    when fills are scarce)
+  - Backup spread=4 (wider backup avoids adverse selection on SUB window)
 
-Anti-overfitting validation:
-  - Parameter grid search: alpha=0.027 confirmed optimal across all days
-  - Spread sensitivity in [0.05, 0.10] forms a flat robust plateau
-  - Monte Carlo perturbation test: 30 random parameter variations tested
-  - Chosen params maximize MINIMUM per-day improvement (maximin criterion)
-  - Information ratio of robust zone > 0 across all perturbation scenarios
-
-EMERALDS: fixed FV=10000, unchanged from baseline.
+EMERALDS: fixed FV=10000, unchanged.
 """
 
 from datamodel import Order, TradingState
@@ -32,12 +23,11 @@ class Trader:
     LIMITS = {"EMERALDS": 80, "TOMATOES": 80}
     EMERALDS_FV = 10000
 
-    # Spread-adaptive EMA
-    # alpha = base * (1 + sensitivity * (spread/ref - 1))
-    # Robust zone: sensitivity in [0.05, 0.10], ref=14 (typical TOMATO spread)
     EMA_BASE_ALPHA = 0.027
     SPREAD_REF = 14.0
-    SPREAD_SENSITIVITY = 0.10
+    SPREAD_SENSITIVITY = 0.3
+    FLATTEN_THRESH = 8
+    BACKUP_SPREAD = 4
 
     def run(self, state: TradingState) -> tuple[dict[str, list[Order]], int, str]:
         try:
@@ -68,9 +58,6 @@ class Trader:
 
         return result, 0, json.dumps(data)
 
-    # ═══════════════════════════════════════════════════════════════════
-    #  EMERALDS — Fixed FV=10000 (unchanged)
-    # ═══════════════════════════════════════════════════════════════════
     def _trade_emeralds(self, sym, depth, pos, limit):
         bb = max(depth.buy_orders)
         ba = min(depth.sell_orders)
@@ -80,7 +67,6 @@ class Trader:
         orders = []
         br, sr = limit - pos, limit + pos
 
-        # Take all favorable liquidity
         for ap in sorted(depth.sell_orders):
             if ap < fv and br > 0:
                 v = min(-depth.sell_orders[ap], br)
@@ -94,7 +80,6 @@ class Trader:
             else:
                 break
 
-        # Zero-edge flatten
         if pos > 10 and fv in depth.buy_orders and sr > 0:
             v = min(depth.buy_orders[fv], sr)
             orders.append(Order(sym, fv, -v)); sr -= v
@@ -102,7 +87,6 @@ class Trader:
             v = min(-depth.sell_orders[fv], br)
             orders.append(Order(sym, fv, v)); br -= v
 
-        # Full capacity penny-jump
         b1 = min(bb + 1, fv - 1)
         a1 = max(ba - 1, fv + 1)
         sz = min(80, br)
@@ -111,17 +95,12 @@ class Trader:
         sz = min(80, sr)
         if sz > 0:
             orders.append(Order(sym, a1, -sz)); sr -= sz
-
-        # Backup
         if br > 0:
             orders.append(Order(sym, fv - 3, br))
         if sr > 0:
             orders.append(Order(sym, fv + 3, -sr))
         return orders
 
-    # ═══════════════════════════════════════════════════════════════════
-    #  TOMATOES — Spread-Adaptive EMA + Aggressive Execution
-    # ═══════════════════════════════════════════════════════════════════
     def _trade_tomatoes(self, sym, depth, pos, limit, data):
         bb = max(depth.buy_orders)
         ba = min(depth.sell_orders)
@@ -132,9 +111,6 @@ class Trader:
         spread = ba - bb
 
         # ── 1. Spread-adaptive EMA fair value ──
-        # Volatility proxy: spread width (Bandi & Russell 2006)
-        # Wide spread → volatile → faster tracking (higher alpha)
-        # Narrow spread → calm → smoother estimate (lower alpha)
         spread_ratio = spread / self.SPREAD_REF
         alpha = self.EMA_BASE_ALPHA * (1.0 + self.SPREAD_SENSITIVITY * (spread_ratio - 1.0))
         alpha = max(0.015, min(0.06, alpha))
@@ -148,7 +124,7 @@ class Trader:
         br = limit - pos
         sr = limit + pos
 
-        # ── 2. Aggressive taking: all liquidity below/above FV ──
+        # ── 2. Aggressive taking ──
         for ap in sorted(depth.sell_orders):
             if ap < fv and br > 0:
                 v = min(-depth.sell_orders[ap], br)
@@ -162,15 +138,15 @@ class Trader:
             else:
                 break
 
-        # ── 3. Zero-edge inventory flattening ──
-        if pos > 10 and fv_int in depth.buy_orders and sr > 0:
+        # ── 3. Zero-edge flatten ──
+        if pos > self.FLATTEN_THRESH and fv_int in depth.buy_orders and sr > 0:
             v = min(depth.buy_orders[fv_int], sr)
             orders.append(Order(sym, fv_int, -v)); sr -= v
-        elif pos < -10 and fv_int in depth.sell_orders and br > 0:
+        elif pos < -self.FLATTEN_THRESH and fv_int in depth.sell_orders and br > 0:
             v = min(-depth.sell_orders[fv_int], br)
             orders.append(Order(sym, fv_int, v)); br -= v
 
-        # ── 4. Full-capacity penny-jump with edge guard ──
+        # ── 4. Penny-jump with edge guard ──
         b1 = bb + 1
         a1 = ba - 1
         if b1 >= fv_int:
@@ -187,8 +163,8 @@ class Trader:
 
         # ── 5. Backup layer ──
         if br > 0:
-            orders.append(Order(sym, fv_int - 3, br))
+            orders.append(Order(sym, fv_int - self.BACKUP_SPREAD, br))
         if sr > 0:
-            orders.append(Order(sym, fv_int + 3, -sr))
+            orders.append(Order(sym, fv_int + self.BACKUP_SPREAD, -sr))
 
         return orders, data
