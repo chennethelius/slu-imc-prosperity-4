@@ -4,21 +4,12 @@ from typing import Dict, List
 
 class Trader:
     """
-    Spread-capture market maker with inventory management.
-
-    The tutorial market has wide spreads (8-16 ticks). The winning
-    strategy is to quote inside the spread and capture it, with
-    larger size than the default trader (5 -> 20+).
-
-    Improvements over bundled trader:
-    - Bigger quote size (more fills per tick)
-    - Multiple price levels (capture more of the book)
-    - Inventory skew (shift quotes to flatten when position builds)
-    - Fair value anchor (don't quote on the wrong side of true value)
+    Hybrid strategy:
+    - EMERALDS: aggressive take + full-capacity penny-jump (FV=10000)
+    - TOMATOES: spread-capture MM with inventory skew (mid-price FV)
     """
 
     LIMITS = {"EMERALDS": 80, "TOMATOES": 80}
-    FAIR = {"EMERALDS": 10000}  # TOMATOES: use mid
 
     def run(self, state: TradingState) -> tuple[dict[str, list[Order]], int, str]:
         result: dict[str, list[Order]] = {}
@@ -29,31 +20,60 @@ class Trader:
                 continue
 
             pos = state.position.get(symbol, 0)
-            limit = self.LIMITS[symbol]
-            result[symbol] = self._quote(symbol, depth, pos, limit)
+
+            if symbol == "EMERALDS":
+                result[symbol] = self._emeralds(depth, pos)
+            elif symbol == "TOMATOES":
+                result[symbol] = self._tomatoes(symbol, depth, pos)
+            else:
+                result[symbol] = []
 
         return result, 0, ""
 
-    def _quote(
-        self, symbol: str, depth: OrderDepth, pos: int, limit: int
-    ) -> list[Order]:
+    # ── EMERALDS: aggressive take + full-capacity penny-jump ──
+    def _emeralds(self, d, pos):
+        if not d.buy_orders or not d.sell_orders:
+            return []
+        bb, ba = max(d.buy_orders), min(d.sell_orders)
+        if bb >= ba:
+            return []
+        fv, lim = 10000, 80
+        orders = []
+        br, sr = lim - pos, lim + pos
+        for a in sorted(d.sell_orders):
+            if a < fv and br > 0:
+                v = min(-d.sell_orders[a], br)
+                orders.append(Order("EMERALDS", a, v)); br -= v
+            else:
+                break
+        for b in sorted(d.buy_orders, reverse=True):
+            if b > fv and sr > 0:
+                v = min(d.buy_orders[b], sr)
+                orders.append(Order("EMERALDS", b, -v)); sr -= v
+            else:
+                break
+        bp, ap = min(bb + 1, fv - 1), max(ba - 1, fv + 1)
+        if br > 0:
+            orders.append(Order("EMERALDS", bp, br))
+        if sr > 0:
+            orders.append(Order("EMERALDS", ap, -sr))
+        return orders
+
+    # ── TOMATOES: spread-capture MM with inventory skew (unchanged) ──
+    def _tomatoes(self, symbol, depth, pos):
         if not depth.buy_orders or not depth.sell_orders:
             return []
 
         best_bid = max(depth.buy_orders)
         best_ask = min(depth.sell_orders)
         spread = best_ask - best_bid
+        limit = 80
 
         if spread <= 0:
             return []
 
         orders = []
-
-        # Fair value: fixed for EMERALDS, mid for others
-        if symbol in self.FAIR:
-            fv = self.FAIR[symbol]
-        else:
-            fv = (best_bid + best_ask) / 2
+        fv = (best_bid + best_ask) / 2
 
         # Primary quote: 1 tick inside the spread
         if spread > 1:
@@ -64,8 +84,6 @@ class Trader:
             ask1 = best_ask
 
         # Inventory skew: push quotes to reduce position
-        # When long: lower both prices (encourage selling to us less, buying from us more)
-        # When short: raise both prices
         skew = 0
         if abs(pos) > 20:
             skew = -1 if pos > 0 else 1
