@@ -1,170 +1,110 @@
-"""
-Prosperity 4 — Robust TOMATO Market Maker + Stable EMERALD MM
-
-TOMATOES: Spread-adaptive EMA + aggressive execution.
-Tuned for realistic matching (worse mode, partial queue penetration).
-
-Key parameters (optimized across all matching configs):
-  - EMA alpha=0.027 (globally optimal)
-  - Spread sensitivity=0.30 (faster FV tracking helps taking accuracy
-    under realistic matching where passive fills are unreliable)
-  - Flatten threshold=8 (earlier flattening reduces inventory risk
-    when fills are scarce)
-  - Backup spread=4 (wider backup avoids adverse selection on SUB window)
-
-EMERALDS: fixed FV=10000, unchanged.
-"""
-
-from datamodel import Order, TradingState
-import json
+from datamodel import Order, OrderDepth, TradingState
+from typing import Dict, List
 
 
 class Trader:
-    LIMITS = {"EMERALDS": 80, "TOMATOES": 80}
-    EMERALDS_FV = 10000
+    """
+    Hybrid strategy:
+    - EMERALDS: aggressive take + full-capacity penny-jump (FV=10000)
+    - TOMATOES: all-level microprice take + penny-jump with inventory control
+    """
 
-    EMA_BASE_ALPHA = 0.027
-    SPREAD_REF = 14.0
-    SPREAD_SENSITIVITY = 0.3
-    FLATTEN_THRESH = 8
-    BACKUP_SPREAD = 4
+    LIMITS = {"EMERALDS": 80, "TOMATOES": 80}
 
     def run(self, state: TradingState) -> tuple[dict[str, list[Order]], int, str]:
-        try:
-            data = json.loads(state.traderData) if state.traderData else {}
-        except Exception:
-            data = {}
-
         result: dict[str, list[Order]] = {}
+
         for symbol, depth in state.order_depths.items():
             if symbol not in self.LIMITS:
                 result[symbol] = []
                 continue
-            if not depth.buy_orders or not depth.sell_orders:
-                result[symbol] = []
-                continue
 
             pos = state.position.get(symbol, 0)
-            limit = self.LIMITS[symbol]
 
             if symbol == "EMERALDS":
-                result[symbol] = self._trade_emeralds(symbol, depth, pos, limit)
+                result[symbol] = self._emeralds(depth, pos)
             elif symbol == "TOMATOES":
-                result[symbol], data = self._trade_tomatoes(
-                    symbol, depth, pos, limit, data
-                )
+                result[symbol] = self._tomatoes(symbol, depth, pos)
             else:
                 result[symbol] = []
 
-        return result, 0, json.dumps(data)
+        return result, 0, ""
 
-    def _trade_emeralds(self, sym, depth, pos, limit):
-        bb = max(depth.buy_orders)
-        ba = min(depth.sell_orders)
+    # ── EMERALDS: aggressive take + full-capacity penny-jump ──
+    def _emeralds(self, d, pos):
+        if not d.buy_orders or not d.sell_orders:
+            return []
+        bb, ba = max(d.buy_orders), min(d.sell_orders)
         if bb >= ba:
             return []
-        fv = self.EMERALDS_FV
+        fv, lim = 10000, 80
         orders = []
-        br, sr = limit - pos, limit + pos
-
-        for ap in sorted(depth.sell_orders):
-            if ap < fv and br > 0:
-                v = min(-depth.sell_orders[ap], br)
-                orders.append(Order(sym, ap, v)); br -= v
+        br, sr = lim - pos, lim + pos
+        for a in sorted(d.sell_orders):
+            if a < fv and br > 0:
+                v = min(-d.sell_orders[a], br)
+                orders.append(Order("EMERALDS", a, v)); br -= v
             else:
                 break
-        for bp in sorted(depth.buy_orders, reverse=True):
-            if bp > fv and sr > 0:
-                v = min(depth.buy_orders[bp], sr)
-                orders.append(Order(sym, bp, -v)); sr -= v
+        for b in sorted(d.buy_orders, reverse=True):
+            if b > fv and sr > 0:
+                v = min(d.buy_orders[b], sr)
+                orders.append(Order("EMERALDS", b, -v)); sr -= v
             else:
                 break
-
-        if pos > 10 and fv in depth.buy_orders and sr > 0:
-            v = min(depth.buy_orders[fv], sr)
-            orders.append(Order(sym, fv, -v)); sr -= v
-        elif pos < -10 and fv in depth.sell_orders and br > 0:
-            v = min(-depth.sell_orders[fv], br)
-            orders.append(Order(sym, fv, v)); br -= v
-
-        b1 = min(bb + 1, fv - 1)
-        a1 = max(ba - 1, fv + 1)
-        sz = min(80, br)
-        if sz > 0:
-            orders.append(Order(sym, b1, sz)); br -= sz
-        sz = min(80, sr)
-        if sz > 0:
-            orders.append(Order(sym, a1, -sz)); sr -= sz
+        bp, ap = min(bb + 1, fv - 1), max(ba - 1, fv + 1)
         if br > 0:
-            orders.append(Order(sym, fv - 3, br))
+            orders.append(Order("EMERALDS", bp, br))
         if sr > 0:
-            orders.append(Order(sym, fv + 3, -sr))
+            orders.append(Order("EMERALDS", ap, -sr))
         return orders
 
-    def _trade_tomatoes(self, sym, depth, pos, limit, data):
-        bb = max(depth.buy_orders)
-        ba = min(depth.sell_orders)
+    # ── TOMATOES: all-level microprice take + penny-jump with inventory control ──
+    def _tomatoes(self, symbol, depth, pos):
+        if not depth.buy_orders or not depth.sell_orders:
+            return []
+        bids = sorted(depth.buy_orders.keys(), reverse=True)
+        asks = sorted(depth.sell_orders.keys())
+        bb, ba = bids[0], asks[0]
         if bb >= ba:
-            return [], data
+            return []
 
-        mid = (bb + ba) / 2.0
-        spread = ba - bb
+        # All-level microprice: cross-weighted VWAP for better FV estimation
+        total_bid_pv = sum(p * depth.buy_orders[p] for p in bids)
+        total_bid_v = sum(depth.buy_orders[p] for p in bids)
+        total_ask_pv = sum(p * abs(depth.sell_orders[p]) for p in asks)
+        total_ask_v = sum(abs(depth.sell_orders[p]) for p in asks)
+        vwap_bid = total_bid_pv / total_bid_v
+        vwap_ask = total_ask_pv / total_ask_v
+        fv = (vwap_bid * total_ask_v + vwap_ask * total_bid_v) / (total_bid_v + total_ask_v)
 
-        # ── 1. Spread-adaptive EMA fair value ──
-        spread_ratio = spread / self.SPREAD_REF
-        alpha = self.EMA_BASE_ALPHA * (1.0 + self.SPREAD_SENSITIVITY * (spread_ratio - 1.0))
-        alpha = max(0.015, min(0.06, alpha))
+        # Inventory-adjusted FV: shift to encourage position reduction
+        fv_eff = fv - pos * 0.15
+        fvi = int(round(fv_eff))
 
-        prev_ema = data.get("ema", mid)
-        fv = alpha * mid + (1 - alpha) * prev_ema
-        data["ema"] = fv
-
-        fv_int = int(round(fv))
+        lim = 80
         orders = []
-        br = limit - pos
-        sr = limit + pos
+        br, sr = lim - pos, lim + pos
 
-        # ── 2. Aggressive taking ──
-        for ap in sorted(depth.sell_orders):
-            if ap < fv and br > 0:
-                v = min(-depth.sell_orders[ap], br)
-                orders.append(Order(sym, ap, v)); br -= v
+        # Aggressive take: sweep mispriced orders vs effective FV
+        for a in asks:
+            if a < fv_eff and br > 0:
+                v = min(-depth.sell_orders[a], br)
+                orders.append(Order(symbol, a, v)); br -= v
             else:
                 break
-        for bp in sorted(depth.buy_orders, reverse=True):
-            if bp > fv and sr > 0:
-                v = min(depth.buy_orders[bp], sr)
-                orders.append(Order(sym, bp, -v)); sr -= v
+        for b in bids:
+            if b > fv_eff and sr > 0:
+                v = min(depth.buy_orders[b], sr)
+                orders.append(Order(symbol, b, -v)); sr -= v
             else:
                 break
 
-        # ── 3. Zero-edge flatten ──
-        if pos > self.FLATTEN_THRESH and fv_int in depth.buy_orders and sr > 0:
-            v = min(depth.buy_orders[fv_int], sr)
-            orders.append(Order(sym, fv_int, -v)); sr -= v
-        elif pos < -self.FLATTEN_THRESH and fv_int in depth.sell_orders and br > 0:
-            v = min(-depth.sell_orders[fv_int], br)
-            orders.append(Order(sym, fv_int, v)); br -= v
-
-        # ── 4. Penny-jump with edge guard ──
-        b1 = bb + 1
-        a1 = ba - 1
-        if b1 >= fv_int:
-            b1 = fv_int - 1
-        if a1 <= fv_int:
-            a1 = fv_int + 1
-
-        sz = min(80, br)
-        if sz > 0:
-            orders.append(Order(sym, b1, sz)); br -= sz
-        sz = min(80, sr)
-        if sz > 0:
-            orders.append(Order(sym, a1, -sz)); sr -= sz
-
-        # ── 5. Backup layer ──
+        # Penny-jump quotes clamped to effective FV
+        bp = min(bb + 1, fvi - 1)
+        ap = max(ba - 1, fvi + 1)
         if br > 0:
-            orders.append(Order(sym, fv_int - self.BACKUP_SPREAD, br))
+            orders.append(Order(symbol, bp, br))
         if sr > 0:
-            orders.append(Order(sym, fv_int + self.BACKUP_SPREAD, -sr))
-
-        return orders, data
+            orders.append(Order(symbol, ap, -sr))
+        return orders
