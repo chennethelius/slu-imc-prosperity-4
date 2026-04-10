@@ -30,7 +30,7 @@ class Trader:
 
         return result, 0, ""
 
-    # ── EMERALDS: aggressive take + full-capacity penny-jump ──
+    # ── EMERALDS: aggressive take + penny-jump with inventory-shifted FV ──
     def _emeralds(self, d, pos):
         if not d.buy_orders or not d.sell_orders:
             return []
@@ -38,21 +38,29 @@ class Trader:
         if bb >= ba:
             return []
         fv, lim = 10000, 80
+
+        # Inventory-shifted effective FV: encourages position reduction
+        fv_eff = fv - pos * 0.15
+        fvi = int(round(fv_eff))
+
         orders = []
         br, sr = lim - pos, lim + pos
+
         for a in sorted(d.sell_orders):
-            if a < fv and br > 0:
+            if a < fv_eff and br > 0:
                 v = min(-d.sell_orders[a], br)
                 orders.append(Order("EMERALDS", a, v)); br -= v
             else:
                 break
         for b in sorted(d.buy_orders, reverse=True):
-            if b > fv and sr > 0:
+            if b > fv_eff and sr > 0:
                 v = min(d.buy_orders[b], sr)
                 orders.append(Order("EMERALDS", b, -v)); sr -= v
             else:
                 break
-        bp, ap = min(bb + 1, fv - 1), max(ba - 1, fv + 1)
+
+        bp = min(bb + 1, fvi - 1)
+        ap = max(ba - 1, fvi + 1)
         if br > 0:
             orders.append(Order("EMERALDS", bp, br))
         if sr > 0:
@@ -69,7 +77,7 @@ class Trader:
         if bb >= ba:
             return []
 
-        # All-level microprice: cross-weighted VWAP for better FV estimation
+        # All-level microprice: cross-weighted VWAP for FV estimation
         total_bid_pv = sum(p * depth.buy_orders[p] for p in bids)
         total_bid_v = sum(depth.buy_orders[p] for p in bids)
         total_ask_pv = sum(p * abs(depth.sell_orders[p]) for p in asks)
@@ -86,7 +94,6 @@ class Trader:
         orders = []
         br, sr = lim - pos, lim + pos
 
-        # Aggressive take: sweep mispriced orders vs effective FV
         for a in asks:
             if a < fv_eff and br > 0:
                 v = min(-depth.sell_orders[a], br)
@@ -100,7 +107,6 @@ class Trader:
             else:
                 break
 
-        # Penny-jump quotes clamped to effective FV
         bp = min(bb + 1, fvi - 1)
         ap = max(ba - 1, fvi + 1)
         if br > 0:
