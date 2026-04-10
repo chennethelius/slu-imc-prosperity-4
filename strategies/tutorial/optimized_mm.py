@@ -4,33 +4,38 @@ from typing import Dict, List
 
 class Trader:
     """
-    Variant D: Best of FrankfurtHedgehogs ideas
-    - EMERALDS: unchanged (inventory-shifted FV take + penny-jump)
-    - TOMATOES: wall-mid FV + two-tier taking + volume-conditional penny-jump
+    Variant L: Sub-tick FV from Bot 2 rounding inversion
+
+    Bot 2 uses asymmetric rounding:
+      bid = floor(FV + 0.75) - 7
+      ask = ceil(FV + 0.25) + 6
+
+    By inverting: FV lies in the intersection of:
+      [bid + 6.25, bid + 7.25) from bid formula
+      (ask - 7.25, ask - 6.25] from ask formula
+
+    This gives FV to ±0.25 precision vs wall-mid's ±0.5.
+    When Bot 3 is present (3+ levels on a side), use second-best level.
+    Falls back to wall-mid if Bot 2 estimate seems inconsistent.
     """
 
     LIMITS = {"EMERALDS": 80, "TOMATOES": 80}
 
     def run(self, state: TradingState) -> tuple[dict[str, list[Order]], int, str]:
         result: dict[str, list[Order]] = {}
-
         for symbol, depth in state.order_depths.items():
             if symbol not in self.LIMITS:
                 result[symbol] = []
                 continue
-
             pos = state.position.get(symbol, 0)
-
             if symbol == "EMERALDS":
                 result[symbol] = self._emeralds(depth, pos)
             elif symbol == "TOMATOES":
                 result[symbol] = self._tomatoes(symbol, depth, pos)
             else:
                 result[symbol] = []
-
         return result, 0, ""
 
-    # EMERALDS: unchanged from baseline
     def _emeralds(self, d, pos):
         if not d.buy_orders or not d.sell_orders:
             return []
@@ -62,7 +67,6 @@ class Trader:
             orders.append(Order("EMERALDS", ap, -sr))
         return orders
 
-    # TOMATOES: wall-mid FV + two-tier taking + volume-conditional penny-jump
     def _tomatoes(self, symbol, depth, pos):
         if not depth.buy_orders or not depth.sell_orders:
             return []
@@ -72,10 +76,27 @@ class Trader:
         if bb >= ba:
             return []
 
-        # Wall-mid FV: outermost levels midpoint (Bot 1 at FV +/- 8 = exact FV)
+        # Identify Bot 2 levels (skip Bot 3 when present)
+        # Bot 3 is rare (6.3%), single-sided, places near FV (above Bot 2 bid, below Bot 2 ask)
+        # When 3+ levels: second level is Bot 2. When 2 levels: best is Bot 2.
+        bot2_bid = bids[1] if len(bids) >= 3 else bids[0]
+        bot2_ask = asks[1] if len(asks) >= 3 else asks[0]
+
+        # Invert Bot 2's rounding to get precise FV range
+        # bid = floor(FV + 0.75) - 7  =>  FV in [bid + 6.25, bid + 7.25)
+        # ask = ceil(FV + 0.25) + 6   =>  FV in (ask - 7.25, ask - 6.25]
+        fv_low = max(bot2_bid + 6.25, bot2_ask - 7.25)
+        fv_high = min(bot2_bid + 7.25, bot2_ask - 6.25)
+
+        # Sanity check: range should be valid and narrow
         bid_wall = min(depth.buy_orders.keys())
         ask_wall = max(depth.sell_orders.keys())
-        fv = (bid_wall + ask_wall) / 2.0
+        wall_mid = (bid_wall + ask_wall) / 2.0
+
+        if fv_low <= fv_high and abs((fv_low + fv_high) / 2 - wall_mid) < 1.5:
+            fv = (fv_low + fv_high) / 2.0
+        else:
+            fv = wall_mid  # fallback
 
         fv_eff = fv - pos * 0.15
         fvi = int(round(fv_eff))
@@ -84,43 +105,21 @@ class Trader:
         orders = []
         br, sr = lim - pos, lim + pos
 
-        # Two-tier taking: aggressive far from FV, flatten-only near FV
         for a in asks:
-            if a < fv_eff - 1 and br > 0:
+            if a < fv_eff and br > 0:
                 v = min(-depth.sell_orders[a], br)
                 orders.append(Order(symbol, a, v)); br -= v
-            elif a < fv_eff and pos < 0 and br > 0:
-                v = min(-depth.sell_orders[a], br, abs(pos))
-                if v > 0:
-                    orders.append(Order(symbol, a, v)); br -= v
             else:
                 break
-
         for b in bids:
-            if b > fv_eff + 1 and sr > 0:
+            if b > fv_eff and sr > 0:
                 v = min(depth.buy_orders[b], sr)
                 orders.append(Order(symbol, b, -v)); sr -= v
-            elif b > fv_eff and pos > 0 and sr > 0:
-                v = min(depth.buy_orders[b], sr, pos)
-                if v > 0:
-                    orders.append(Order(symbol, b, -v)); sr -= v
             else:
                 break
 
-        # Volume-conditional penny-jump
-        best_bid_vol = depth.buy_orders.get(bb, 0)
-        best_ask_vol = abs(depth.sell_orders.get(ba, 0))
-
-        if best_bid_vol > 1:
-            bp = min(bb + 1, fvi - 1)
-        else:
-            bp = min(bb, fvi - 1)
-
-        if best_ask_vol > 1:
-            ap = max(ba - 1, fvi + 1)
-        else:
-            ap = max(ba, fvi + 1)
-
+        bp = min(bb + 1, fvi - 1)
+        ap = max(ba - 1, fvi + 1)
         if br > 0:
             orders.append(Order(symbol, bp, br))
         if sr > 0:
