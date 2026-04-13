@@ -1,21 +1,30 @@
+import json
 from datamodel import Order, OrderDepth, TradingState
 class Trader:
     """
-    Maximally aggressive taker on TOMATOES.
-    - Bot 2 FV inversion for precise fair value (±0.25)
-    - Takes at and through FV with zero inventory penalty
-    - Passive penny-jump at FV for remaining capacity
+    Maximally aggressive taker on TOMATOES with AR(1) mean-reversion prediction.
+    phi = -0.18: returns are mean-reverting, so predicted next FV = fv + phi*(fv - prev_fv).
     """
+    PHI = -0.18
     def run(self, state: TradingState):
         result = {}
+        try:
+            td = json.loads(state.traderData) if state.traderData else {}
+        except Exception:
+            td = {}
+        prev_fv_tom = td.get('pfv_tom', None)
+        new_td = dict(td)
+        tom_trades = state.market_trades.get('TOMATOES', []) + state.own_trades.get('TOMATOES', [])
         for sym, depth in state.order_depths.items():
             if sym == "EMERALDS":
                 result[sym] = self._em(depth, state.position.get(sym,0))
             elif sym == "TOMATOES":
-                result[sym] = self._tom(depth, state.position.get(sym,0))
+                orders, fv = self._tom(depth, state.position.get(sym,0), prev_fv_tom, tom_trades)
+                result[sym] = orders
+                new_td['pfv_tom'] = fv
             else:
                 result[sym] = []
-        return result, 0, ""
+        return result, 0, json.dumps(new_td)
     def _em(self, d, pos):
         if not d.buy_orders or not d.sell_orders: return []
         bb, ba = max(d.buy_orders), min(d.sell_orders)
@@ -35,12 +44,12 @@ class Trader:
         if br > 0: orders.append(Order("EMERALDS",bp,br))
         if sr > 0: orders.append(Order("EMERALDS",ap,-sr))
         return orders
-    def _tom(self, d, pos):
-        if not d.buy_orders or not d.sell_orders: return []
+    def _tom(self, d, pos, prev_fv, recent_trades):
+        if not d.buy_orders or not d.sell_orders: return [], None
         bids = sorted(d.buy_orders.keys(), reverse=True)
         asks = sorted(d.sell_orders.keys())
         bb, ba = bids[0], asks[0]
-        if bb >= ba: return []
+        if bb >= ba: return [], None
         lim = 80
 
         # --- Bot 2 FV inversion (±0.25 precision) ---
@@ -61,33 +70,38 @@ class Trader:
         else:
             fv = wall_mid
 
-        fvi = int(round(fv))
+        # AR(1) mean-reversion: predicted next FV = fv + phi * (fv - prev_fv)
+        fv_pred = fv
+        if prev_fv is not None:
+            fv_pred = fv + self.PHI * (fv - prev_fv)
+
+        fvi = int(round(fv_pred))
         orders = []
         br, sr = lim - pos, lim + pos
 
-        # AGGRESSIVE TAKE: take at FV and better — no inventory penalty
+        # Asymmetric take: stricter buy (less long-building), looser sell
         for a in sorted(d.sell_orders):
-            if a <= fv and br > 0:
+            if a < fv_pred and br > 0:
                 v = min(-d.sell_orders[a], br)
                 orders.append(Order("TOMATOES", a, v)); br -= v
             else:
                 break
         for b in sorted(d.buy_orders, reverse=True):
-            if b >= fv and sr > 0:
+            if b >= fv_pred - 0.5 and sr > 0:
                 v = min(d.buy_orders[b], sr)
                 orders.append(Order("TOMATOES", b, -v)); sr -= v
             else:
                 break
 
-        # Passive: penny-jump right at FV boundary
+        # Passive: book-adaptive (penny inside best bid/ask, capped at FV)
         bp = min(bb + 1, fvi)
         ap = max(ba - 1, fvi)
-        # Avoid self-trade
         if bp >= ap:
             bp = fvi - 1
             ap = fvi + 1
+
         if br > 0:
             orders.append(Order("TOMATOES", bp, br))
         if sr > 0:
             orders.append(Order("TOMATOES", ap, -sr))
-        return orders
+        return orders, fv
