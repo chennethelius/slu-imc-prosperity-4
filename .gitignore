@@ -41,6 +41,10 @@ backtester/target/
 
 # Discord bot
 discord-bot/storage/*.json
+discord-bot/storage/*.db
+discord-bot/*.log
+discord-bot/cron.log
+discord-bot/venv/
 !discord-bot/storage/.gitkeep
 
 # Datasets (large, downloaded separately)

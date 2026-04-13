@@ -1,25 +1,27 @@
 #!/usr/bin/env python3
 """
-Discord bot for scraping IMC Prosperity strategy discussions.
+Discord intel bot for IMC Prosperity 4.
 
-Monitors configured channels, extracts code blocks, strategy mentions,
-and product signals. Stores everything in a structured JSON file that
-Claude can read for community intel.
+Silently scrapes the IMC Prosperity Discord for strategy discussions,
+code snippets, and trading parameters. Stores structured intel in SQLite
+and exports Claude-optimized summaries.
+
+Usage:
+    python bot.py                         # Live monitoring
+    python bot.py --backfill              # Backfill history then monitor
+    python bot.py --backfill --limit=500  # Backfill with custom limit
+    python bot.py --export                # Just regenerate claude_intel.json
 
 Setup:
-    1. Copy .env.example to .env and fill in your bot token + channel IDs
-    2. pip install -r requirements.txt
-    3. python bot.py
-
-Bot permissions needed: Read Messages, Read Message History, Message Content Intent
+    1. Copy .env.example to .env
+    2. Add your Discord user token (from browser DevTools)
+    3. Add channel IDs to monitor
+    4. pip install -r requirements.txt
+    5. python bot.py
 """
 
-import json
-import os
-import re
+import asyncio
 import sys
-from datetime import datetime, timezone
-from pathlib import Path
 
 try:
     import discord
@@ -30,162 +32,69 @@ except ImportError:
 
 load_dotenv()
 
-TOKEN = os.getenv("DISCORD_TOKEN", "")
-WATCH_CHANNELS = [int(c.strip()) for c in os.getenv("WATCH_CHANNELS", "").split(",") if c.strip()]
-GUILD_ID = int(os.getenv("GUILD_ID", "0"))
-
-STORAGE_DIR = Path(__file__).parent / "storage"
-STORAGE_DIR.mkdir(exist_ok=True)
-STRATEGIES_FILE = STORAGE_DIR / "scraped_strategies.json"
-SIGNALS_FILE = STORAGE_DIR / "scraped_signals.json"
-
-# Known Prosperity 4 products for signal detection
-PRODUCTS = {
-    "RAINFOREST_RESIN", "KELP", "SQUID_INK",
-    "CROISSANTS", "JAMS", "DJEMBES",
-    "PICNIC_BASKET1", "PICNIC_BASKET2",
-    "VOLCANIC_ROCK", "VOLCANIC_ROCK_VOUCHER",
-    "MAGNIFICENT_MACARONS",
-}
-
-# Strategy-related keywords
-STRATEGY_KEYWORDS = {
-    "market making", "market maker", "mm",
-    "mean reversion", "mean-revert", "ema", "sma", "regression",
-    "arbitrage", "arb", "stat arb", "pairs",
-    "black-scholes", "black scholes", "greeks", "delta", "gamma", "vega",
-    "fair value", "fair price", "mid price",
-    "spread", "bid-ask", "position limit",
-    "pnl", "sharpe", "drawdown",
-    "backtesting", "backtest",
-}
-
-CODE_BLOCK_RE = re.compile(r"```(?:python|py)?\n(.*?)```", re.DOTALL)
+from config import CLAUDE_EXPORT_PATH, CURRENT_ROUND, DB_PATH, TOKEN, WATCH_CHANNELS
+from export.claude_export import generate_claude_intel
+from scraper.backfiller import backfill_all_channels
+from scraper.listener import process_message
+from storage.db import IntelDB
 
 
-def load_json(path: Path) -> list:
-    if path.exists():
-        with open(path) as f:
-            return json.load(f)
-    return []
+class ProsperityIntelBot(discord.Client):
+    """Silent selfbot that scrapes and processes messages."""
 
-
-def save_json(path: Path, data: list):
-    with open(path, "w") as f:
-        json.dump(data, f, indent=2, default=str)
-
-
-def extract_code_blocks(content: str) -> list[str]:
-    return CODE_BLOCK_RE.findall(content)
-
-
-def detect_products(content: str) -> list[str]:
-    upper = content.upper()
-    return [p for p in PRODUCTS if p in upper]
-
-
-def detect_strategy_keywords(content: str) -> list[str]:
-    lower = content.lower()
-    return [kw for kw in STRATEGY_KEYWORDS if kw in lower]
-
-
-def is_relevant(content: str) -> bool:
-    """Check if a message is worth scraping."""
-    if len(content) < 20:
-        return False
-    has_code = bool(CODE_BLOCK_RE.search(content))
-    has_products = bool(detect_products(content))
-    has_keywords = bool(detect_strategy_keywords(content))
-    return has_code or has_products or has_keywords
-
-
-class ProsperityBot(discord.Client):
-    def __init__(self):
-        intents = discord.Intents.default()
-        intents.message_content = True
-        intents.guilds = True
-        super().__init__(intents=intents)
+    def __init__(self, db: IntelDB, do_backfill: bool = False, backfill_limit: int | None = None):
+        super().__init__()
+        self.db = db
+        self.do_backfill = do_backfill
+        self.backfill_limit = backfill_limit
+        self._message_count = 0
 
     async def on_ready(self):
         print(f"[bot] Logged in as {self.user}")
-        print(f"[bot] Watching {len(WATCH_CHANNELS)} channel(s)")
-        print(f"[bot] Storage: {STORAGE_DIR}")
+        print(f"[bot] Watching {len(WATCH_CHANNELS)} channel(s): {WATCH_CHANNELS}")
+        print(f"[bot] Database: {DB_PATH}")
+        print(f"[bot] Current round: {CURRENT_ROUND or 'tutorial'}")
+
+        if self.do_backfill:
+            print("[bot] Starting backfill...")
+            await backfill_all_channels(self, self.db, self.backfill_limit)
+
+            # Generate export after backfill
+            await generate_claude_intel(self.db, CLAUDE_EXPORT_PATH, CURRENT_ROUND or None)
+            print("[bot] Backfill complete. Switching to live monitoring...")
+
+        stats = await self.db.get_stats()
+        print(f"[bot] DB stats: {stats}")
+        print("[bot] Listening for new messages...")
 
     async def on_message(self, message: discord.Message):
-        # Skip bot messages
-        if message.author.bot:
-            return
+        record = await process_message(message, self.db)
+        if record:
+            self._message_count += 1
+            products = ", ".join(record.products) if record.products else "none"
+            params = len(record.parameters)
+            print(
+                f"[bot] [{record.relevance_score:3d}] "
+                f"#{record.channel_name} | {record.author_name} | "
+                f"products={products} | params={params} | "
+                f"code={'yes' if record.has_code else 'no'}"
+            )
 
-        # Skip if not in a watched channel (if channels are configured)
-        if WATCH_CHANNELS and message.channel.id not in WATCH_CHANNELS:
-            return
+            # Auto-export on high-relevance messages
+            if record.relevance_score >= 80:
+                await generate_claude_intel(self.db, CLAUDE_EXPORT_PATH, CURRENT_ROUND or None)
 
-        content = message.content
-        if not is_relevant(content):
-            return
-
-        timestamp = message.created_at.isoformat()
-        author = str(message.author)
-        channel = str(message.channel)
-        code_blocks = extract_code_blocks(content)
-        products = detect_products(content)
-        keywords = detect_strategy_keywords(content)
-
-        entry = {
-            "timestamp": timestamp,
-            "author": author,
-            "channel": channel,
-            "message_id": message.id,
-            "content": content[:2000],  # Truncate very long messages
-            "code_blocks": code_blocks,
-            "products_mentioned": products,
-            "strategy_keywords": keywords,
-            "has_code": len(code_blocks) > 0,
-            "url": message.jump_url,
-        }
-
-        # Save to strategies file if it has code
-        if code_blocks:
-            strategies = load_json(STRATEGIES_FILE)
-            # Deduplicate by message_id
-            if not any(s.get("message_id") == message.id for s in strategies):
-                strategies.append(entry)
-                save_json(STRATEGIES_FILE, strategies)
-                print(f"[bot] Saved strategy from {author} in #{channel} ({len(code_blocks)} code block(s))")
-
-        # Save to signals file if it mentions products/strategies
-        if products or keywords:
-            signals = load_json(SIGNALS_FILE)
-            if not any(s.get("message_id") == message.id for s in signals):
-                signals.append(entry)
-                # Keep only last 500 signals to avoid unbounded growth
-                if len(signals) > 500:
-                    signals = signals[-500:]
-                save_json(SIGNALS_FILE, signals)
-                print(f"[bot] Saved signal: products={products}, keywords={keywords[:3]}")
+            # Periodic export every 50 messages
+            if self._message_count % 50 == 0:
+                await generate_claude_intel(self.db, CLAUDE_EXPORT_PATH, CURRENT_ROUND or None)
 
 
-class BackfillBot(ProsperityBot):
-    """Extended bot that can backfill message history from channels."""
-
-    async def backfill(self, channel_id: int, limit: int = 1000):
-        """Scrape the last `limit` messages from a channel."""
-        channel = self.get_channel(channel_id)
-        if not channel:
-            print(f"[backfill] Channel {channel_id} not found")
-            return
-
-        print(f"[backfill] Scanning #{channel.name} (last {limit} messages)...")
-        count = 0
-
-        async for message in channel.history(limit=limit):
-            if message.author.bot:
-                continue
-            if is_relevant(message.content):
-                await self.on_message(message)
-                count += 1
-
-        print(f"[backfill] Found {count} relevant messages in #{channel.name}")
+async def run_export_only():
+    """Just regenerate the Claude export from existing DB."""
+    async with IntelDB(DB_PATH) as db:
+        stats = await db.get_stats()
+        print(f"[export] DB stats: {stats}")
+        await generate_claude_intel(db, CLAUDE_EXPORT_PATH, CURRENT_ROUND or None)
 
 
 def main():
@@ -194,27 +103,30 @@ def main():
         print("See .env.example for configuration", file=sys.stderr)
         sys.exit(1)
 
-    # Check for backfill mode
-    backfill = "--backfill" in sys.argv
-    limit = 1000
-    for arg in sys.argv:
+    # Parse args
+    args = sys.argv[1:]
+    do_backfill = "--backfill" in args
+    export_only = "--export" in args
+    limit = None
+    for arg in args:
         if arg.startswith("--limit="):
             limit = int(arg.split("=")[1])
 
-    if backfill:
-        bot = BackfillBot()
+    if export_only:
+        asyncio.run(run_export_only())
+        return
 
-        @bot.event
-        async def on_ready():
-            print(f"[backfill] Logged in as {bot.user}")
-            for channel_id in WATCH_CHANNELS:
-                await bot.backfill(channel_id, limit=limit)
-            print("[backfill] Done. Switching to live monitoring...")
+    # Main bot loop
+    async def start():
+        db = IntelDB(DB_PATH)
+        await db.connect()
+        try:
+            bot = ProsperityIntelBot(db, do_backfill=do_backfill, backfill_limit=limit)
+            await bot.start(TOKEN)
+        finally:
+            await db.close()
 
-        bot.run(TOKEN)
-    else:
-        bot = ProsperityBot()
-        bot.run(TOKEN)
+    asyncio.run(start())
 
 
 if __name__ == "__main__":
