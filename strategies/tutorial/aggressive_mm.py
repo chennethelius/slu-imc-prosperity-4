@@ -1,10 +1,10 @@
 from datamodel import Order, OrderDepth, TradingState
 class Trader:
     """
-    Key idea: use micro-price (volume-weighted mid) as FV.
-    Micro-price naturally incorporates book imbalance — when bid volume
-    is high, micro-price shifts toward ask, predicting upward move.
-    No parameters to overfit.
+    Maximally aggressive taker on TOMATOES.
+    - Bot 2 FV inversion for precise fair value (±0.25)
+    - Takes at and through FV with zero inventory penalty
+    - Passive penny-jump at FV for remaining capacity
     """
     def run(self, state: TradingState):
         result = {}
@@ -41,29 +41,53 @@ class Trader:
         asks = sorted(d.sell_orders.keys())
         bb, ba = bids[0], asks[0]
         if bb >= ba: return []
-        # Compute FV using ALL visible book levels, weighted by volume
-        total_bid_pv = sum(p * d.buy_orders[p] for p in bids)
-        total_bid_v = sum(d.buy_orders[p] for p in bids)
-        total_ask_pv = sum(p * abs(d.sell_orders[p]) for p in asks)
-        total_ask_v = sum(abs(d.sell_orders[p]) for p in asks)
-        # Micro-price: weighted by opposite side (bid-weighted ask price, ask-weighted bid price)
-        fv = (total_bid_pv / total_bid_v * total_ask_v + total_ask_pv / total_ask_v * total_bid_v) / (total_bid_v + total_ask_v)
-        fvi = int(round(fv))
         lim = 80
+
+        # --- Bot 2 FV inversion (±0.25 precision) ---
+        # Bot 2: bid = floor(FV+0.75)-7, ask = ceil(FV+0.25)+6
+        # Skip Bot 3 levels when 3+ on a side (Bot 3 is near-FV, rare)
+        bot2_bid = bids[1] if len(bids) >= 3 else bids[0]
+        bot2_ask = asks[1] if len(asks) >= 3 else asks[0]
+        fv_low = max(bot2_bid + 6.25, bot2_ask - 7.25)
+        fv_high = min(bot2_bid + 7.25, bot2_ask - 6.25)
+
+        # Fallback to wall-mid if Bot 2 inversion inconsistent
+        bid_wall = min(d.buy_orders.keys())
+        ask_wall = max(d.sell_orders.keys())
+        wall_mid = (bid_wall + ask_wall) / 2.0
+
+        if fv_low <= fv_high and abs((fv_low + fv_high) / 2 - wall_mid) < 1.5:
+            fv = (fv_low + fv_high) / 2.0
+        else:
+            fv = wall_mid
+
+        fvi = int(round(fv))
         orders = []
-        br, sr = lim-pos, lim+pos
-        # Take below FV
+        br, sr = lim - pos, lim + pos
+
+        # AGGRESSIVE TAKE: take at FV and better — no inventory penalty
         for a in sorted(d.sell_orders):
-            if a < fv and br > 0:
-                v = min(-d.sell_orders[a], br); orders.append(Order("TOMATOES",a,v)); br -= v
-            else: break
-        # Sell above FV
+            if a <= fv and br > 0:
+                v = min(-d.sell_orders[a], br)
+                orders.append(Order("TOMATOES", a, v)); br -= v
+            else:
+                break
         for b in sorted(d.buy_orders, reverse=True):
-            if b > fv and sr > 0:
-                v = min(d.buy_orders[b], sr); orders.append(Order("TOMATOES",b,-v)); sr -= v
-            else: break
-        # Penny-jump clamped to FV
-        bp, ap = min(bb+1, fvi-1), max(ba-1, fvi+1)
-        if br > 0: orders.append(Order("TOMATOES",bp,br))
-        if sr > 0: orders.append(Order("TOMATOES",ap,-sr))
+            if b >= fv and sr > 0:
+                v = min(d.buy_orders[b], sr)
+                orders.append(Order("TOMATOES", b, -v)); sr -= v
+            else:
+                break
+
+        # Passive: penny-jump right at FV boundary
+        bp = min(bb + 1, fvi)
+        ap = max(ba - 1, fvi)
+        # Avoid self-trade
+        if bp >= ap:
+            bp = fvi - 1
+            ap = fvi + 1
+        if br > 0:
+            orders.append(Order("TOMATOES", bp, br))
+        if sr > 0:
+            orders.append(Order("TOMATOES", ap, -sr))
         return orders
