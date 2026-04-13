@@ -78,18 +78,22 @@ class Trader:
         fvi = int(round(fv_pred))
         orders = []
         br, sr = lim - pos, lim + pos
+        # P3-style: reserve 20 units of capacity for passive fills (don't burn all on takes)
+        soft_lim = 60
+        take_br = max(0, soft_lim - pos)
+        take_sr = max(0, soft_lim + pos)
 
         # Asymmetric take: stricter buy (less long-building), looser sell
         for a in sorted(d.sell_orders):
-            if a < fv_pred and br > 0:
-                v = min(-d.sell_orders[a], br)
-                orders.append(Order("TOMATOES", a, v)); br -= v
+            if a < fv_pred and take_br > 0 and br > 0:
+                v = min(-d.sell_orders[a], take_br, br)
+                orders.append(Order("TOMATOES", a, v)); br -= v; take_br -= v
             else:
                 break
         for b in sorted(d.buy_orders, reverse=True):
-            if b >= fv_pred - 0.5 and sr > 0:
-                v = min(d.buy_orders[b], sr)
-                orders.append(Order("TOMATOES", b, -v)); sr -= v
+            if b >= fv_pred - 0.5 and take_sr > 0 and sr > 0:
+                v = min(d.buy_orders[b], take_sr, sr)
+                orders.append(Order("TOMATOES", b, -v)); sr -= v; take_sr -= v
             else:
                 break
 
