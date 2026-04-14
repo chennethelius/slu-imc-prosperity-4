@@ -100,9 +100,14 @@ class Trader:
             else:
                 break
 
-        # Passive: book-adaptive (penny inside best bid/ask, capped at FV)
-        bp = min(bb + 1, fvi)
-        ap = max(ba - 1, fvi)
+        # Sylvain/YBansal-inspired: penny inside nearest level >1 tick from fair
+        # avoids pennying Bot 3 noise right next to FV (adverse selection)
+        asks_above = [p for p in d.sell_orders if p > fv_pred + 1]
+        bids_below = [p for p in d.buy_orders if p < fv_pred - 1]
+        baaf = min(asks_above) if asks_above else fvi + 2
+        bbbf = max(bids_below) if bids_below else fvi - 2
+        bp = bbbf + 1
+        ap = baaf - 1
         if bp >= ap:
             bp = fvi - 1
             ap = fvi + 1
