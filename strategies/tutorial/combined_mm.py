@@ -33,34 +33,51 @@ class Trader:
         return result, 0, json.dumps(new_td)
 
     def _em(self, d, pos):
+        # P3 three-phase (Sylvain resin): take + clear-at-fair + edge-maintain make
         if not d.buy_orders or not d.sell_orders:
             return []
-        bb, ba = max(d.buy_orders), min(d.sell_orders)
-        if bb >= ba:
-            return []
-        fv, lim = 10000, 80
-        # Inventory-shifted FV (from optimized_mm)
-        fv_eff = fv - pos * self.POS_SHIFT
-        fvi = int(round(fv_eff))
-        orders = []
-        br, sr = lim - pos, lim + pos
-        for a in sorted(d.sell_orders):
-            if a < fv_eff and br > 0:
-                v = min(-d.sell_orders[a], br)
-                orders.append(Order("EMERALDS", a, v)); br -= v
-            else:
-                break
-        for b in sorted(d.buy_orders, reverse=True):
-            if b > fv_eff and sr > 0:
-                v = min(d.buy_orders[b], sr)
-                orders.append(Order("EMERALDS", b, -v)); sr -= v
-            else:
-                break
-        bp, ap = min(bb + 1, fvi - 1), max(ba - 1, fvi + 1)
-        if br > 0:
-            orders.append(Order("EMERALDS", bp, br))
-        if sr > 0:
-            orders.append(Order("EMERALDS", ap, -sr))
+        fair, lim = 10000, 80
+        tw, cw, vlim = 1, 0, 20
+        orders = []; bv = sv = 0
+        ba = min(d.sell_orders); ba_amt = -d.sell_orders[ba]
+        if ba <= fair - tw:
+            q = min(ba_amt, lim - pos - bv)
+            if q > 0:
+                orders.append(Order("EMERALDS", ba, q)); bv += q
+        bb = max(d.buy_orders); bb_amt = d.buy_orders[bb]
+        if bb >= fair + tw:
+            q = min(bb_amt, lim + pos - sv)
+            if q > 0:
+                orders.append(Order("EMERALDS", bb, -q)); sv += q
+        pos_after = pos + bv - sv
+        f_bid, f_ask = fair - cw, fair + cw
+        if pos_after > 0:
+            cq = sum(v for p, v in d.buy_orders.items() if p >= f_ask)
+            cq = min(cq, pos_after)
+            sent = min(lim + pos - sv, cq)
+            if sent > 0:
+                orders.append(Order("EMERALDS", f_ask, -sent)); sv += sent
+        if pos_after < 0:
+            cq = sum(-v for p, v in d.sell_orders.items() if p <= f_bid)
+            cq = min(cq, -pos_after)
+            sent = min(lim - pos - bv, cq)
+            if sent > 0:
+                orders.append(Order("EMERALDS", f_bid, sent)); bv += sent
+        baaf = [p for p in d.sell_orders if p > fair + 1]
+        bbbf = [p for p in d.buy_orders if p < fair - 1]
+        if baaf and bbbf:
+            baaf = min(baaf); bbbf = max(bbbf)
+            if baaf <= fair + 2 and pos <= vlim:
+                baaf = fair + 3
+            if bbbf >= fair - 2 and pos >= -vlim:
+                bbbf = fair - 3
+            bid = bbbf + 1; ask = baaf - 1
+            buy_q = lim - pos - bv
+            if buy_q > 0:
+                orders.append(Order("EMERALDS", int(bid), buy_q))
+            sell_q = lim + pos - sv
+            if sell_q > 0:
+                orders.append(Order("EMERALDS", int(ask), -sell_q))
         return orders
 
     def _tom(self, d, pos, prev_fv):
