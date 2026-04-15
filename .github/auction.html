@@ -91,6 +91,14 @@
     font-size:8px; font-weight:700; color:#60a5fa; letter-spacing:.5px;
   }
   .vb-empty { color:#4b5563; font-size:11px; }
+  .vb-fill { box-shadow: inset 0 0 0 1px rgba(96,165,250,.45); }
+  .vb-skip { opacity:.4; }
+  .vb-pct { font-style:normal; color:#60a5fa; font-size:10px; margin-left:6px; font-weight:700; }
+  .vb-clear-line {
+    background:rgba(96,165,250,.12); border:1px dashed rgba(96,165,250,.7);
+    border-radius:6px; padding:4px 10px; margin-top:8px; text-align:center;
+    color:#60a5fa; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; letter-spacing:.5px;
+  }
 
   /* ── Form ── */
   .form-row { display:flex; flex-direction:column; gap:5px; margin-bottom:10px; }
@@ -230,11 +238,17 @@
       </div>
       <div class="form-row">
         <label>Price <span id="price-hint" style="color:var(--text-muted);font-weight:500;text-transform:none;letter-spacing:0;"></span></label>
-        <input type="number" id="my-price" value="30" step="1">
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="range" id="my-price-slider" style="flex:1;accent-color:var(--accent)">
+          <input type="number" id="my-price" value="30" step="1" style="width:90px">
+        </div>
       </div>
       <div class="form-row">
         <label>Quantity <span id="qty-hint" style="color:var(--text-muted);font-weight:500;text-transform:none;letter-spacing:0;"></span></label>
-        <input type="number" id="my-qty" value="10000" step="1000" min="0">
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="range" id="my-qty-slider" style="flex:1;accent-color:var(--accent)">
+          <input type="number" id="my-qty" value="10000" step="1000" min="0" style="width:90px">
+        </div>
       </div>
 
       <h3 style="margin-top:14px"><span>Economics</span><span class="hint">post-auction FV &amp; fees</span></h3>
@@ -365,7 +379,7 @@ function setProduct(p){
   document.getElementById('book-title').textContent = p;
   loadEconForProduct();
   renderBook();
-  renderVisualBook();
+  syncSliders();
   simulate();
   document.getElementById('scan-results').innerHTML = '<div class="scan-empty">Click <b>Find Optimal</b> to scan.</div>';
 }
@@ -388,7 +402,6 @@ function resetBook(){
   BOOKS[CURRENT] = JSON.parse(JSON.stringify(DEFAULT_BOOKS[CURRENT]));
   loadEconForProduct();
   renderBook();
-  renderVisualBook();
   simulate();
 }
 
@@ -396,14 +409,13 @@ function addRow(side){
   const b = BOOKS[CURRENT];
   (side==='bid'?b.bids:b.asks).push({px:0, qty:0});
   renderBook();
-  renderVisualBook();
+  simulate();
 }
 
 function delRow(side, i){
   const b = BOOKS[CURRENT];
   (side==='bid'?b.bids:b.asks).splice(i,1);
   renderBook();
-  renderVisualBook();
   simulate();
 }
 
@@ -412,7 +424,6 @@ function editRow(side, i, field, v){
   const arr = side==='bid' ? b.bids : b.asks;
   const num = Number(v); if (!isFinite(num)) return;
   arr[i][field] = num;
-  renderVisualBook();
   simulate();
 }
 
@@ -442,27 +453,66 @@ function fmtVol(v){
   if (Math.abs(v) >= 1000) return (v/1000).toFixed(v%1000===0?0:1).replace(/\.0$/,'') + 'k';
   return String(v);
 }
-function renderVisualBook(){
+function renderVisualBook(pStar, allocByKey){
   const b = BOOKS[CURRENT];
-  const bids = [...b.bids].sort((a,b)=>b.px-a.px);
-  const asks = [...b.asks].sort((a,b)=>a.px-b.px);
-  const N = Math.max(bids.length, asks.length);
-  const maxVol = Math.max(1, ...bids.map(o=>o.qty), ...asks.map(o=>o.qty));
   const yourPrice = Math.floor(Number(document.getElementById('my-price').value)||0);
   const yourQty = Math.max(0, Math.floor(Number(document.getElementById('my-qty').value)||0));
+  const youActive = yourQty>0 && yourPrice>0;
+
+  // Build sides with the user's order INSERTED as a distinct row
+  let bids = b.bids.filter(o=>o.qty>0&&o.px>0).map(o=>({px:o.px, qty:o.qty, who:'mkt'}));
+  let asks = b.asks.filter(o=>o.qty>0&&o.px>0).map(o=>({px:o.px, qty:o.qty, who:'mkt'}));
+  if (youActive) {
+    if (MY_SIDE==='buy') bids.push({px:yourPrice, qty:yourQty, who:'you'});
+    else                 asks.push({px:yourPrice, qty:yourQty, who:'you'});
+  }
+  // Sort: bids desc px (you-last among ties); asks asc px (you-last among ties)
+  bids.sort((a,b)=> b.px-a.px || (a.who==='you'?1:b.who==='you'?-1:0));
+  asks.sort((a,b)=> a.px-b.px || (a.who==='you'?1:b.who==='you'?-1:0));
+
+  const N = Math.max(bids.length, asks.length);
+  const maxVol = Math.max(1, ...bids.map(o=>o.qty), ...asks.map(o=>o.qty));
+
+  const fillPct = (side, o) => {
+    if (!allocByKey) return null;
+    const k = `${side}|${o.px}|${o.who}|${o.qty}`;
+    const filled = allocByKey.get(k);
+    if (filled == null) return null;
+    return o.qty>0 ? Math.round(filled/o.qty*100) : 0;
+  };
 
   const body = document.getElementById('visual-book-body');
   const rows = [];
   for (let i = 0; i < N; i++) {
-    const bid = bids[i];
-    const ask = asks[i];
-    const bidIsYou = yourQty>0 && MY_SIDE==='buy' && bid && bid.px===yourPrice;
-    const askIsYou = yourQty>0 && MY_SIDE==='sell' && ask && ask.px===yourPrice;
-    const bidVolCell = bid ? `<div class="vb-cell vb-bid-vol ${bidIsYou?'vb-you':''}"><div class="vb-bar" style="width:${(bid.qty/maxVol*100).toFixed(1)}%"></div><span>${fmtVol(bid.qty)}</span></div>` : `<div class="vb-cell vb-empty"></div>`;
-    const bidPxCell  = bid ? `<div class="vb-cell vb-bid-px"><div class="vb-bar" style="width:${(bid.qty/maxVol*60).toFixed(1)}%"></div><span>${bid.px}</span></div>` : `<div class="vb-cell vb-empty"></div>`;
-    const askPxCell  = ask ? `<div class="vb-cell vb-ask-px"><div class="vb-bar" style="width:${(ask.qty/maxVol*60).toFixed(1)}%"></div><span>${ask.px}</span></div>` : `<div class="vb-cell vb-empty"></div>`;
-    const askVolCell = ask ? `<div class="vb-cell vb-ask-vol ${askIsYou?'vb-you':''}"><div class="vb-bar" style="width:${(ask.qty/maxVol*100).toFixed(1)}%"></div><span>${fmtVol(ask.qty)}</span></div>` : `<div class="vb-cell vb-empty"></div>`;
-    rows.push(`<div class="vb-row">${bidVolCell}${bidPxCell}${askPxCell}${askVolCell}</div>`);
+    const bid = bids[i], ask = asks[i];
+    const cells = [];
+
+    if (bid) {
+      const bidPct = fillPct('BID', bid);
+      const willFill = pStar!=null && bid.px>=pStar;
+      const youCls = bid.who==='you' ? 'vb-you' : '';
+      const fillCls = willFill ? 'vb-fill' : (pStar!=null ? 'vb-skip' : '');
+      const tag = bidPct!=null && bidPct<100 && willFill ? ` <em class="vb-pct">${bidPct}%</em>` : '';
+      cells.push(`<div class="vb-cell vb-bid-vol ${youCls} ${fillCls}"><div class="vb-bar" style="width:${(bid.qty/maxVol*100).toFixed(1)}%"></div><span>${fmtVol(bid.qty)}${tag}</span></div>`);
+      cells.push(`<div class="vb-cell vb-bid-px ${youCls} ${fillCls}"><div class="vb-bar" style="width:${(bid.qty/maxVol*60).toFixed(1)}%"></div><span>${bid.px}</span></div>`);
+    } else {
+      cells.push(`<div class="vb-cell vb-empty"></div><div class="vb-cell vb-empty"></div>`);
+    }
+    if (ask) {
+      const askPct = fillPct('ASK', ask);
+      const willFill = pStar!=null && ask.px<=pStar;
+      const youCls = ask.who==='you' ? 'vb-you' : '';
+      const fillCls = willFill ? 'vb-fill' : (pStar!=null ? 'vb-skip' : '');
+      const tag = askPct!=null && askPct<100 && willFill ? ` <em class="vb-pct">${askPct}%</em>` : '';
+      cells.push(`<div class="vb-cell vb-ask-px ${youCls} ${fillCls}"><div class="vb-bar" style="width:${(ask.qty/maxVol*60).toFixed(1)}%"></div><span>${ask.px}</span></div>`);
+      cells.push(`<div class="vb-cell vb-ask-vol ${youCls} ${fillCls}"><div class="vb-bar" style="width:${(ask.qty/maxVol*100).toFixed(1)}%"></div><span>${fmtVol(ask.qty)}${tag}</span></div>`);
+    } else {
+      cells.push(`<div class="vb-cell vb-empty"></div><div class="vb-cell vb-empty"></div>`);
+    }
+    rows.push(`<div class="vb-row">${cells.join('')}</div>`);
+  }
+  if (pStar!=null) {
+    rows.push(`<div class="vb-clear-line"><span>P* = ${pStar}</span></div>`);
   }
   body.innerHTML = rows.join('');
 }
@@ -539,7 +589,12 @@ function simulate(){
 
   const res = clearAuction(book, MY_SIDE, price, qty);
 
-  renderVisualBook();
+  // Build allocation lookup keyed by (side|px|who|qty) for visual book annotations
+  const allocByKey = new Map();
+  for (const r of res.alloc || []) {
+    allocByKey.set(`${r.side}|${r.px}|${r.who}|${r.qty}`, r.filled);
+  }
+  renderVisualBook(res.pStar, allocByKey);
 
   const hero = document.getElementById('hero');
   const hv   = document.getElementById('hero-val');
@@ -554,6 +609,7 @@ function simulate(){
     pnlHero.style.display='none';
     renderAlloc([], null);
     renderCurve(res.curve, null);
+    syncSliders();
     return;
   }
   hero.classList.remove('none');
@@ -738,13 +794,36 @@ function loadScan(p, q){
   simulate();
 }
 
+/* ── Slider <-> number sync ── */
+function syncSliders(){
+  const b = BOOKS[CURRENT];
+  const allPx = [...b.bids.map(o=>o.px), ...b.asks.map(o=>o.px)].filter(p=>p>0);
+  const lo = allPx.length ? Math.min(...allPx) - 2 : 0;
+  const hi = allPx.length ? Math.max(...allPx) + 2 : 100;
+  const ps = document.getElementById('my-price-slider');
+  ps.min = lo; ps.max = hi; ps.step = 1; ps.value = document.getElementById('my-price').value;
+  const totalSupply = b.asks.reduce((s,o)=>s+o.qty,0);
+  const totalDemand = b.bids.reduce((s,o)=>s+o.qty,0);
+  const qmax = Math.max(1000, totalSupply, totalDemand) * 1.2 | 0;
+  const qs = document.getElementById('my-qty-slider');
+  qs.min = 0; qs.max = qmax; qs.step = Math.max(1, qmax/200|0); qs.value = document.getElementById('my-qty').value;
+}
+
+function bindSync(numId, sliderId){
+  const num = document.getElementById(numId), slider = document.getElementById(sliderId);
+  num.addEventListener('input', () => { slider.value = num.value; simulate(); });
+  slider.addEventListener('input', () => { num.value = slider.value; simulate(); });
+}
+
 /* ── Wire ── */
 document.querySelectorAll('.prod-tab').forEach(t => t.addEventListener('click', () => setProduct(t.dataset.prod)));
-['my-price','my-qty','econ-fv','econ-buyfee','econ-sellfee'].forEach(id=>document.getElementById(id).addEventListener('input', simulate));
+bindSync('my-price', 'my-price-slider');
+bindSync('my-qty', 'my-qty-slider');
+['econ-fv','econ-buyfee','econ-sellfee'].forEach(id=>document.getElementById(id).addEventListener('input', simulate));
 
 loadEconForProduct();
 renderBook();
-renderVisualBook();
+syncSliders();
 simulate();
 </script>
 </body>
