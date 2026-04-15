@@ -5,6 +5,7 @@ on:
     paths:
       - 'strategies/**'
       - 'backtester/**'
+      - 'datasets_extra/**'
       - '.github/dashboard.html'
       - '.github/auction.html'
       - '.github/discord-intel.html'

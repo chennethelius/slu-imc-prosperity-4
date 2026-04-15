@@ -20,9 +20,20 @@ def main():
     results_dir = repo_root / "backtest-results"
     results_dir.mkdir(exist_ok=True)
 
+    # Stage extra datasets (e.g. round1_slow) from repo root into backtester
+    extra_ds_root = repo_root / "datasets_extra"
+    ds_root = backtester_dir / "datasets"
+    if extra_ds_root.is_dir():
+        for extra in sorted(extra_ds_root.iterdir()):
+            if not extra.is_dir():
+                continue
+            target = ds_root / extra.name
+            if not target.exists():
+                shutil.copytree(extra, target)
+                print(f"Staged extra dataset: {extra.name}")
+
     # Find available datasets
     datasets = []
-    ds_root = backtester_dir / "datasets"
     for d in sorted(ds_root.iterdir()):
         if d.is_dir() and any(d.iterdir()):
             datasets.append(d.name)
@@ -55,7 +66,7 @@ def main():
             if round_num == "0":
                 target_datasets = [d for d in datasets if "tutorial" in d]
             else:
-                target_datasets = [d for d in datasets if d == parent]
+                target_datasets = [d for d in datasets if d == parent or d.startswith(f"{parent}_")]
         elif parent == "tutorial":
             target_datasets = [d for d in datasets if "tutorial" in d]
         else:
@@ -81,6 +92,7 @@ def main():
                         str(backtester_bin),
                         "--trader", str(strategy_path),
                         "--dataset", ds,
+                        "--queue-penetration", "0.0",
                         "--persist",
                         "--artifact-mode", "full",
                     ],
