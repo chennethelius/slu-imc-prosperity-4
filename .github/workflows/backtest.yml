@@ -119,6 +119,7 @@ jobs:
 
           # Copy dashboard
           cp .github/dashboard.html "$DEPLOY_DIR/index.html"
+          cp .github/auction.html "$DEPLOY_DIR/auction.html" 2>/dev/null || true
 
           # Push to gh-pages
           cd "$DEPLOY_DIR"
