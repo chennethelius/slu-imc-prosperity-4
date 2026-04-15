@@ -255,12 +255,21 @@
 const BASE='./runs';
 let RUNS=[],groups=[],filtered=[];
 const allCharts={};
-let activeFilters={author:null,strategy:null};
+let activeFilters={author:null,strategy:null,round:null};
 let currentView='feed';
 let lbSort={key:'pnl',desc:true};
 
 const pc=v=>v>=0?'pos':'neg';
 const fp=v=>(v>=0?'+':'')+v.toLocaleString(undefined,{minimumFractionDigits:1,maximumFractionDigits:1});
+function normRound(ds){
+  const s=String(ds||'').toLowerCase();
+  if(s.includes('tutorial'))return'Tutorial';
+  const m=s.match(/round[_-]?(\d+)/);
+  if(m)return'Round '+m[1];
+  if(s.includes('submission'))return'Submission';
+  return null;
+}
+const roundRank=r=>r==='Tutorial'?0:r==='Submission'?99:parseInt((r||'').replace(/\D/g,''))||50;
 
 async function init(){
   try{const r=await fetch('./results.json');if(!r.ok)throw 0;RUNS=await r.json()}
@@ -278,10 +287,12 @@ async function init(){
     g.sub_pnl=sub?sub.pnl:null;
     g.total_pnl=g.runs.reduce((s,r)=>s+(r.pnl||0),0);
     g.total_trades=g.runs.reduce((s,r)=>s+(r.trades||0),0);
+    g.rounds=[...new Set(g.runs.map(r=>normRound(r.dataset)).filter(Boolean))];
   }
 
   const authors=[...new Set(groups.map(g=>g.author))];
   const strategies=[...new Set(groups.map(g=>g.strategy))];
+  const rounds=[...new Set(groups.flatMap(g=>g.rounds))].sort((a,b)=>roundRank(a)-roundRank(b));
   const tb=document.getElementById('toolbar');
   const tg=tb.querySelector('.tab-group');
   const addPills=(vals,key)=>{
@@ -297,6 +308,7 @@ async function init(){
       tb.insertBefore(p,tg);
     });
   };
+  if(rounds.length>1)addPills(rounds,'round');
   if(authors.length>1)addPills(authors,'author');
   if(strategies.length>1)addPills(strategies,'strategy');
 
@@ -317,6 +329,7 @@ function applyFilters(){
   filtered=groups.filter(g=>{
     if(activeFilters.author&&g.author!==activeFilters.author)return false;
     if(activeFilters.strategy&&g.strategy!==activeFilters.strategy)return false;
+    if(activeFilters.round&&!g.rounds.includes(activeFilters.round))return false;
     if(q&&!(g.author.toLowerCase().includes(q)||g.strategy.toLowerCase().includes(q)||(g.commit||'').toLowerCase().includes(q)))return false;
     return true;
   });
