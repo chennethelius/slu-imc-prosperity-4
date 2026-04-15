@@ -4,7 +4,12 @@ on:
   push:
     paths:
       - 'strategies/**'
-      - 'backtester/datasets/**'
+      - 'backtester/**'
+      - '.github/dashboard.html'
+      - '.github/auction.html'
+      - '.github/discord-intel.html'
+      - '.github/collect_results.py'
+      - '.github/workflows/backtest.yml'
   workflow_dispatch:
 
 permissions:
