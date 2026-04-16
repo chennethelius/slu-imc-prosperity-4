@@ -1,132 +1,130 @@
-import json
-
 from datamodel import Order, TradingState
 
-#test
+OSM = "ASH_COATED_OSMIUM"
+PEP = "INTARIAN_PEPPER_ROOT"
+
+
 class Trader:
     """
-    pepper_long: always target +80 pepper, load from tick 0. No signal,
-    no flip. Pure directional bet that the submission day drifts up.
-    OSM uses slow EMA fair value seeded at 10000 (3-day data shows ~+3 drift).
+    Round 1 bot. Two products:
+      OSM — inventory-skewed three-phase market-making at fair=10000.
+      PEP — pure +80 buy-and-hold (exploits monotonic upward drift).
     """
 
-    POSITION_LIMITS = {"ASH_COATED_OSMIUM": 80, "INTARIAN_PEPPER_ROOT": 80}
+    POSITION_LIMITS = {OSM: 80, PEP: 80}
 
-    OSMIUM_FAIR_SEED = 10000.0
-    OSMIUM_FAIR_ALPHA = 0.01
-    OSMIUM_TAKE_WIDTH = 2
-    OSMIUM_CLEAR_WIDTH = 0
-    OSMIUM_INVENTORY_SKEW_THRESHOLD = 5
+    OSM_FAIR = 10000
+    OSM_TAKE_WIDTH = 1
+    OSM_CLEAR_WIDTH = 1
+    OSM_MAKE_EDGE = 3
+    OSM_MIN_EDGE = 1
+    OSM_MIN_TW = 0
+    OSM_SKEW_UNIT = 12
+    OSM_VOLUME_LIMIT = 30
 
-    PEPPER_TARGET_POSITION = 80
+    PEP_TARGET = 80
 
     def bid(self):
         return 15
 
     def run(self, state: TradingState):
-        td = json.loads(state.traderData) if state.traderData else {}
-        osm_fair = td.get("osm_fair", self.OSMIUM_FAIR_SEED)
-
-        orders_by_symbol: dict[str, list[Order]] = {}
-        for symbol, order_depth in state.order_depths.items():
+        orders: dict[str, list[Order]] = {}
+        for symbol, depth in state.order_depths.items():
             if symbol not in self.POSITION_LIMITS:
-                orders_by_symbol[symbol] = []
+                orders[symbol] = []
                 continue
-            current_position = state.position.get(symbol, 0)
-            if symbol == "ASH_COATED_OSMIUM":
-                if order_depth.buy_orders and order_depth.sell_orders:
-                    mid = (max(order_depth.buy_orders) + min(order_depth.sell_orders)) / 2
-                    osm_fair = self.OSMIUM_FAIR_ALPHA * mid + (1 - self.OSMIUM_FAIR_ALPHA) * osm_fair
-                orders_by_symbol[symbol] = self._osmium(order_depth, current_position, int(round(osm_fair)))
-            elif symbol == "INTARIAN_PEPPER_ROOT":
-                orders_by_symbol[symbol] = self._pepper(symbol, order_depth, current_position)
+            pos = state.position.get(symbol, 0)
+            if symbol == OSM:
+                orders[symbol] = self._osmium(depth, pos)
+            elif symbol == PEP:
+                orders[symbol] = self._pepper(depth, pos)
             else:
-                orders_by_symbol[symbol] = []
+                orders[symbol] = []
+        return orders, 0, ""
 
-        trader_data = json.dumps({"osm_fair": osm_fair})
-        return orders_by_symbol, 0, trader_data
-
-    def _osmium(self, order_depth, current_position, fair_value):
-        if not order_depth.buy_orders or not order_depth.sell_orders:
+    def _osmium(self, d, pos):
+        if not d.buy_orders or not d.sell_orders:
             return []
-        position_limit = self.POSITION_LIMITS["ASH_COATED_OSMIUM"]
-        take_width = self.OSMIUM_TAKE_WIDTH
-        clear_width = self.OSMIUM_CLEAR_WIDTH
-        inventory_skew_threshold = self.OSMIUM_INVENTORY_SKEW_THRESHOLD
+
+        fair = self.OSM_FAIR
+        lim = self.POSITION_LIMITS[OSM]
+        cw = self.OSM_CLEAR_WIDTH
+        vol_lim = self.OSM_VOLUME_LIMIT
         orders = []
-        buy_volume_used = 0
-        sell_volume_used = 0
+        bought = sold = 0
 
-        best_ask = min(order_depth.sell_orders)
-        best_ask_volume = -order_depth.sell_orders[best_ask]
-        if best_ask <= fair_value - take_width:
-            buy_quantity = min(best_ask_volume, position_limit - current_position - buy_volume_used)
-            if buy_quantity > 0:
-                orders.append(Order("ASH_COATED_OSMIUM", best_ask, buy_quantity))
-                buy_volume_used += buy_quantity
-        best_bid = max(order_depth.buy_orders)
-        best_bid_volume = order_depth.buy_orders[best_bid]
-        if best_bid >= fair_value + take_width:
-            sell_quantity = min(best_bid_volume, position_limit + current_position - sell_volume_used)
-            if sell_quantity > 0:
-                orders.append(Order("ASH_COATED_OSMIUM", best_bid, -sell_quantity))
-                sell_volume_used += sell_quantity
+        skew = round(pos / self.OSM_SKEW_UNIT)
+        tw_ask = max(self.OSM_MIN_TW, self.OSM_TAKE_WIDTH + skew)
+        tw_bid = max(self.OSM_MIN_TW, self.OSM_TAKE_WIDTH - skew)
 
-        position_after_take = current_position + buy_volume_used - sell_volume_used
-        fair_bid_price = fair_value - clear_width
-        fair_ask_price = fair_value + clear_width
-        if position_after_take > 0:
-            clearable_quantity = sum(v for p, v in order_depth.buy_orders.items() if p >= fair_ask_price)
-            clearable_quantity = min(clearable_quantity, position_after_take)
-            clear_sell_quantity = min(position_limit + current_position - sell_volume_used, clearable_quantity)
-            if clear_sell_quantity > 0:
-                orders.append(Order("ASH_COATED_OSMIUM", fair_ask_price, -clear_sell_quantity))
-                sell_volume_used += clear_sell_quantity
-        if position_after_take < 0:
-            clearable_quantity = sum(-v for p, v in order_depth.sell_orders.items() if p <= fair_bid_price)
-            clearable_quantity = min(clearable_quantity, -position_after_take)
-            clear_buy_quantity = min(position_limit - current_position - buy_volume_used, clearable_quantity)
-            if clear_buy_quantity > 0:
-                orders.append(Order("ASH_COATED_OSMIUM", fair_bid_price, clear_buy_quantity))
-                buy_volume_used += clear_buy_quantity
+        best_ask = min(d.sell_orders)
+        if best_ask <= fair - tw_ask:
+            q = min(-d.sell_orders[best_ask], lim - pos - bought)
+            if q > 0:
+                orders.append(Order(OSM, best_ask, q))
+                bought += q
 
-        asks_above_fair = [p for p in order_depth.sell_orders if p > fair_value + 1]
-        bids_below_fair = [p for p in order_depth.buy_orders if p < fair_value - 1]
-        if asks_above_fair and bids_below_fair:
-            lowest_ask_above_fair = min(asks_above_fair)
-            highest_bid_below_fair = max(bids_below_fair)
-            if lowest_ask_above_fair <= fair_value + 2 and current_position <= inventory_skew_threshold:
-                lowest_ask_above_fair = fair_value + 3
-            if highest_bid_below_fair >= fair_value - 2 and current_position >= -inventory_skew_threshold:
-                highest_bid_below_fair = fair_value - 3
-            quote_bid_price = highest_bid_below_fair + 1
-            quote_ask_price = lowest_ask_above_fair - 1
-            make_buy_quantity = position_limit - current_position - buy_volume_used
-            if make_buy_quantity > 0:
-                orders.append(Order("ASH_COATED_OSMIUM", int(quote_bid_price), make_buy_quantity))
-            make_sell_quantity = position_limit + current_position - sell_volume_used
-            if make_sell_quantity > 0:
-                orders.append(Order("ASH_COATED_OSMIUM", int(quote_ask_price), -make_sell_quantity))
+        best_bid = max(d.buy_orders)
+        if best_bid >= fair + tw_bid:
+            q = min(d.buy_orders[best_bid], lim + pos - sold)
+            if q > 0:
+                orders.append(Order(OSM, best_bid, -q))
+                sold += q
+
+        pos_after = pos + bought - sold
+        clear_bid = fair - cw
+        clear_ask = fair + cw
+        if pos_after > 0:
+            available = sum(v for p, v in d.buy_orders.items() if p >= clear_ask)
+            q = min(lim + pos - sold, min(available, pos_after))
+            if q > 0:
+                orders.append(Order(OSM, clear_ask, -q))
+                sold += q
+        elif pos_after < 0:
+            available = sum(-v for p, v in d.sell_orders.items() if p <= clear_bid)
+            q = min(lim - pos - bought, min(available, -pos_after))
+            if q > 0:
+                orders.append(Order(OSM, clear_bid, q))
+                bought += q
+
+        bid_edge = max(self.OSM_MIN_EDGE, self.OSM_MAKE_EDGE + skew)
+        ask_edge = max(self.OSM_MIN_EDGE, self.OSM_MAKE_EDGE - skew)
+        outer_asks = [p for p in d.sell_orders if p > fair + ask_edge - 1]
+        outer_bids = [p for p in d.buy_orders if p < fair - bid_edge + 1]
+        if outer_asks and outer_bids:
+            ask_anchor = min(outer_asks)
+            bid_anchor = max(outer_bids)
+            if ask_anchor <= fair + ask_edge and pos <= vol_lim:
+                ask_anchor = fair + ask_edge + 1
+            if bid_anchor >= fair - bid_edge and pos >= -vol_lim:
+                bid_anchor = fair - bid_edge - 1
+            quote_bid = bid_anchor + 1
+            quote_ask = ask_anchor - 1
+            buy_q = lim - pos - bought
+            if buy_q > 0:
+                orders.append(Order(OSM, quote_bid, buy_q))
+            sell_q = lim + pos - sold
+            if sell_q > 0:
+                orders.append(Order(OSM, quote_ask, -sell_q))
+
         return orders
 
-    def _pepper(self, symbol, order_depth, current_position):
-        if not order_depth.buy_orders or not order_depth.sell_orders:
+    def _pepper(self, d, pos):
+        if not d.buy_orders or not d.sell_orders:
             return []
-        asks_ascending = sorted(order_depth.sell_orders.keys())
-        bids_descending = sorted(order_depth.buy_orders.keys(), reverse=True)
-        position_limit = self.POSITION_LIMITS["INTARIAN_PEPPER_ROOT"]
-        quantity_needed = self.PEPPER_TARGET_POSITION - current_position
+        need = self.PEP_TARGET - pos
+        if need <= 0:
+            return []
+        lim = self.POSITION_LIMITS[PEP]
+        to_buy = min(need, lim - pos)
         orders = []
-        if quantity_needed > 0:
-            remaining_to_buy = min(quantity_needed, position_limit - current_position)
-            for ask_price in asks_ascending:
-                if remaining_to_buy <= 0:
-                    break
-                fill_volume = min(-order_depth.sell_orders[ask_price], remaining_to_buy)
-                if fill_volume > 0:
-                    orders.append(Order(symbol, ask_price, fill_volume))
-                    remaining_to_buy -= fill_volume
-            if remaining_to_buy > 0:
-                passive_bid_price = bids_descending[0] + 1
-                orders.append(Order(symbol, passive_bid_price, remaining_to_buy))
+        for price in sorted(d.sell_orders):
+            if to_buy <= 0:
+                break
+            fill = min(-d.sell_orders[price], to_buy)
+            if fill > 0:
+                orders.append(Order(PEP, price, fill))
+                to_buy -= fill
+        if to_buy > 0:
+            orders.append(Order(PEP, max(d.buy_orders) + 1, to_buy))
         return orders

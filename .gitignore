@@ -52,3 +52,4 @@ datasets/**/*.csv
 datasets/**/*.json
 !datasets/README.md
 !datasets/**/README.md
+strategies/round1/ref.md
