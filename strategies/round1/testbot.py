@@ -1,3 +1,5 @@
+import json
+
 from datamodel import Order, TradingState
 
 OSM = "ASH_COATED_OSMIUM"
@@ -8,26 +10,37 @@ class Trader:
     """
     Round 1 bot. Two products:
       OSM — inventory-skewed three-phase market-making at fair=10000.
-      PEP — pure +80 buy-and-hold (exploits monotonic upward drift).
+      PEP — +80 target with drift-calibrated selective entry for first
+            200 ticks, then pure aggressive take (from test_40).
     """
 
     POSITION_LIMITS = {OSM: 80, PEP: 80}
 
     OSM_FAIR = 10000
-    OSM_TAKE_WIDTH = 1
-    OSM_CLEAR_WIDTH = 1
+    OSM_TAKE_WIDTH = 2
+    OSM_CLEAR_WIDTH = 2
     OSM_MAKE_EDGE = 3
     OSM_MIN_EDGE = 1
     OSM_MIN_TW = 0
-    OSM_SKEW_UNIT = 12
+    OSM_SKEW_UNIT = 18
     OSM_VOLUME_LIMIT = 30
 
     PEP_TARGET = 80
+    PEP_DRIFT = 0.100188
+    PEP_CALIB_TICKS = 10
+    PEP_ENTRY_TAKE = 7
+    PEP_ENTRY_TIMEOUT = 200
+    PEP_BID_FLOOR = -6
+    PEP_BID_CEIL = 5
 
     def bid(self):
         return 15
 
     def run(self, state: TradingState):
+        try:
+            td = json.loads(state.traderData) if state.traderData else {}
+        except Exception:
+            td = {}
         orders: dict[str, list[Order]] = {}
         for symbol, depth in state.order_depths.items():
             if symbol not in self.POSITION_LIMITS:
@@ -37,10 +50,10 @@ class Trader:
             if symbol == OSM:
                 orders[symbol] = self._osmium(depth, pos)
             elif symbol == PEP:
-                orders[symbol] = self._pepper(depth, pos)
+                orders[symbol] = self._pepper(depth, pos, state.timestamp, td)
             else:
                 orders[symbol] = []
-        return orders, 0, ""
+        return orders, 0, json.dumps(td)
 
     def _osmium(self, d, pos):
         if not d.buy_orders or not d.sell_orders:
@@ -109,7 +122,7 @@ class Trader:
 
         return orders
 
-    def _pepper(self, d, pos):
+    def _pepper(self, d, pos, timestamp, td):
         if not d.buy_orders or not d.sell_orders:
             return []
         need = self.PEP_TARGET - pos
@@ -117,14 +130,34 @@ class Trader:
             return []
         lim = self.POSITION_LIMITS[PEP]
         to_buy = min(need, lim - pos)
+        tick = timestamp // 100
+
+        best_bid = max(d.buy_orders)
+        best_ask = min(d.sell_orders)
+        mid = (best_bid + best_ask) / 2.0
+
+        samples = td.get("_pep_samples", [])
+        if tick < self.PEP_CALIB_TICKS:
+            samples.append(mid - self.PEP_DRIFT * tick)
+            td["_pep_samples"] = samples
+        intercept = sum(samples) / len(samples) if samples else mid
+        fair = intercept + self.PEP_DRIFT * tick
+
         orders = []
+        bought = 0
+        selective = tick < self.PEP_ENTRY_TIMEOUT
         for price in sorted(d.sell_orders):
-            if to_buy <= 0:
+            if bought >= to_buy:
                 break
-            fill = min(-d.sell_orders[price], to_buy)
+            if selective and price > fair + self.PEP_ENTRY_TAKE:
+                break
+            fill = min(-d.sell_orders[price], to_buy - bought)
             if fill > 0:
                 orders.append(Order(PEP, price, fill))
-                to_buy -= fill
-        if to_buy > 0:
-            orders.append(Order(PEP, max(d.buy_orders) + 1, to_buy))
+                bought += fill
+
+        if selective and bought < to_buy:
+            offset = max(d.buy_orders) + 1 - int(round(fair))
+            offset = max(self.PEP_BID_FLOOR, min(self.PEP_BID_CEIL, offset))
+            orders.append(Order(PEP, int(round(fair)) + offset, to_buy - bought))
         return orders
