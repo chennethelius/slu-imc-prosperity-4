@@ -2,7 +2,7 @@ import json
 
 from datamodel import Order, TradingState
 
-
+#test
 class Trader:
     """
     pepper_long: always target +80 pepper, load from tick 0. No signal,
