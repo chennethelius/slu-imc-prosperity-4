@@ -1,11 +1,38 @@
 """Generate Claude-optimized intel summary from the database."""
 
 import json
+import re
 from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 
 from storage.db import IntelDB
+
+
+# Match profit/PnL values in messages: 7500, 10k, 2.3k, ~3200, $5000, -500
+_PNL_RE = re.compile(
+    r"(?<![\w.])(-?\$?\d{1,3}(?:,\d{3})+|-?\$?\d+(?:\.\d+)?)(k|K)?(?!\w)"
+)
+
+
+def _extract_pnl_mentions(text: str) -> list[float]:
+    """Parse numeric profit mentions from a message. Returns list of values."""
+    if not text:
+        return []
+    values = []
+    for match in _PNL_RE.finditer(text):
+        num_str, suffix = match.group(1), match.group(2)
+        num_str = num_str.replace(",", "").replace("$", "")
+        try:
+            val = float(num_str)
+            if suffix:
+                val *= 1000
+            # Filter: likely PnL values (not timestamps, prices under 100, tiny decimals)
+            if 100 <= abs(val) <= 500_000:
+                values.append(val)
+        except ValueError:
+            continue
+    return values
 
 
 async def generate_claude_intel(db: IntelDB, output_path: Path, current_round: int | None = None):
@@ -78,11 +105,89 @@ async def _export_messages(db: IntelDB, output_path: Path):
     for row in rows:
         msg = dict(row)
         msg["products"] = msg["products"].split(",") if msg["products"] else []
+        pnls = _extract_pnl_mentions(msg["content"])
+        msg["pnl_mentions"] = pnls
+        msg["max_pnl"] = max(pnls) if pnls else None
         messages.append(msg)
 
     with open(output_path, "w") as f:
         json.dump(messages, f, indent=2, ensure_ascii=False)
     print(f"[export] Wrote messages.json: {len(messages)} messages")
+
+    # Build auto-digest
+    digest = _build_digest(messages)
+    digest_path = output_path.parent / "digest.json"
+    with open(digest_path, "w") as f:
+        json.dump(digest, f, indent=2, ensure_ascii=False)
+    print(f"[export] Wrote digest.json")
+
+
+def _build_digest(messages: list[dict]) -> dict:
+    """Extractive digest — picks top insights without needing an LLM."""
+    from collections import Counter
+
+    # Group by product
+    by_product = defaultdict(list)
+    for m in messages:
+        for p in m.get("products", []):
+            if p:
+                by_product[p].append(m)
+
+    products_digest = {}
+    for product, msgs in by_product.items():
+        # Top 5 highest-scored messages
+        top = sorted(msgs, key=lambda x: -x["relevance_score"])[:5]
+        # PnL distribution
+        all_pnls = []
+        for m in msgs:
+            all_pnls.extend(m.get("pnl_mentions") or [])
+        pnl_stats = None
+        if all_pnls:
+            pnl_stats = {
+                "min": min(all_pnls),
+                "max": max(all_pnls),
+                "median": sorted(all_pnls)[len(all_pnls) // 2],
+                "common": [v for v, _ in Counter([round(x / 500) * 500 for x in all_pnls]).most_common(3)],
+                "count": len(all_pnls),
+            }
+        # Most active authors
+        authors = Counter([m["author_name"] for m in msgs]).most_common(5)
+        products_digest[product] = {
+            "message_count": len(msgs),
+            "top_messages": [
+                {
+                    "score": m["relevance_score"],
+                    "author": m["author_name"],
+                    "content": m["content"][:400],
+                    "url": m.get("url"),
+                    "pnls": m.get("pnl_mentions") or [],
+                }
+                for m in top
+            ],
+            "pnl_stats": pnl_stats,
+            "top_contributors": [{"name": a, "messages": c} for a, c in authors],
+        }
+
+    # Overall top messages (any product)
+    overall_top = sorted(messages, key=lambda x: -x["relevance_score"])[:10]
+
+    return {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "total_messages": len(messages),
+        "products": products_digest,
+        "overall_top_messages": [
+            {
+                "score": m["relevance_score"],
+                "author": m["author_name"],
+                "channel": m["channel_name"],
+                "content": m["content"][:400],
+                "products": m.get("products", []),
+                "url": m.get("url"),
+                "pnls": m.get("pnl_mentions") or [],
+            }
+            for m in overall_top
+        ],
+    }
 
 
 async def _build_product_intel(db: IntelDB, product: str) -> dict:

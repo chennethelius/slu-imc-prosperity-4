@@ -39,6 +39,12 @@ cd backtester && make tutorial TRADER=../strategies/tutorial/my_strat.py
 cd backtester && make round1 TRADER=../strategies/round1/my_strat.py
 cd backtester && make round1 TRADER=../strategies/round1/my_strat.py DAY=-1
 
+# REALISTIC mode — mirrors Prosperity fill rates. Default (QP=1.0) lets
+# your orders "inherit" competitor market-trade volume and overstates PnL
+# ~2-3×. Use QP=0.0 when tuning for the submission environment:
+cd backtester && cargo run --release -- --trader ../strategies/round1/my_strat.py \
+  --dataset round1 --queue-penetration 0.0 --products summary
+
 # Analyze a run
 python scripts/analyze.py backtester/runs/<run_id>/
 

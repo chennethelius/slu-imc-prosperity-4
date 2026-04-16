@@ -223,6 +223,57 @@
   }
   .empty-state .icon { font-size:32px; margin-bottom:12px; opacity:.3; }
 
+  /* ── AI Summary Panel ── */
+  .ai-panel {
+    background:linear-gradient(135deg, rgba(0,61,165,.03), rgba(0,61,165,.01));
+    border:1px solid var(--border); border-radius:10px; padding:18px;
+    margin-bottom:16px;
+  }
+  .ai-head { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+  .ai-badge {
+    background:var(--accent); color:#fff; font-size:10px; font-weight:700;
+    padding:2px 8px; border-radius:4px; letter-spacing:.5px;
+  }
+  .ai-title { font-weight:600; font-size:13px; color:var(--text-primary); flex:1; }
+  .btn {
+    background:var(--accent); color:#fff; border:none; border-radius:6px;
+    padding:6px 14px; font-size:12px; font-weight:600; cursor:pointer;
+    font-family:inherit; transition:background .15s;
+  }
+  .btn:hover { background:var(--accent-dim); }
+  .btn:disabled { opacity:.5; cursor:not-allowed; }
+  .btn-sm { padding:4px 10px; font-size:11px; }
+  .btn-ghost { background:transparent; color:var(--text-muted); border:1px solid var(--border); }
+  .btn-ghost:hover { background:var(--bg-hover); color:var(--text-primary); }
+  .ai-body {
+    font-size:13px; line-height:1.7; color:var(--text-primary);
+    white-space:pre-wrap; word-break:break-word;
+  }
+  .ai-body h1, .ai-body h2, .ai-body h3 {
+    color:var(--accent); font-weight:700; margin:14px 0 6px 0;
+  }
+  .ai-body h1 { font-size:16px; }
+  .ai-body h2 { font-size:14px; }
+  .ai-body h3 { font-size:13px; }
+  .ai-body strong { color:var(--text-primary); font-weight:700; }
+  .ai-body ul, .ai-body ol { margin:6px 0 10px 20px; }
+  .ai-body li { margin-bottom:4px; }
+  .ai-body code { background:var(--bg-raised); padding:1px 5px; border-radius:3px; font-size:12px; font-family:'JetBrains Mono',monospace; }
+  .ai-meta { font-size:11px; color:var(--text-muted); margin-top:10px; padding-top:10px; border-top:1px solid var(--border); }
+  .ai-error { color:var(--red); font-size:12px; padding:10px; background:var(--red-dim); border-radius:6px; }
+  .ai-loading { color:var(--text-muted); font-size:12px; display:flex; align-items:center; gap:8px; }
+  .ai-spinner {
+    width:12px; height:12px; border:2px solid var(--border); border-top-color:var(--accent);
+    border-radius:50%; animation:spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .ai-key-input {
+    background:var(--bg-base); border:1px solid var(--border); border-radius:6px;
+    padding:6px 10px; color:var(--text-primary); font-family:'JetBrains Mono',monospace;
+    font-size:11px; width:100%; outline:none; margin-top:6px;
+  }
+  .ai-key-input:focus { border-color:var(--accent); }
+
   /* ── Responsive ── */
   @media(max-width:768px) {
     .topbar { padding:0 16px; }
@@ -280,8 +331,14 @@
     <input type="range" id="scoreSlider" min="0" max="100" value="0" />
     <span class="val" id="scoreVal">0</span>
   </div>
+  <div class="range-group">
+    <span class="label">Min PnL (xirecs)</span>
+    <input type="range" id="pnlSlider" min="0" max="50000" value="0" step="500" />
+    <span class="val" id="pnlVal">0</span>
+  </div>
   <div class="tab-group">
-    <button class="tab-btn active" data-view="products">Products</button>
+    <button class="tab-btn active" data-view="digest">Digest</button>
+    <button class="tab-btn" data-view="products">Products</button>
     <button class="tab-btn" data-view="messages">Messages</button>
     <button class="tab-btn" data-view="contributors">Contributors</button>
   </div>
@@ -294,20 +351,24 @@
 <script>
 let DATA = null;
 let MESSAGES = [];
-let currentView = 'products';
+let DIGEST = null;
+let currentView = 'digest';
 let activeProduct = 'all';
 let activeStrategy = 'all';
 let minScore = 0;
+let minPnl = 0;
 let searchQuery = '';
 
 async function loadData() {
   try {
-    const [intelRes, msgsRes] = await Promise.allSettled([
+    const [intelRes, msgsRes, digestRes] = await Promise.allSettled([
       fetch('./discord-intel/claude_intel.json'),
-      fetch('./discord-intel/messages.json')
+      fetch('./discord-intel/messages.json'),
+      fetch('./discord-intel/digest.json')
     ]);
     if (intelRes.status === 'fulfilled' && intelRes.value.ok) DATA = await intelRes.value.json();
     if (msgsRes.status === 'fulfilled' && msgsRes.value.ok) MESSAGES = await msgsRes.value.json();
+    if (digestRes.status === 'fulfilled' && digestRes.value.ok) DIGEST = await digestRes.value.json();
     if (!DATA) { document.getElementById('mainContent').innerHTML = '<div class="empty-state"><div class="icon">&#9888;</div>No intel data found. Run the Discord bot first.</div>'; return; }
     initUI();
   } catch (e) {
@@ -353,6 +414,11 @@ function initUI() {
     document.getElementById('scoreVal').textContent = minScore;
     render();
   };
+  document.getElementById('pnlSlider').oninput = (e) => {
+    minPnl = parseInt(e.target.value);
+    document.getElementById('pnlVal').textContent = minPnl.toLocaleString();
+    render();
+  };
   document.getElementById('searchBox').oninput = (e) => { searchQuery = e.target.value.toLowerCase(); render(); };
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.onclick = () => {
@@ -382,9 +448,102 @@ document.querySelector('[data-filter="all"]').onclick = () => {
 
 function render() {
   const el = document.getElementById('mainContent');
-  if (currentView === 'products') renderProducts(el);
+  if (currentView === 'digest') renderDigest(el);
+  else if (currentView === 'products') renderProducts(el);
   else if (currentView === 'messages') renderMessages(el);
   else renderContributors(el);
+}
+
+function renderDigest(el) {
+  if (!DIGEST) { el.innerHTML = '<div class="empty-state">No digest available. Run the bot export.</div>'; return; }
+
+  let products = Object.entries(DIGEST.products || {});
+  if (activeProduct !== 'all') products = products.filter(([n]) => n === activeProduct);
+  if (searchQuery) products = products.filter(([n]) => n.toLowerCase().includes(searchQuery));
+
+  // Overall top hits (filtered by pnl + score + search)
+  const topMsgs = (DIGEST.overall_top_messages || []).filter(m => {
+    if (m.score < minScore) return false;
+    if (minPnl > 0 && !(m.pnls || []).some(v => v >= minPnl)) return false;
+    if (searchQuery && !m.content.toLowerCase().includes(searchQuery)) return false;
+    return true;
+  });
+
+  let html = '';
+
+  // Top insights banner
+  if (topMsgs.length) {
+    html += `<div class="section"><div class="section-title">Top Insights</div>`;
+    html += topMsgs.slice(0, 6).map(m => {
+      const pnlTag = m.pnls && m.pnls.length ? `<span class="tag tag-params">${m.pnls.map(v=>fmtPnl(v)).join(', ')} xirecs</span>` : '';
+      const prods = (m.products || []).map(p => `<span class="tag tag-msgs">${esc(p)}</span>`).join('');
+      return `<div class="msg-card">
+        <div class="msg-header">
+          <span class="score-badge ${m.score>=50?'score-high':m.score>=25?'score-mid':'score-low'}">${m.score}</span>
+          <span class="msg-author">${esc(m.author)}</span>
+          <span class="msg-channel">#${esc(m.channel || '')}</span>
+          ${m.url ? `<a class="msg-link" href="${m.url}" target="_blank" rel="noopener" style="margin-left:auto">Open</a>` : ''}
+        </div>
+        <div class="msg-body">${esc(m.content)}</div>
+        <div class="msg-tags">${prods}${pnlTag}</div>
+      </div>`;
+    }).join('');
+    html += `</div>`;
+  }
+
+  // Per-product digest
+  products.forEach(([name, p]) => {
+    const ps = p.pnl_stats;
+    const statsHtml = ps ? `<div class="params-grid" style="margin-bottom:12px">
+      <div class="param-card"><div class="param-label">Max PnL Reported</div><div class="param-val">${fmtPnl(ps.max)}</div><div class="param-meta">${ps.count} mentions</div></div>
+      <div class="param-card"><div class="param-label">Median PnL</div><div class="param-val">${fmtPnl(ps.median)}</div><div class="param-meta">typical</div></div>
+      <div class="param-card"><div class="param-label">Common Values</div><div class="param-val" style="font-size:14px">${ps.common.map(v=>fmtPnl(v)).join(' · ')}</div><div class="param-meta">most reported</div></div>
+    </div>` : '';
+
+    const filteredTop = (p.top_messages || []).filter(m => {
+      if (m.score < minScore) return false;
+      if (minPnl > 0 && !(m.pnls || []).some(v => v >= minPnl)) return false;
+      if (searchQuery && !m.content.toLowerCase().includes(searchQuery)) return false;
+      return true;
+    });
+
+    const msgsHtml = filteredTop.map(m => {
+      const pnlTag = m.pnls && m.pnls.length ? `<span class="tag tag-params">${m.pnls.map(v=>fmtPnl(v)).join(', ')} xirecs</span>` : '';
+      return `<div class="msg-card">
+        <div class="msg-header">
+          <span class="score-badge ${m.score>=50?'score-high':m.score>=25?'score-mid':'score-low'}">${m.score}</span>
+          <span class="msg-author">${esc(m.author)}</span>
+          ${m.url ? `<a class="msg-link" href="${m.url}" target="_blank" rel="noopener" style="margin-left:auto">Open</a>` : ''}
+        </div>
+        <div class="msg-body">${esc(m.content)}</div>
+        ${pnlTag ? `<div class="msg-tags">${pnlTag}</div>` : ''}
+      </div>`;
+    }).join('');
+
+    html += `<div class="product-card expanded" style="margin-top:16px">
+      <div class="product-header" style="cursor:default">
+        <span class="product-name">${esc(name)}</span>
+        <div class="product-tags">
+          <span class="tag tag-msgs">${p.message_count} msgs</span>
+          ${ps ? `<span class="tag tag-params">${ps.count} PnL mentions</span>` : ''}
+        </div>
+      </div>
+      <div class="product-detail">
+        ${statsHtml}
+        <div class="section-title">Top Messages</div>
+        ${msgsHtml || '<div class="empty-state">No matches with current filters</div>'}
+      </div>
+    </div>`;
+  });
+
+  el.innerHTML = html || '<div class="empty-state">No digest data for current filters</div>';
+  updateCount((topMsgs.length + products.reduce((s,[,p]) => s + (p.top_messages?.length || 0), 0)) + ' items');
+}
+
+function fmtPnl(v) {
+  if (v == null) return '--';
+  if (Math.abs(v) >= 1000) return (v/1000).toFixed(v % 1000 ? 1 : 0) + 'k';
+  return v.toString();
 }
 
 function renderProducts(el) {
@@ -444,6 +603,7 @@ function renderProducts(el) {
 function renderMessages(el) {
   let msgs = MESSAGES.filter(m => {
     if (m.relevance_score < minScore) return false;
+    if (minPnl > 0 && !(m.pnl_mentions || []).some(v => v >= minPnl)) return false;
     if (activeProduct !== 'all' && !(m.products || []).includes(activeProduct)) return false;
     if (activeStrategy !== 'all' && m.strategy_type !== activeStrategy) return false;
     if (searchQuery && !m.content.toLowerCase().includes(searchQuery) && !m.author_name.toLowerCase().includes(searchQuery)) return false;
@@ -456,6 +616,7 @@ function renderMessages(el) {
     const prods = (m.products || []).map(p => `<span class="tag tag-msgs">${esc(p)}</span>`).join('');
     const strat = m.strategy_type ? `<span class="tag tag-strategy">${m.strategy_type.replace(/_/g,' ')}</span>` : '';
     const code = m.has_code ? '<span class="tag tag-code">code</span>' : '';
+    const pnl = (m.pnl_mentions && m.pnl_mentions.length) ? `<span class="tag tag-params">${m.pnl_mentions.map(v=>fmtPnl(v)).join(', ')} xirecs</span>` : '';
     return `<div class="msg-card">
       <div class="msg-header">
         <span class="score-badge ${m.relevance_score>=50?'score-high':m.relevance_score>=25?'score-mid':'score-low'}">${m.relevance_score}</span>
@@ -465,7 +626,7 @@ function renderMessages(el) {
         ${m.url ? `<a class="msg-link" href="${m.url}" target="_blank" rel="noopener">Open</a>` : ''}
       </div>
       <div class="msg-body">${esc(trunc(m.content, 600))}</div>
-      <div class="msg-tags">${prods}${strat}${code}</div>
+      <div class="msg-tags">${prods}${strat}${code}${pnl}</div>
     </div>`;
   }).join('');
   updateCount(msgs.length + ' message' + (msgs.length !== 1 ? 's' : ''));

@@ -34,7 +34,7 @@ CURRENT_ROUND = int(os.getenv("CURRENT_ROUND", "0"))  # 0 = tutorial/pre-round
 
 # Known products — start with tutorial, extend as rounds drop
 # Override via env: KNOWN_PRODUCTS=EMERALDS,TOMATOES,KELP,...
-_default_products = "EMERALDS,TOMATOES"
+_default_products = "EMERALDS,TOMATOES,ASH_COATED_OSMIUM,INTARIAN_PEPPER_ROOT,OSMIUM,PEPPER_ROOT,PEPPER"
 KNOWN_PRODUCTS = {
     p.strip()
     for p in os.getenv("KNOWN_PRODUCTS", _default_products).split(",")

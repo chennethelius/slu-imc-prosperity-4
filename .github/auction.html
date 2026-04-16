@@ -228,7 +228,7 @@
 
     <!-- ── MIDDLE: Your order + economics ── -->
     <div class="card">
-      <h3><span>Your Limit Order</span><span class="hint">submitted last</span></h3>
+      <h3><span>Your Limit Order</span><span class="hint" id="order-hint">queue rank 0 = first</span></h3>
       <div class="form-row">
         <label>Side</label>
         <div class="side-group">
@@ -249,6 +249,10 @@
           <input type="range" id="my-qty-slider" style="flex:1;accent-color:var(--accent)">
           <input type="number" id="my-qty" value="10000" step="1000" min="0" style="width:90px">
         </div>
+      </div>
+      <div class="form-row">
+        <label>Queue rank <span style="color:var(--text-muted);font-weight:500;text-transform:none;letter-spacing:0;">at your price · 0 = first, blank = last</span></label>
+        <input type="number" id="my-tpri" min="0" step="1" style="width:110px" placeholder="last">
       </div>
 
       <h3 style="margin-top:14px"><span>Economics</span><span class="hint">post-auction FV &amp; fees</span></h3>
@@ -354,7 +358,7 @@ const DEFAULT_BOOKS = {
   DRYLAND_FLAX: {
     bids: [{px:30,qty:30000},{px:29,qty:5000},{px:28,qty:12000},{px:27,qty:28000}],
     asks: [{px:28,qty:40000},{px:31,qty:20000},{px:32,qty:20000},{px:33,qty:30000}],
-    econ: { fv: null, buyFee: 0, sellFee: 0 }
+    econ: { fv: 30, buyFee: 0, sellFee: 0 }
   },
   EMBER_MUSHROOM: {
     bids: [
@@ -523,12 +527,29 @@ function clearOrder(){
 }
 
 /* ── Core auction ── */
-function clearAuction(book, side, myPrice, myQty){
-  const bids = book.bids.filter(o=>o.qty>0 && o.px>0).map((o,i)=>({px:o.px, qty:o.qty, t:i, who:'mkt'}));
-  const asks = book.asks.filter(o=>o.qty>0 && o.px>0).map((o,i)=>({px:o.px, qty:o.qty, t:i, who:'mkt'}));
+/* Time priority is per-price-level: at each price, orders fill in ascending `t`.
+   Market orders get `t = 0..N-1` in book order at each price.
+   User's `t` is set from `queueRank` (null = last). Same-rank ties broken by who='mkt' first. */
+function clearAuction(book, side, myPrice, myQty, queueRank){
+  const mkt = list => {
+    const perPx = {};
+    return list.filter(o=>o.qty>0 && o.px>0).map(o=>{
+      perPx[o.px] = (perPx[o.px] ?? 0);
+      return {px:o.px, qty:o.qty, t:perPx[o.px]++, who:'mkt'};
+    });
+  };
+  const bids = mkt(book.bids);
+  const asks = mkt(book.asks);
+
   if (myQty > 0 && myPrice > 0) {
-    if (side === 'buy') bids.push({px:myPrice, qty:myQty, t:bids.length, who:'you'});
-    else                 asks.push({px:myPrice, qty:myQty, t:asks.length, who:'you'});
+    const target = side === 'buy' ? bids : asks;
+    const sameN = target.filter(o => o.px === myPrice).length;
+    const rank = (queueRank == null || !isFinite(queueRank))
+      ? sameN                    // default: last in queue
+      : Math.max(0, Math.min(queueRank, sameN));
+    // Shift existing market orders at same price with t >= rank up by 1
+    target.forEach(o => { if (o.px === myPrice && o.t >= rank) o.t += 1; });
+    target.push({px:myPrice, qty:myQty, t:rank, who:'you'});
   }
 
   const set = new Set();
