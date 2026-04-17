@@ -25,6 +25,12 @@ import json
 
 
 class Trader:
+    def bid(self) -> int:
+        # Round 2 Market Access Fee: top 50% of bids unlock 125% quote volume
+        # (default testing mode runs at 80%); the accepted bid is subtracted
+        # from total PnL as a one-time fee. Ignored in all other rounds.
+        return 0
+
     def run(self, state: TradingState) -> tuple[dict[str, List[Order]], int, str]:
         """
         Called once per tick with the current market state.
