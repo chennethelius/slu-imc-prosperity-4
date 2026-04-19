@@ -47,7 +47,7 @@ class Trader:
     PEP_BID_CEIL = 5
 
     def bid(self) -> int:
-        return 0
+        return 1103
 
     def run(self, state: TradingState):
         try:
