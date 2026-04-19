@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Discord Intel - Prosperity</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -338,6 +339,7 @@
   </div>
   <div class="tab-group">
     <button class="tab-btn active" data-view="digest">Digest</button>
+    <button class="tab-btn" data-view="leaderboard">Leaderboard</button>
     <button class="tab-btn" data-view="products">Products</button>
     <button class="tab-btn" data-view="messages">Messages</button>
     <button class="tab-btn" data-view="contributors">Contributors</button>
@@ -352,6 +354,8 @@
 let DATA = null;
 let MESSAGES = [];
 let DIGEST = null;
+let LEADERBOARD = null;
+let lbChart = null;
 let currentView = 'digest';
 let activeProduct = 'all';
 let activeStrategy = 'all';
@@ -361,14 +365,16 @@ let searchQuery = '';
 
 async function loadData() {
   try {
-    const [intelRes, msgsRes, digestRes] = await Promise.allSettled([
+    const [intelRes, msgsRes, digestRes, lbRes] = await Promise.allSettled([
       fetch('./discord-intel/claude_intel.json'),
       fetch('./discord-intel/messages.json'),
-      fetch('./discord-intel/digest.json')
+      fetch('./discord-intel/digest.json'),
+      fetch('./discord-intel/leaderboard_analysis.json')
     ]);
     if (intelRes.status === 'fulfilled' && intelRes.value.ok) DATA = await intelRes.value.json();
     if (msgsRes.status === 'fulfilled' && msgsRes.value.ok) MESSAGES = await msgsRes.value.json();
     if (digestRes.status === 'fulfilled' && digestRes.value.ok) DIGEST = await digestRes.value.json();
+    if (lbRes.status === 'fulfilled' && lbRes.value.ok) LEADERBOARD = await lbRes.value.json();
     if (!DATA) { document.getElementById('mainContent').innerHTML = '<div class="empty-state"><div class="icon">&#9888;</div>No intel data found. Run the Discord bot first.</div>'; return; }
     initUI();
   } catch (e) {
@@ -448,10 +454,97 @@ document.querySelector('[data-filter="all"]').onclick = () => {
 
 function render() {
   const el = document.getElementById('mainContent');
+  if (lbChart) { lbChart.destroy(); lbChart = null; }
   if (currentView === 'digest') renderDigest(el);
+  else if (currentView === 'leaderboard') renderLeaderboard(el);
   else if (currentView === 'products') renderProducts(el);
   else if (currentView === 'messages') renderMessages(el);
   else renderContributors(el);
+}
+
+function renderLeaderboard(el) {
+  if (!LEADERBOARD) { el.innerHTML = '<div class="empty-state">No leaderboard data. Run the scraper first.</div>'; return; }
+  const lb = LEADERBOARD;
+  const pctl = lb.percentiles;
+
+  // Stats cards
+  let html = `<div class="section"><div class="section-title">Round 1 Leaderboard — ${lb.total_teams.toLocaleString()} Teams</div>
+  <div class="params-grid">
+    <div class="param-card"><div class="param-label">Total Teams</div><div class="param-val" style="color:var(--text-primary)">${lb.total_teams.toLocaleString()}</div></div>
+    <div class="param-card"><div class="param-label">Positive PnL</div><div class="param-val">${lb.positive_teams.toLocaleString()}</div><div class="param-meta">${lb.pct_positive}% of all teams</div></div>
+    <div class="param-card"><div class="param-label">#1 Score</div><div class="param-val">${lb.max.toLocaleString()}</div><div class="param-meta">xirecs</div></div>
+    <div class="param-card"><div class="param-label">Top 1%</div><div class="param-val">${pctl.p1.toLocaleString()}</div><div class="param-meta">rank ~${Math.round(lb.positive_teams * 0.01)}</div></div>
+    <div class="param-card"><div class="param-label">Top 5%</div><div class="param-val">${pctl.p5.toLocaleString()}</div><div class="param-meta">rank ~${Math.round(lb.positive_teams * 0.05)}</div></div>
+    <div class="param-card"><div class="param-label">Top 10%</div><div class="param-val">${pctl.p10.toLocaleString()}</div><div class="param-meta">rank ~${Math.round(lb.positive_teams * 0.10)}</div></div>
+    <div class="param-card"><div class="param-label">Top 25%</div><div class="param-val">${pctl.p25.toLocaleString()}</div><div class="param-meta">rank ~${Math.round(lb.positive_teams * 0.25)}</div></div>
+    <div class="param-card"><div class="param-label">Median (positive)</div><div class="param-val">${pctl.p50.toLocaleString()}</div><div class="param-meta">rank ~${Math.round(lb.positive_teams * 0.50)}</div></div>
+  </div></div>`;
+
+  // Chart container
+  html += `<div class="section" style="margin-top:16px">
+    <div class="section-title">PnL Distribution (positive teams only)</div>
+    <div style="background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;padding:18px">
+      <canvas id="lbChart" height="120"></canvas>
+    </div>
+  </div>`;
+
+  // Top 20 teams table
+  if (lb.positive_scores) {
+    html += `<div class="section" style="margin-top:16px">
+      <div class="section-title">Top 20 Teams</div>
+      <div style="overflow-x:auto">`;
+    // We only have scores, not names in analysis.json. Fetch from raw if available.
+    html += '<table style="width:100%;border-collapse:collapse;font-size:12px">';
+    html += '<thead><tr style="border-bottom:2px solid var(--border)"><th style="padding:8px;text-align:left;color:var(--text-muted);font-size:11px">RANK</th><th style="padding:8px;text-align:right;color:var(--text-muted);font-size:11px">SCORE (xirecs)</th><th style="padding:8px;text-align:right;color:var(--text-muted);font-size:11px">vs #1</th></tr></thead><tbody>';
+    for (let i = 0; i < Math.min(20, lb.positive_scores.length); i++) {
+      const s = lb.positive_scores[i];
+      const diff = s - lb.max;
+      const rc = i < 3 ? 'color:var(--amber);font-weight:700' : 'color:var(--text-muted)';
+      html += '<tr style="border-bottom:1px solid var(--border)">' +
+        '<td style="padding:6px 8px;font-family:JetBrains Mono,monospace;' + rc + '">' + (i+1) + '</td>' +
+        '<td style="padding:6px 8px;text-align:right;font-family:JetBrains Mono,monospace;font-weight:600">' + s.toLocaleString() + '</td>' +
+        '<td style="padding:6px 8px;text-align:right;font-family:JetBrains Mono,monospace;color:var(--red)">' + diff.toLocaleString() + '</td></tr>';
+    }
+    html += '</tbody></table></div></div>';
+  }
+
+  html += `<div class="ai-meta">Scraped: ${new Date(lb.scraped_at).toLocaleString()}</div>`;
+
+  el.innerHTML = html;
+  updateCount(lb.positive_teams + ' positive teams');
+
+  // Draw chart
+  const ctx = document.getElementById('lbChart');
+  if (ctx && lb.histogram) {
+    const labels = lb.histogram.map(b => (b.lo/1000) + 'k');
+    const counts = lb.histogram.map(b => b.count);
+    lbChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Teams',
+          data: counts,
+          backgroundColor: counts.map((_, i) => {
+            const pct = i / counts.length;
+            return pct > 0.85 ? 'rgba(0,61,165,0.8)' : pct > 0.7 ? 'rgba(0,61,165,0.5)' : 'rgba(0,61,165,0.25)';
+          }),
+          borderRadius: 4,
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: (c) => c.raw + ' teams' } }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: '#9ca3af', font: { size: 10 } } },
+          y: { grid: { color: '#e2e5ea' }, ticks: { color: '#9ca3af', font: { size: 10 } } }
+        }
+      }
+    });
+  }
 }
 
 function renderDigest(el) {

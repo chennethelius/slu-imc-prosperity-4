@@ -32,6 +32,7 @@ mkdir -p discord-intel
 cp "$REPO_ROOT/$INTEL_JSON" discord-intel/claude_intel.json
 [ -f "$REPO_ROOT/$MESSAGES_JSON" ] && cp "$REPO_ROOT/$MESSAGES_JSON" discord-intel/messages.json
 [ -f "$REPO_ROOT/discord-bot/storage/digest.json" ] && cp "$REPO_ROOT/discord-bot/storage/digest.json" discord-intel/digest.json
+[ -f "$REPO_ROOT/discord-bot/storage/leaderboard_analysis.json" ] && cp "$REPO_ROOT/discord-bot/storage/leaderboard_analysis.json" discord-intel/leaderboard_analysis.json
 cp "$REPO_ROOT/$INTEL_HTML" discord-intel.html
 
 # Update main dashboard with intel link
