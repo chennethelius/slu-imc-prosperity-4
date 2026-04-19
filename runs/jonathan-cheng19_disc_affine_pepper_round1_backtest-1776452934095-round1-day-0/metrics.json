@@ -1,0 +1,20 @@
+{
+  "dataset_id": "prices_round_1_day_0",
+  "dataset_path": "datasets/round1/prices_round_1_day_0.csv",
+  "day": 0,
+  "final_pnl_by_product": {
+    "ASH_COATED_OSMIUM": 2908.0,
+    "INTARIAN_PEPPER_ROOT": 78630.0
+  },
+  "final_pnl_total": 81538.0,
+  "generated_at": "2026-04-17T19:08:58+00:00",
+  "matching": {
+    "price_slippage_bps": 0.0,
+    "queue_penetration": 0.0,
+    "trade_match_mode": "all"
+  },
+  "own_trade_count": 164,
+  "run_id": "backtest-1776452934095-round1-day-0",
+  "tick_count": 10000,
+  "trader_path": "/home/runner/work/slu-imc-prosperity-4/slu-imc-prosperity-4/strategies/round1/disc_affine_pepper.py"
+}

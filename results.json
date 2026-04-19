@@ -1,0 +1,4274 @@
+[
+  {
+    "id": "jonathan-cheng19_v27_regime_make_round2_backtest-1776640732246-round2-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "v27_regime_make",
+    "dataset": "prices_round_2_day_1.csv",
+    "day": 1,
+    "pnl": 99373.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 20176.0,
+      "INTARIAN_PEPPER_ROOT": 79197.0
+    },
+    "trades": 694,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T18:18:16-05:00",
+    "commit": "da16b36"
+  },
+  {
+    "id": "jonathan-cheng19_v27_regime_make_round2_backtest-1776640732246-round2-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "v27_regime_make",
+    "dataset": "prices_round_2_day_0.csv",
+    "day": 0,
+    "pnl": 99803.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 20404.0,
+      "INTARIAN_PEPPER_ROOT": 79399.0
+    },
+    "trades": 691,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T18:18:16-05:00",
+    "commit": "da16b36"
+  },
+  {
+    "id": "jonathan-cheng19_v36_favorable_onesided_make_round2_backtest-1776638312698-round2-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "v36_favorable_onesided_make",
+    "dataset": "prices_round_2_day_1.csv",
+    "day": 1,
+    "pnl": 94228.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 15031.0,
+      "INTARIAN_PEPPER_ROOT": 79197.0
+    },
+    "trades": 513,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T17:38:00-05:00",
+    "commit": "d3d6bb4"
+  },
+  {
+    "id": "jonathan-cheng19_v36_favorable_onesided_make_round2_backtest-1776638312698-round2-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "v36_favorable_onesided_make",
+    "dataset": "prices_round_2_day_0.csv",
+    "day": 0,
+    "pnl": 93652.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 14253.0,
+      "INTARIAN_PEPPER_ROOT": 79399.0
+    },
+    "trades": 505,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T17:38:00-05:00",
+    "commit": "d3d6bb4"
+  },
+  {
+    "id": "jonathan-cheng19_v35_trade_weighted_fair_round2_backtest-1776636673358-round2-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "v35_trade_weighted_fair",
+    "dataset": "prices_round_2_day_1.csv",
+    "day": 1,
+    "pnl": 99373.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 20176.0,
+      "INTARIAN_PEPPER_ROOT": 79197.0
+    },
+    "trades": 694,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T17:10:42-05:00",
+    "commit": "06a9756"
+  },
+  {
+    "id": "jonathan-cheng19_v35_trade_weighted_fair_round2_backtest-1776636673358-round2-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "v35_trade_weighted_fair",
+    "dataset": "prices_round_2_day_0.csv",
+    "day": 0,
+    "pnl": 99803.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 20404.0,
+      "INTARIAN_PEPPER_ROOT": 79399.0
+    },
+    "trades": 691,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T17:10:42-05:00",
+    "commit": "06a9756"
+  },
+  {
+    "id": "jonathan-cheng19_v34_target_skew_round2_backtest-1776633945180-round2-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "v34_target_skew",
+    "dataset": "prices_round_2_day_1.csv",
+    "day": 1,
+    "pnl": 99304.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 20107.0,
+      "INTARIAN_PEPPER_ROOT": 79197.0
+    },
+    "trades": 692,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T16:25:12-05:00",
+    "commit": "8bacc4b"
+  },
+  {
+    "id": "jonathan-cheng19_v34_target_skew_round2_backtest-1776633945180-round2-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "v34_target_skew",
+    "dataset": "prices_round_2_day_0.csv",
+    "day": 0,
+    "pnl": 99746.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 20347.0,
+      "INTARIAN_PEPPER_ROOT": 79399.0
+    },
+    "trades": 689,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T16:25:12-05:00",
+    "commit": "8bacc4b"
+  },
+  {
+    "id": "jonathan-cheng19_v33_pepper_dip_take_round2_backtest-1776632207717-round2-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "v33_pepper_dip_take",
+    "dataset": "prices_round_2_day_1.csv",
+    "day": 1,
+    "pnl": 99368.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 20176.0,
+      "INTARIAN_PEPPER_ROOT": 79192.0
+    },
+    "trades": 689,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T15:56:15-05:00",
+    "commit": "ac7654d"
+  },
+  {
+    "id": "jonathan-cheng19_v33_pepper_dip_take_round2_backtest-1776632207717-round2-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "v33_pepper_dip_take",
+    "dataset": "prices_round_2_day_0.csv",
+    "day": 0,
+    "pnl": 99713.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 20404.0,
+      "INTARIAN_PEPPER_ROOT": 79309.0
+    },
+    "trades": 689,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T15:56:15-05:00",
+    "commit": "ac7654d"
+  },
+  {
+    "id": "jonathan-cheng19_v32_signed_skew_round2_backtest-1776630400521-round2-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "v32_signed_skew",
+    "dataset": "prices_round_2_day_1.csv",
+    "day": 1,
+    "pnl": 99392.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 20195.0,
+      "INTARIAN_PEPPER_ROOT": 79197.0
+    },
+    "trades": 691,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T15:26:04-05:00",
+    "commit": "159d3b6"
+  },
+  {
+    "id": "jonathan-cheng19_v32_signed_skew_round2_backtest-1776630400521-round2-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "v32_signed_skew",
+    "dataset": "prices_round_2_day_0.csv",
+    "day": 0,
+    "pnl": 99731.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 20332.0,
+      "INTARIAN_PEPPER_ROOT": 79399.0
+    },
+    "trades": 683,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T15:26:04-05:00",
+    "commit": "159d3b6"
+  },
+  {
+    "id": "jonathan-cheng19_v31_dual_signal_clear_round2_backtest-1776628630046-round2-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "v31_dual_signal_clear",
+    "dataset": "prices_round_2_day_1.csv",
+    "day": 1,
+    "pnl": 99373.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 20176.0,
+      "INTARIAN_PEPPER_ROOT": 79197.0
+    },
+    "trades": 694,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T14:56:36-05:00",
+    "commit": "6b3d734"
+  },
+  {
+    "id": "jonathan-cheng19_v31_dual_signal_clear_round2_backtest-1776628630046-round2-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "v31_dual_signal_clear",
+    "dataset": "prices_round_2_day_0.csv",
+    "day": 0,
+    "pnl": 99803.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 20404.0,
+      "INTARIAN_PEPPER_ROOT": 79399.0
+    },
+    "trades": 691,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T14:56:36-05:00",
+    "commit": "6b3d734"
+  },
+  {
+    "id": "jonathan-cheng19_v30_envelope_make_round2_backtest-1776626742499-round2-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "v30_envelope_make",
+    "dataset": "prices_round_2_day_1.csv",
+    "day": 1,
+    "pnl": 98921.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 19724.0,
+      "INTARIAN_PEPPER_ROOT": 79197.0
+    },
+    "trades": 651,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T14:25:06-05:00",
+    "commit": "0ba45fe"
+  },
+  {
+    "id": "jonathan-cheng19_v30_envelope_make_round2_backtest-1776626742499-round2-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "v30_envelope_make",
+    "dataset": "prices_round_2_day_0.csv",
+    "day": 0,
+    "pnl": 97926.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 18527.0,
+      "INTARIAN_PEPPER_ROOT": 79399.0
+    },
+    "trades": 628,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T14:25:06-05:00",
+    "commit": "0ba45fe"
+  },
+  {
+    "id": "jonathan-cheng19_v29_regime_take_round2_backtest-1776625321094-round2-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "v29_regime_take",
+    "dataset": "prices_round_2_day_1.csv",
+    "day": 1,
+    "pnl": 98004.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 18807.0,
+      "INTARIAN_PEPPER_ROOT": 79197.0
+    },
+    "trades": 701,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T14:01:26-05:00",
+    "commit": "2a6a227"
+  },
+  {
+    "id": "jonathan-cheng19_v29_regime_take_round2_backtest-1776625321094-round2-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "v29_regime_take",
+    "dataset": "prices_round_2_day_0.csv",
+    "day": 0,
+    "pnl": 96311.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 16912.0,
+      "INTARIAN_PEPPER_ROOT": 79399.0
+    },
+    "trades": 662,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T14:01:26-05:00",
+    "commit": "2a6a227"
+  },
+  {
+    "id": "jonathan-cheng19_v28_regime_quote_round2_backtest-1776623878018-round2-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "v28_regime_quote",
+    "dataset": "prices_round_2_day_1.csv",
+    "day": 1,
+    "pnl": 94269.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 15072.0,
+      "INTARIAN_PEPPER_ROOT": 79197.0
+    },
+    "trades": 515,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T13:37:26-05:00",
+    "commit": "5602125"
+  },
+  {
+    "id": "jonathan-cheng19_v28_regime_quote_round2_backtest-1776623878018-round2-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "v28_regime_quote",
+    "dataset": "prices_round_2_day_0.csv",
+    "day": 0,
+    "pnl": 93652.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 14253.0,
+      "INTARIAN_PEPPER_ROOT": 79399.0
+    },
+    "trades": 505,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T13:37:26-05:00",
+    "commit": "5602125"
+  },
+  {
+    "id": "jonathan-cheng19_v26_regime_clear_round2_backtest-1776620972537-round2-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "v26_regime_clear",
+    "dataset": "prices_round_2_day_1.csv",
+    "day": 1,
+    "pnl": 99304.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 20107.0,
+      "INTARIAN_PEPPER_ROOT": 79197.0
+    },
+    "trades": 692,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T12:49:01-05:00",
+    "commit": "818136a"
+  },
+  {
+    "id": "jonathan-cheng19_v26_regime_clear_round2_backtest-1776620972537-round2-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "v26_regime_clear",
+    "dataset": "prices_round_2_day_0.csv",
+    "day": 0,
+    "pnl": 99826.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 20427.0,
+      "INTARIAN_PEPPER_ROOT": 79399.0
+    },
+    "trades": 690,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T12:49:01-05:00",
+    "commit": "818136a"
+  },
+  {
+    "id": "jonathan-cheng19_v25_layered_make_round2_backtest-1776619612475-round2-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "v25_layered_make",
+    "dataset": "prices_round_2_day_1.csv",
+    "day": 1,
+    "pnl": 99294.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 20097.0,
+      "INTARIAN_PEPPER_ROOT": 79197.0
+    },
+    "trades": 701,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T12:26:18-05:00",
+    "commit": "e64f578"
+  },
+  {
+    "id": "jonathan-cheng19_v25_layered_make_round2_backtest-1776619612475-round2-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "v25_layered_make",
+    "dataset": "prices_round_2_day_0.csv",
+    "day": 0,
+    "pnl": 99627.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 20228.0,
+      "INTARIAN_PEPPER_ROOT": 79399.0
+    },
+    "trades": 692,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T12:26:18-05:00",
+    "commit": "e64f578"
+  },
+  {
+    "id": "jonathan-cheng19_v24_static_clear_round2_backtest-1776618386599-round2-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "v24_static_clear",
+    "dataset": "prices_round_2_day_1.csv",
+    "day": 1,
+    "pnl": 99436.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 20239.0,
+      "INTARIAN_PEPPER_ROOT": 79197.0
+    },
+    "trades": 643,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T12:05:54-05:00",
+    "commit": "1340860"
+  },
+  {
+    "id": "jonathan-cheng19_v24_static_clear_round2_backtest-1776618386599-round2-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "v24_static_clear",
+    "dataset": "prices_round_2_day_0.csv",
+    "day": 0,
+    "pnl": 98715.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 19316.0,
+      "INTARIAN_PEPPER_ROOT": 79399.0
+    },
+    "trades": 624,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T12:05:54-05:00",
+    "commit": "1340860"
+  },
+  {
+    "id": "jonathan-cheng19_v23_static_anchor_round2_backtest-1776610783566-round2-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "v23_static_anchor",
+    "dataset": "prices_round_2_day_1.csv",
+    "day": 1,
+    "pnl": 99577.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 20380.0,
+      "INTARIAN_PEPPER_ROOT": 79197.0
+    },
+    "trades": 686,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T09:59:12-05:00",
+    "commit": "5da34f4"
+  },
+  {
+    "id": "jonathan-cheng19_v23_static_anchor_round2_backtest-1776610783566-round2-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "v23_static_anchor",
+    "dataset": "prices_round_2_day_0.csv",
+    "day": 0,
+    "pnl": 99089.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 19690.0,
+      "INTARIAN_PEPPER_ROOT": 79399.0
+    },
+    "trades": 664,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T09:59:12-05:00",
+    "commit": "5da34f4"
+  },
+  {
+    "id": "jonathan-cheng19_v22_sumpnl_best_round2_backtest-1776610045644-round2-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "v22_sumpnl_best",
+    "dataset": "prices_round_2_day_1.csv",
+    "day": 1,
+    "pnl": 99294.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 20097.0,
+      "INTARIAN_PEPPER_ROOT": 79197.0
+    },
+    "trades": 701,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T09:46:56-05:00",
+    "commit": "d162127"
+  },
+  {
+    "id": "jonathan-cheng19_v22_sumpnl_best_round2_backtest-1776610045644-round2-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "v22_sumpnl_best",
+    "dataset": "prices_round_2_day_0.csv",
+    "day": 0,
+    "pnl": 99709.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 20310.0,
+      "INTARIAN_PEPPER_ROOT": 79399.0
+    },
+    "trades": 692,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T09:46:56-05:00",
+    "commit": "d162127"
+  },
+  {
+    "id": "jonathan-cheng19_v21_slu_osm_v0_pep_round2_backtest-1776609359802-round2-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "v21_slu_osm_v0_pep",
+    "dataset": "prices_round_2_day_1.csv",
+    "day": 1,
+    "pnl": 97381.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 18184.0,
+      "INTARIAN_PEPPER_ROOT": 79197.0
+    },
+    "trades": 535,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T09:35:25-05:00",
+    "commit": "aa366a7"
+  },
+  {
+    "id": "jonathan-cheng19_v21_slu_osm_v0_pep_round2_backtest-1776609359802-round2-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "v21_slu_osm_v0_pep",
+    "dataset": "prices_round_2_day_0.csv",
+    "day": 0,
+    "pnl": 94267.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 14868.0,
+      "INTARIAN_PEPPER_ROOT": 79399.0
+    },
+    "trades": 458,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T09:35:25-05:00",
+    "commit": "aa366a7"
+  },
+  {
+    "id": "jonathan-cheng19_v16_osm_adverse_selection_round2_backtest-1776607131591-round2-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "v16_osm_adverse_selection",
+    "dataset": "prices_round_2_day_1.csv",
+    "day": 1,
+    "pnl": 99308.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 20097.0,
+      "INTARIAN_PEPPER_ROOT": 79211.0
+    },
+    "trades": 698,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T08:58:20-05:00",
+    "commit": "caa1038"
+  },
+  {
+    "id": "jonathan-cheng19_v16_osm_adverse_selection_round2_backtest-1776607131591-round2-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "v16_osm_adverse_selection",
+    "dataset": "prices_round_2_day_0.csv",
+    "day": 0,
+    "pnl": 99595.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 20310.0,
+      "INTARIAN_PEPPER_ROOT": 79285.0
+    },
+    "trades": 689,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T08:58:20-05:00",
+    "commit": "caa1038"
+  },
+  {
+    "id": "jonathan-cheng19_v13_tight_take_skew_round2_backtest-1776605615760-round2-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "v13_tight_take_skew",
+    "dataset": "prices_round_2_day_1.csv",
+    "day": 1,
+    "pnl": 98641.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 20249.0,
+      "INTARIAN_PEPPER_ROOT": 78392.0
+    },
+    "trades": 697,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T08:33:07-05:00",
+    "commit": "7e2b71d"
+  },
+  {
+    "id": "jonathan-cheng19_v13_tight_take_skew_round2_backtest-1776605615760-round2-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "v13_tight_take_skew",
+    "dataset": "prices_round_2_day_0.csv",
+    "day": 0,
+    "pnl": 99564.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 20321.0,
+      "INTARIAN_PEPPER_ROOT": 79243.0
+    },
+    "trades": 696,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T08:33:07-05:00",
+    "commit": "7e2b71d"
+  },
+  {
+    "id": "jonathan-cheng19_v17_pep_trend_detect_round2_backtest-1776605621882-round2-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "v17_pep_trend_detect",
+    "dataset": "prices_round_2_day_1.csv",
+    "day": 1,
+    "pnl": 98310.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 19918.0,
+      "INTARIAN_PEPPER_ROOT": 78392.0
+    },
+    "trades": 633,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T08:33:07-05:00",
+    "commit": "7e2b71d"
+  },
+  {
+    "id": "jonathan-cheng19_v17_pep_trend_detect_round2_backtest-1776605621882-round2-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "v17_pep_trend_detect",
+    "dataset": "prices_round_2_day_0.csv",
+    "day": 0,
+    "pnl": 99551.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 20308.0,
+      "INTARIAN_PEPPER_ROOT": 79243.0
+    },
+    "trades": 658,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T08:33:07-05:00",
+    "commit": "7e2b71d"
+  },
+  {
+    "id": "jonathan-cheng19_v18_pep_microprice_round2_backtest-1776605625020-round2-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "v18_pep_microprice",
+    "dataset": "prices_round_2_day_1.csv",
+    "day": 1,
+    "pnl": 98485.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 20093.0,
+      "INTARIAN_PEPPER_ROOT": 78392.0
+    },
+    "trades": 641,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T08:33:07-05:00",
+    "commit": "7e2b71d"
+  },
+  {
+    "id": "jonathan-cheng19_v18_pep_microprice_round2_backtest-1776605625020-round2-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "v18_pep_microprice",
+    "dataset": "prices_round_2_day_0.csv",
+    "day": 0,
+    "pnl": 99451.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 20208.0,
+      "INTARIAN_PEPPER_ROOT": 79243.0
+    },
+    "trades": 655,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T08:33:07-05:00",
+    "commit": "7e2b71d"
+  },
+  {
+    "id": "jonathan-cheng19_v15_adaptive_kalman_round2_backtest-1776596559190-round2-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "v15_adaptive_kalman",
+    "dataset": "prices_round_2_day_1.csv",
+    "day": 1,
+    "pnl": 98489.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 20097.0,
+      "INTARIAN_PEPPER_ROOT": 78392.0
+    },
+    "trades": 704,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T06:02:10-05:00",
+    "commit": "851d80d"
+  },
+  {
+    "id": "jonathan-cheng19_v15_adaptive_kalman_round2_backtest-1776596559190-round2-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "v15_adaptive_kalman",
+    "dataset": "prices_round_2_day_0.csv",
+    "day": 0,
+    "pnl": 99224.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 20310.0,
+      "INTARIAN_PEPPER_ROOT": 78914.0
+    },
+    "trades": 697,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T06:02:10-05:00",
+    "commit": "851d80d"
+  },
+  {
+    "id": "jonathan-cheng19_v14_osm_multilevel_take_round2_backtest-1776594788270-round2-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "v14_osm_multilevel_take",
+    "dataset": "prices_round_2_day_1.csv",
+    "day": 1,
+    "pnl": 98612.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 20220.0,
+      "INTARIAN_PEPPER_ROOT": 78392.0
+    },
+    "trades": 696,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T05:32:35-05:00",
+    "commit": "a210fe8"
+  },
+  {
+    "id": "jonathan-cheng19_v14_osm_multilevel_take_round2_backtest-1776594788270-round2-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "v14_osm_multilevel_take",
+    "dataset": "prices_round_2_day_0.csv",
+    "day": 0,
+    "pnl": 99235.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 20321.0,
+      "INTARIAN_PEPPER_ROOT": 78914.0
+    },
+    "trades": 696,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T05:32:35-05:00",
+    "commit": "a210fe8"
+  },
+  {
+    "id": "chennethelius_r2_combined_round2_backtest-1776578058156-round2-day-1",
+    "author": "chennethelius",
+    "strategy": "r2_combined",
+    "dataset": "prices_round_2_day_1.csv",
+    "day": 1,
+    "pnl": 98512.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 19496.0,
+      "INTARIAN_PEPPER_ROOT": 79016.0
+    },
+    "trades": 567,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T00:53:51-05:00",
+    "commit": "8fa8ce8"
+  },
+  {
+    "id": "chennethelius_r2_combined_round2_backtest-1776578058156-round2-day-0",
+    "author": "chennethelius",
+    "strategy": "r2_combined",
+    "dataset": "prices_round_2_day_0.csv",
+    "day": 0,
+    "pnl": 97986.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 18904.0,
+      "INTARIAN_PEPPER_ROOT": 79082.0
+    },
+    "trades": 561,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T00:53:51-05:00",
+    "commit": "8fa8ce8"
+  },
+  {
+    "id": "chennethelius_r2_imbalance_round2_backtest-1776578061080-round2-day-1",
+    "author": "chennethelius",
+    "strategy": "r2_imbalance",
+    "dataset": "prices_round_2_day_1.csv",
+    "day": 1,
+    "pnl": 97200.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 18184.0,
+      "INTARIAN_PEPPER_ROOT": 79016.0
+    },
+    "trades": 532,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T00:53:51-05:00",
+    "commit": "8fa8ce8"
+  },
+  {
+    "id": "chennethelius_r2_imbalance_round2_backtest-1776578061080-round2-day-0",
+    "author": "chennethelius",
+    "strategy": "r2_imbalance",
+    "dataset": "prices_round_2_day_0.csv",
+    "day": 0,
+    "pnl": 93950.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 14868.0,
+      "INTARIAN_PEPPER_ROOT": 79082.0
+    },
+    "trades": 460,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T00:53:51-05:00",
+    "commit": "8fa8ce8"
+  },
+  {
+    "id": "chennethelius_r2_inventory_skew_round2_backtest-1776578063894-round2-day-1",
+    "author": "chennethelius",
+    "strategy": "r2_inventory_skew",
+    "dataset": "prices_round_2_day_1.csv",
+    "day": 1,
+    "pnl": 98456.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 19440.0,
+      "INTARIAN_PEPPER_ROOT": 79016.0
+    },
+    "trades": 577,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T00:53:51-05:00",
+    "commit": "8fa8ce8"
+  },
+  {
+    "id": "chennethelius_r2_inventory_skew_round2_backtest-1776578063894-round2-day-0",
+    "author": "chennethelius",
+    "strategy": "r2_inventory_skew",
+    "dataset": "prices_round_2_day_0.csv",
+    "day": 0,
+    "pnl": 98298.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 19216.0,
+      "INTARIAN_PEPPER_ROOT": 79082.0
+    },
+    "trades": 580,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T00:53:51-05:00",
+    "commit": "8fa8ce8"
+  },
+  {
+    "id": "chennethelius_r2_microprice_round2_backtest-1776578066539-round2-day-1",
+    "author": "chennethelius",
+    "strategy": "r2_microprice",
+    "dataset": "prices_round_2_day_1.csv",
+    "day": 1,
+    "pnl": 97200.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 18184.0,
+      "INTARIAN_PEPPER_ROOT": 79016.0
+    },
+    "trades": 532,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T00:53:51-05:00",
+    "commit": "8fa8ce8"
+  },
+  {
+    "id": "chennethelius_r2_microprice_round2_backtest-1776578066539-round2-day-0",
+    "author": "chennethelius",
+    "strategy": "r2_microprice",
+    "dataset": "prices_round_2_day_0.csv",
+    "day": 0,
+    "pnl": 93950.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 14868.0,
+      "INTARIAN_PEPPER_ROOT": 79082.0
+    },
+    "trades": 460,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T00:53:51-05:00",
+    "commit": "8fa8ce8"
+  },
+  {
+    "id": "chennethelius_slu_r2_submit_round2_backtest-1776578069149-round2-day-1",
+    "author": "chennethelius",
+    "strategy": "slu_r2_submit",
+    "dataset": "prices_round_2_day_1.csv",
+    "day": 1,
+    "pnl": 97200.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 18184.0,
+      "INTARIAN_PEPPER_ROOT": 79016.0
+    },
+    "trades": 532,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T00:53:51-05:00",
+    "commit": "8fa8ce8"
+  },
+  {
+    "id": "chennethelius_slu_r2_submit_round2_backtest-1776578069149-round2-day-0",
+    "author": "chennethelius",
+    "strategy": "slu_r2_submit",
+    "dataset": "prices_round_2_day_0.csv",
+    "day": 0,
+    "pnl": 93950.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 14868.0,
+      "INTARIAN_PEPPER_ROOT": 79082.0
+    },
+    "trades": 460,
+    "ticks": 10000,
+    "timestamp": "2026-04-19T00:53:51-05:00",
+    "commit": "8fa8ce8"
+  },
+  {
+    "id": "jonathan-cheng19_disc_meta_v1_round1_backtest-1776452857067-round1-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "disc_meta_v1",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 82707.5,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3090.5,
+      "INTARIAN_PEPPER_ROOT": 79617.0
+    },
+    "trades": 205,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_disc_meta_v1_round1_backtest-1776452857067-round1-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "disc_meta_v1",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 82514.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3217.0,
+      "INTARIAN_PEPPER_ROOT": 79297.0
+    },
+    "trades": 223,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_disc_meta_v1_round1_backtest-1776452857067-round1-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "disc_meta_v1",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 82298.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3511.0,
+      "INTARIAN_PEPPER_ROOT": 78787.0
+    },
+    "trades": 252,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_Test_9_e3_round1_backtest-1776452867039-round1-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "Test_9_e3",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 82900.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3283.0,
+      "INTARIAN_PEPPER_ROOT": 79617.0
+    },
+    "trades": 146,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_Test_9_e3_round1_backtest-1776452867039-round1-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "Test_9_e3",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 83271.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3974.0,
+      "INTARIAN_PEPPER_ROOT": 79297.0
+    },
+    "trades": 150,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_Test_9_e3_round1_backtest-1776452867039-round1-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "Test_9_e3",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 81824.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3019.0,
+      "INTARIAN_PEPPER_ROOT": 78805.0
+    },
+    "trades": 147,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_disc_spartan_band_round1_backtest-1776452869467-round1-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "disc_spartan_band",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 82366.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 2823.0,
+      "INTARIAN_PEPPER_ROOT": 79543.0
+    },
+    "trades": 146,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_disc_spartan_band_round1_backtest-1776452869467-round1-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "disc_spartan_band",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 83354.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 4162.0,
+      "INTARIAN_PEPPER_ROOT": 79192.0
+    },
+    "trades": 169,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_disc_spartan_band_round1_backtest-1776452869467-round1-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "disc_spartan_band",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 80704.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 2908.0,
+      "INTARIAN_PEPPER_ROOT": 77796.0
+    },
+    "trades": 166,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_13_round1_backtest-1776452871946-round1-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "test_13",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 82826.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3283.0,
+      "INTARIAN_PEPPER_ROOT": 79543.0
+    },
+    "trades": 144,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_13_round1_backtest-1776452871946-round1-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "test_13",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 83166.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3974.0,
+      "INTARIAN_PEPPER_ROOT": 79192.0
+    },
+    "trades": 148,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_13_round1_backtest-1776452871946-round1-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "test_13",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 82338.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3019.0,
+      "INTARIAN_PEPPER_ROOT": 79319.0
+    },
+    "trades": 143,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_disc_osm_alpha_round1_backtest-1776452874376-round1-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "disc_osm_alpha",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 81989.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 2372.0,
+      "INTARIAN_PEPPER_ROOT": 79617.0
+    },
+    "trades": 168,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_disc_osm_alpha_round1_backtest-1776452874376-round1-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "disc_osm_alpha",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 81550.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 2253.0,
+      "INTARIAN_PEPPER_ROOT": 79297.0
+    },
+    "trades": 164,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_disc_osm_alpha_round1_backtest-1776452874376-round1-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "disc_osm_alpha",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 81059.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 2254.0,
+      "INTARIAN_PEPPER_ROOT": 78805.0
+    },
+    "trades": 189,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_pepper_long_round1_backtest-1776452877096-round1-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "pepper_long",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 82231.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 2688.0,
+      "INTARIAN_PEPPER_ROOT": 79543.0
+    },
+    "trades": 219,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_pepper_long_round1_backtest-1776452877096-round1-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "pepper_long",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 82976.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3784.0,
+      "INTARIAN_PEPPER_ROOT": 79192.0
+    },
+    "trades": 242,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_pepper_long_round1_backtest-1776452877096-round1-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "pepper_long",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 82405.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3086.0,
+      "INTARIAN_PEPPER_ROOT": 79319.0
+    },
+    "trades": 257,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_disc_time_phase_round1_backtest-1776452879334-round1-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "disc_time_phase",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 82303.5,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 2726.5,
+      "INTARIAN_PEPPER_ROOT": 79577.0
+    },
+    "trades": 148,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_disc_time_phase_round1_backtest-1776452879334-round1-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "disc_time_phase",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 81426.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 2192.0,
+      "INTARIAN_PEPPER_ROOT": 79234.0
+    },
+    "trades": 147,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_disc_time_phase_round1_backtest-1776452879334-round1-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "disc_time_phase",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 82438.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 2988.0,
+      "INTARIAN_PEPPER_ROOT": 79450.0
+    },
+    "trades": 158,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_20_round1_backtest-1776452881997-round1-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "test_20",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 83040.5,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3497.5,
+      "INTARIAN_PEPPER_ROOT": 79543.0
+    },
+    "trades": 145,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_20_round1_backtest-1776452881997-round1-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "test_20",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 83598.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 4406.0,
+      "INTARIAN_PEPPER_ROOT": 79192.0
+    },
+    "trades": 169,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_20_round1_backtest-1776452881997-round1-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "test_20",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 82884.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3565.0,
+      "INTARIAN_PEPPER_ROOT": 79319.0
+    },
+    "trades": 149,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_pepper_trend_round1_backtest-1776452884482-round1-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "pepper_trend",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 67931.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 2688.0,
+      "INTARIAN_PEPPER_ROOT": 65243.0
+    },
+    "trades": 257,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_pepper_trend_round1_backtest-1776452884482-round1-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "pepper_trend",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 68431.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3784.0,
+      "INTARIAN_PEPPER_ROOT": 64647.0
+    },
+    "trades": 284,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_pepper_trend_round1_backtest-1776452884482-round1-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "pepper_trend",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 67901.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3086.0,
+      "INTARIAN_PEPPER_ROOT": 64815.0
+    },
+    "trades": 294,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_disc_bnh_floor_round1_backtest-1776452887737-round1-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "disc_bnh_floor",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 79543.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 0.0,
+      "INTARIAN_PEPPER_ROOT": 79543.0
+    },
+    "trades": 6,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_disc_bnh_floor_round1_backtest-1776452887737-round1-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "disc_bnh_floor",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 79192.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 0.0,
+      "INTARIAN_PEPPER_ROOT": 79192.0
+    },
+    "trades": 6,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_disc_bnh_floor_round1_backtest-1776452887737-round1-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "disc_bnh_floor",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 79319.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 0.0,
+      "INTARIAN_PEPPER_ROOT": 79319.0
+    },
+    "trades": 6,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_24_round1_backtest-1776452889540-round1-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "test_24",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 83130.5,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3497.5,
+      "INTARIAN_PEPPER_ROOT": 79633.0
+    },
+    "trades": 147,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_24_round1_backtest-1776452889540-round1-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "test_24",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 83153.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 4406.0,
+      "INTARIAN_PEPPER_ROOT": 78747.0
+    },
+    "trades": 173,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_24_round1_backtest-1776452889540-round1-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "test_24",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 82105.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3565.0,
+      "INTARIAN_PEPPER_ROOT": 78540.0
+    },
+    "trades": 153,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_30_round1_backtest-1776452892152-round1-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "test_30",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 83146.5,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3497.5,
+      "INTARIAN_PEPPER_ROOT": 79649.0
+    },
+    "trades": 147,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_30_round1_backtest-1776452892152-round1-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "test_30",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 83714.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 4406.0,
+      "INTARIAN_PEPPER_ROOT": 79308.0
+    },
+    "trades": 172,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_30_round1_backtest-1776452892152-round1-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "test_30",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 82946.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3565.0,
+      "INTARIAN_PEPPER_ROOT": 79381.0
+    },
+    "trades": 151,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_51_round1_backtest-1776452894994-round1-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "test_51",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 82991.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3342.0,
+      "INTARIAN_PEPPER_ROOT": 79649.0
+    },
+    "trades": 195,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_51_round1_backtest-1776452894994-round1-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "test_51",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 82717.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3409.0,
+      "INTARIAN_PEPPER_ROOT": 79308.0
+    },
+    "trades": 146,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_51_round1_backtest-1776452894994-round1-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "test_51",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 83040.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3659.0,
+      "INTARIAN_PEPPER_ROOT": 79381.0
+    },
+    "trades": 195,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_54_round1_backtest-1776452898163-round1-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "test_54",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 83652.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 4003.0,
+      "INTARIAN_PEPPER_ROOT": 79649.0
+    },
+    "trades": 249,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_54_round1_backtest-1776452898163-round1-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "test_54",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 83647.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 4339.0,
+      "INTARIAN_PEPPER_ROOT": 79308.0
+    },
+    "trades": 214,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_54_round1_backtest-1776452898163-round1-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "test_54",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 82840.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3451.0,
+      "INTARIAN_PEPPER_ROOT": 79389.0
+    },
+    "trades": 255,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_best_round1_backtest-1776452901185-round1-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "best",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 83652.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 4003.0,
+      "INTARIAN_PEPPER_ROOT": 79649.0
+    },
+    "trades": 249,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_best_round1_backtest-1776452901185-round1-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "best",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 83647.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 4339.0,
+      "INTARIAN_PEPPER_ROOT": 79308.0
+    },
+    "trades": 214,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_best_round1_backtest-1776452901185-round1-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "best",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 82832.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3451.0,
+      "INTARIAN_PEPPER_ROOT": 79381.0
+    },
+    "trades": 255,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_29_round1_backtest-1776452904378-round1-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "test_29",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 83146.5,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3497.5,
+      "INTARIAN_PEPPER_ROOT": 79649.0
+    },
+    "trades": 147,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_29_round1_backtest-1776452904378-round1-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "test_29",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 83714.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 4406.0,
+      "INTARIAN_PEPPER_ROOT": 79308.0
+    },
+    "trades": 172,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_29_round1_backtest-1776452904378-round1-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "test_29",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 82946.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3565.0,
+      "INTARIAN_PEPPER_ROOT": 79381.0
+    },
+    "trades": 151,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_pepper_drift_round1_backtest-1776452907190-round1-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "pepper_drift",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 23985.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 2688.0,
+      "INTARIAN_PEPPER_ROOT": 21297.0
+    },
+    "trades": 484,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_pepper_drift_round1_backtest-1776452907190-round1-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "pepper_drift",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 12793.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3784.0,
+      "INTARIAN_PEPPER_ROOT": 9009.0
+    },
+    "trades": 546,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_pepper_drift_round1_backtest-1776452907190-round1-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "pepper_drift",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 14445.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3086.0,
+      "INTARIAN_PEPPER_ROOT": 11359.0
+    },
+    "trades": 544,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_37_round1_backtest-1776452909682-round1-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "test_37",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 83669.5,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 4020.5,
+      "INTARIAN_PEPPER_ROOT": 79649.0
+    },
+    "trades": 234,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_37_round1_backtest-1776452909682-round1-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "test_37",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 83618.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 4310.0,
+      "INTARIAN_PEPPER_ROOT": 79308.0
+    },
+    "trades": 212,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_37_round1_backtest-1776452909682-round1-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "test_37",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 82789.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3408.0,
+      "INTARIAN_PEPPER_ROOT": 79381.0
+    },
+    "trades": 242,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_36_round1_backtest-1776452912873-round1-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "test_36",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 83134.5,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3485.5,
+      "INTARIAN_PEPPER_ROOT": 79649.0
+    },
+    "trades": 165,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_36_round1_backtest-1776452912873-round1-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "test_36",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 83635.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 4327.0,
+      "INTARIAN_PEPPER_ROOT": 79308.0
+    },
+    "trades": 205,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_36_round1_backtest-1776452912873-round1-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "test_36",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 83093.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3712.0,
+      "INTARIAN_PEPPER_ROOT": 79381.0
+    },
+    "trades": 215,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_55_round1_backtest-1776452916025-round1-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "test_55",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 83652.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 4003.0,
+      "INTARIAN_PEPPER_ROOT": 79649.0
+    },
+    "trades": 249,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_55_round1_backtest-1776452916025-round1-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "test_55",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 83647.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 4339.0,
+      "INTARIAN_PEPPER_ROOT": 79308.0
+    },
+    "trades": 214,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_55_round1_backtest-1776452916025-round1-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "test_55",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 82840.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3451.0,
+      "INTARIAN_PEPPER_ROOT": 79389.0
+    },
+    "trades": 255,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_25_round1_backtest-1776452918999-round1-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "test_25",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 80929.5,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3497.5,
+      "INTARIAN_PEPPER_ROOT": 77432.0
+    },
+    "trades": 410,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_25_round1_backtest-1776452918999-round1-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "test_25",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 80711.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 4406.0,
+      "INTARIAN_PEPPER_ROOT": 76305.0
+    },
+    "trades": 481,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_25_round1_backtest-1776452918999-round1-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "test_25",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 80484.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3565.0,
+      "INTARIAN_PEPPER_ROOT": 76919.0
+    },
+    "trades": 393,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_disc_spread_regime_round1_backtest-1776452921892-round1-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "disc_spread_regime",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 82414.5,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3277.5,
+      "INTARIAN_PEPPER_ROOT": 79137.0
+    },
+    "trades": 211,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_disc_spread_regime_round1_backtest-1776452921892-round1-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "disc_spread_regime",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 82275.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3213.0,
+      "INTARIAN_PEPPER_ROOT": 79062.0
+    },
+    "trades": 232,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_disc_spread_regime_round1_backtest-1776452921892-round1-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "disc_spread_regime",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 82158.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3442.0,
+      "INTARIAN_PEPPER_ROOT": 78716.0
+    },
+    "trades": 253,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_40_round1_backtest-1776452924534-round1-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "test_40",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 83652.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 4003.0,
+      "INTARIAN_PEPPER_ROOT": 79649.0
+    },
+    "trades": 249,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_40_round1_backtest-1776452924534-round1-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "test_40",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 83647.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 4339.0,
+      "INTARIAN_PEPPER_ROOT": 79308.0
+    },
+    "trades": 214,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_40_round1_backtest-1776452924534-round1-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "test_40",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 82832.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3451.0,
+      "INTARIAN_PEPPER_ROOT": 79381.0
+    },
+    "trades": 255,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_39_round1_backtest-1776452927725-round1-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "test_39",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 83669.5,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 4020.5,
+      "INTARIAN_PEPPER_ROOT": 79649.0
+    },
+    "trades": 234,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_39_round1_backtest-1776452927725-round1-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "test_39",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 83618.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 4310.0,
+      "INTARIAN_PEPPER_ROOT": 79308.0
+    },
+    "trades": 212,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_39_round1_backtest-1776452927725-round1-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "test_39",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 82789.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3408.0,
+      "INTARIAN_PEPPER_ROOT": 79381.0
+    },
+    "trades": 242,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_41_round1_backtest-1776452930898-round1-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "test_41",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 83784.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 4135.0,
+      "INTARIAN_PEPPER_ROOT": 79649.0
+    },
+    "trades": 308,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_41_round1_backtest-1776452930898-round1-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "test_41",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 84030.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 4722.0,
+      "INTARIAN_PEPPER_ROOT": 79308.0
+    },
+    "trades": 268,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_41_round1_backtest-1776452930898-round1-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "test_41",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 83142.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3761.0,
+      "INTARIAN_PEPPER_ROOT": 79381.0
+    },
+    "trades": 320,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_disc_affine_pepper_round1_backtest-1776452934095-round1-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "disc_affine_pepper",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 82440.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 2823.0,
+      "INTARIAN_PEPPER_ROOT": 79617.0
+    },
+    "trades": 148,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_disc_affine_pepper_round1_backtest-1776452934095-round1-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "disc_affine_pepper",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 83459.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 4162.0,
+      "INTARIAN_PEPPER_ROOT": 79297.0
+    },
+    "trades": 171,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_disc_affine_pepper_round1_backtest-1776452934095-round1-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "disc_affine_pepper",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 81538.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 2908.0,
+      "INTARIAN_PEPPER_ROOT": 78630.0
+    },
+    "trades": 164,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_pepper_hybrid_round1_backtest-1776452941425-round1-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "pepper_hybrid",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 46983.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 2688.0,
+      "INTARIAN_PEPPER_ROOT": 44295.0
+    },
+    "trades": 493,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_pepper_hybrid_round1_backtest-1776452941425-round1-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "pepper_hybrid",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 36109.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3784.0,
+      "INTARIAN_PEPPER_ROOT": 32325.0
+    },
+    "trades": 548,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_pepper_hybrid_round1_backtest-1776452941425-round1-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "pepper_hybrid",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 26754.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3086.0,
+      "INTARIAN_PEPPER_ROOT": 23668.0
+    },
+    "trades": 545,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_58_round1_backtest-1776452945595-round1-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "test_58",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 83652.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 4003.0,
+      "INTARIAN_PEPPER_ROOT": 79649.0
+    },
+    "trades": 249,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_58_round1_backtest-1776452945595-round1-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "test_58",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 83657.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 4339.0,
+      "INTARIAN_PEPPER_ROOT": 79318.0
+    },
+    "trades": 214,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_58_round1_backtest-1776452945595-round1-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "test_58",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 82901.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3451.0,
+      "INTARIAN_PEPPER_ROOT": 79450.0
+    },
+    "trades": 256,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_53_round1_backtest-1776452948540-round1-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "test_53",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 83652.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 4003.0,
+      "INTARIAN_PEPPER_ROOT": 79649.0
+    },
+    "trades": 249,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_53_round1_backtest-1776452948540-round1-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "test_53",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 83647.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 4339.0,
+      "INTARIAN_PEPPER_ROOT": 79308.0
+    },
+    "trades": 214,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_53_round1_backtest-1776452948540-round1-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "test_53",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 82832.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3451.0,
+      "INTARIAN_PEPPER_ROOT": 79381.0
+    },
+    "trades": 255,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_7_round1_backtest-1776452951594-round1-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "test_7",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 3283.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3283.0,
+      "INTARIAN_PEPPER_ROOT": 0.0
+    },
+    "trades": 138,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_7_round1_backtest-1776452951594-round1-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "test_7",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 3974.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3974.0,
+      "INTARIAN_PEPPER_ROOT": 0.0
+    },
+    "trades": 142,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_7_round1_backtest-1776452951594-round1-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "test_7",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 3019.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3019.0,
+      "INTARIAN_PEPPER_ROOT": 0.0
+    },
+    "trades": 137,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_5_round1_backtest-1776452954090-round1-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "test_5",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 11065.5,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 2688.0,
+      "INTARIAN_PEPPER_ROOT": 8377.5
+    },
+    "trades": 484,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_5_round1_backtest-1776452954090-round1-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "test_5",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 9277.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3784.0,
+      "INTARIAN_PEPPER_ROOT": 5493.0
+    },
+    "trades": 545,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_5_round1_backtest-1776452954090-round1-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "test_5",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 7410.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3086.0,
+      "INTARIAN_PEPPER_ROOT": 4324.0
+    },
+    "trades": 542,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_56_round1_backtest-1776452956586-round1-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "test_56",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 83652.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 4003.0,
+      "INTARIAN_PEPPER_ROOT": 79649.0
+    },
+    "trades": 249,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_56_round1_backtest-1776452956586-round1-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "test_56",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 83647.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 4339.0,
+      "INTARIAN_PEPPER_ROOT": 79308.0
+    },
+    "trades": 214,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_56_round1_backtest-1776452956586-round1-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "test_56",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 82840.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3451.0,
+      "INTARIAN_PEPPER_ROOT": 79389.0
+    },
+    "trades": 255,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_testbot_round1_backtest-1776452959492-round1-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "testbot",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 83331.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3682.0,
+      "INTARIAN_PEPPER_ROOT": 79649.0
+    },
+    "trades": 173,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_testbot_round1_backtest-1776452959492-round1-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "testbot",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 84044.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 4736.0,
+      "INTARIAN_PEPPER_ROOT": 79308.0
+    },
+    "trades": 206,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_testbot_round1_backtest-1776452959492-round1-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "testbot",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 83244.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3863.0,
+      "INTARIAN_PEPPER_ROOT": 79381.0
+    },
+    "trades": 196,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_disc_safe_core_round1_backtest-1776452962225-round1-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "disc_safe_core",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 81059.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3297.0,
+      "INTARIAN_PEPPER_ROOT": 77762.0
+    },
+    "trades": 232,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_disc_safe_core_round1_backtest-1776452962225-round1-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "disc_safe_core",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 81253.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3348.0,
+      "INTARIAN_PEPPER_ROOT": 77905.0
+    },
+    "trades": 252,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_disc_safe_core_round1_backtest-1776452962225-round1-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "disc_safe_core",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 81733.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3442.0,
+      "INTARIAN_PEPPER_ROOT": 78291.0
+    },
+    "trades": 261,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_candidate_round1_backtest-1776452964875-round1-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "candidate",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 83652.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 4003.0,
+      "INTARIAN_PEPPER_ROOT": 79649.0
+    },
+    "trades": 249,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_candidate_round1_backtest-1776452964875-round1-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "candidate",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 83647.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 4339.0,
+      "INTARIAN_PEPPER_ROOT": 79308.0
+    },
+    "trades": 214,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_candidate_round1_backtest-1776452964875-round1-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "candidate",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 82832.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3451.0,
+      "INTARIAN_PEPPER_ROOT": 79381.0
+    },
+    "trades": 255,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_9_round1_backtest-1776452968086-round1-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "test_9",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 82900.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3283.0,
+      "INTARIAN_PEPPER_ROOT": 79617.0
+    },
+    "trades": 146,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_9_round1_backtest-1776452968086-round1-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "test_9",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 83271.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3974.0,
+      "INTARIAN_PEPPER_ROOT": 79297.0
+    },
+    "trades": 150,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_test_9_round1_backtest-1776452968086-round1-day-0",
+    "author": "jonathan-cheng19",
+    "strategy": "test_9",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 81824.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3019.0,
+      "INTARIAN_PEPPER_ROOT": 78805.0
+    },
+    "trades": 147,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_aggressive_mm_tutorial_backtest-1776452970507-tutorial-submission-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "aggressive_mm",
+    "dataset": "submission.json",
+    "day": -1,
+    "pnl": 14.5,
+    "pnl_by_product": {
+      "EMERALDS": 0.0,
+      "TOMATOES": 14.5
+    },
+    "trades": 52,
+    "ticks": 2000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_aggressive_mm_tutorial_backtest-1776452970507-tutorial-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "aggressive_mm",
+    "dataset": "prices_round_0_day_-2.csv",
+    "day": -2,
+    "pnl": 1538.5,
+    "pnl_by_product": {
+      "EMERALDS": 0.0,
+      "TOMATOES": 1538.5
+    },
+    "trades": 242,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_aggressive_mm_tutorial_backtest-1776452970507-tutorial-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "aggressive_mm",
+    "dataset": "prices_round_0_day_-1.csv",
+    "day": -1,
+    "pnl": -480.0,
+    "pnl_by_product": {
+      "EMERALDS": 0.0,
+      "TOMATOES": -480.0
+    },
+    "trades": 251,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_tutorial_mm_tutorial_backtest-1776452972731-tutorial-submission-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "tutorial_mm",
+    "dataset": "submission.json",
+    "day": -1,
+    "pnl": 0.0,
+    "pnl_by_product": {
+      "EMERALDS": 0.0,
+      "TOMATOES": 0.0
+    },
+    "trades": 0,
+    "ticks": 2000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_tutorial_mm_tutorial_backtest-1776452972731-tutorial-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "tutorial_mm",
+    "dataset": "prices_round_0_day_-2.csv",
+    "day": -2,
+    "pnl": 0.0,
+    "pnl_by_product": {
+      "EMERALDS": 0.0,
+      "TOMATOES": 0.0
+    },
+    "trades": 0,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_tutorial_mm_tutorial_backtest-1776452972731-tutorial-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "tutorial_mm",
+    "dataset": "prices_round_0_day_-1.csv",
+    "day": -1,
+    "pnl": 0.0,
+    "pnl_by_product": {
+      "EMERALDS": 0.0,
+      "TOMATOES": 0.0
+    },
+    "trades": 0,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_mm_tomatoes_tutorial_backtest-1776452974389-tutorial-submission-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "mm_tomatoes",
+    "dataset": "submission.json",
+    "day": -1,
+    "pnl": 0.0,
+    "pnl_by_product": {
+      "EMERALDS": 0.0,
+      "TOMATOES": 0.0
+    },
+    "trades": 0,
+    "ticks": 2000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_mm_tomatoes_tutorial_backtest-1776452974389-tutorial-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "mm_tomatoes",
+    "dataset": "prices_round_0_day_-2.csv",
+    "day": -2,
+    "pnl": 0.0,
+    "pnl_by_product": {
+      "EMERALDS": 0.0,
+      "TOMATOES": 0.0
+    },
+    "trades": 0,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_mm_tomatoes_tutorial_backtest-1776452974389-tutorial-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "mm_tomatoes",
+    "dataset": "prices_round_0_day_-1.csv",
+    "day": -1,
+    "pnl": 0.0,
+    "pnl_by_product": {
+      "EMERALDS": 0.0,
+      "TOMATOES": 0.0
+    },
+    "trades": 0,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_combined_mm_tutorial_backtest-1776452976096-tutorial-submission-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "combined_mm",
+    "dataset": "submission.json",
+    "day": -1,
+    "pnl": 14.5,
+    "pnl_by_product": {
+      "EMERALDS": 0.0,
+      "TOMATOES": 14.5
+    },
+    "trades": 52,
+    "ticks": 2000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_combined_mm_tutorial_backtest-1776452976096-tutorial-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "combined_mm",
+    "dataset": "prices_round_0_day_-2.csv",
+    "day": -2,
+    "pnl": 1538.5,
+    "pnl_by_product": {
+      "EMERALDS": 0.0,
+      "TOMATOES": 1538.5
+    },
+    "trades": 242,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_combined_mm_tutorial_backtest-1776452976096-tutorial-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "combined_mm",
+    "dataset": "prices_round_0_day_-1.csv",
+    "day": -1,
+    "pnl": -480.0,
+    "pnl_by_product": {
+      "EMERALDS": 0.0,
+      "TOMATOES": -480.0
+    },
+    "trades": 251,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_reference_mm_tutorial_backtest-1776452978318-tutorial-submission-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "reference_mm",
+    "dataset": "submission.json",
+    "day": -1,
+    "pnl": 0.0,
+    "pnl_by_product": {
+      "EMERALDS": 0.0,
+      "TOMATOES": 0.0
+    },
+    "trades": 0,
+    "ticks": 2000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_reference_mm_tutorial_backtest-1776452978318-tutorial-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "reference_mm",
+    "dataset": "prices_round_0_day_-2.csv",
+    "day": -2,
+    "pnl": 0.0,
+    "pnl_by_product": {
+      "EMERALDS": 0.0,
+      "TOMATOES": 0.0
+    },
+    "trades": 0,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_reference_mm_tutorial_backtest-1776452978318-tutorial-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "reference_mm",
+    "dataset": "prices_round_0_day_-1.csv",
+    "day": -1,
+    "pnl": 0.0,
+    "pnl_by_product": {
+      "EMERALDS": 0.0,
+      "TOMATOES": 0.0
+    },
+    "trades": 0,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_emeralds_mm_tutorial_backtest-1776452980050-tutorial-submission-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "emeralds_mm",
+    "dataset": "submission.json",
+    "day": -1,
+    "pnl": 0.0,
+    "pnl_by_product": {
+      "EMERALDS": 0.0,
+      "TOMATOES": 0.0
+    },
+    "trades": 0,
+    "ticks": 2000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_emeralds_mm_tutorial_backtest-1776452980050-tutorial-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "emeralds_mm",
+    "dataset": "prices_round_0_day_-2.csv",
+    "day": -2,
+    "pnl": 0.0,
+    "pnl_by_product": {
+      "EMERALDS": 0.0,
+      "TOMATOES": 0.0
+    },
+    "trades": 0,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_emeralds_mm_tutorial_backtest-1776452980050-tutorial-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "emeralds_mm",
+    "dataset": "prices_round_0_day_-1.csv",
+    "day": -1,
+    "pnl": 0.0,
+    "pnl_by_product": {
+      "EMERALDS": 0.0,
+      "TOMATOES": 0.0
+    },
+    "trades": 0,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_43088_tutorial_backtest-1776452981566-tutorial-submission-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "43088",
+    "dataset": "submission.json",
+    "day": -1,
+    "pnl": 0.0,
+    "pnl_by_product": {
+      "EMERALDS": 0.0,
+      "TOMATOES": 0.0
+    },
+    "trades": 0,
+    "ticks": 2000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_43088_tutorial_backtest-1776452981566-tutorial-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "43088",
+    "dataset": "prices_round_0_day_-2.csv",
+    "day": -2,
+    "pnl": 0.0,
+    "pnl_by_product": {
+      "EMERALDS": 0.0,
+      "TOMATOES": 0.0
+    },
+    "trades": 0,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_43088_tutorial_backtest-1776452981566-tutorial-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "43088",
+    "dataset": "prices_round_0_day_-1.csv",
+    "day": -1,
+    "pnl": 0.0,
+    "pnl_by_product": {
+      "EMERALDS": 0.0,
+      "TOMATOES": 0.0
+    },
+    "trades": 0,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_optimized_mm_tutorial_backtest-1776452983516-tutorial-submission-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "optimized_mm",
+    "dataset": "submission.json",
+    "day": -1,
+    "pnl": 68.5,
+    "pnl_by_product": {
+      "EMERALDS": 0.0,
+      "TOMATOES": 68.5
+    },
+    "trades": 56,
+    "ticks": 2000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_optimized_mm_tutorial_backtest-1776452983516-tutorial-day-2",
+    "author": "jonathan-cheng19",
+    "strategy": "optimized_mm",
+    "dataset": "prices_round_0_day_-2.csv",
+    "day": -2,
+    "pnl": 1005.5,
+    "pnl_by_product": {
+      "EMERALDS": 0.0,
+      "TOMATOES": 1005.5
+    },
+    "trades": 282,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "jonathan-cheng19_optimized_mm_tutorial_backtest-1776452983516-tutorial-day-1",
+    "author": "jonathan-cheng19",
+    "strategy": "optimized_mm",
+    "dataset": "prices_round_0_day_-1.csv",
+    "day": -1,
+    "pnl": 472.0,
+    "pnl_by_product": {
+      "EMERALDS": 0.0,
+      "TOMATOES": 472.0
+    },
+    "trades": 295,
+    "ticks": 10000,
+    "timestamp": "2026-04-17T14:07:03-05:00",
+    "commit": "393abe8"
+  },
+  {
+    "id": "chennethelius_disc_affine_pepper_round1_backtest-1776371041695-round1-day-2",
+    "author": "chennethelius",
+    "strategy": "disc_affine_pepper",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 82440.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 2823.0,
+      "INTARIAN_PEPPER_ROOT": 79617.0
+    },
+    "trades": 148,
+    "ticks": 10000,
+    "timestamp": "2026-04-16T15:23:23-05:00",
+    "commit": "766bce8"
+  },
+  {
+    "id": "chennethelius_disc_affine_pepper_round1_backtest-1776371041695-round1-day-1",
+    "author": "chennethelius",
+    "strategy": "disc_affine_pepper",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 83459.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 4162.0,
+      "INTARIAN_PEPPER_ROOT": 79297.0
+    },
+    "trades": 171,
+    "ticks": 10000,
+    "timestamp": "2026-04-16T15:23:23-05:00",
+    "commit": "766bce8"
+  },
+  {
+    "id": "chennethelius_disc_affine_pepper_round1_backtest-1776371041695-round1-day-0",
+    "author": "chennethelius",
+    "strategy": "disc_affine_pepper",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 81538.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 2908.0,
+      "INTARIAN_PEPPER_ROOT": 78630.0
+    },
+    "trades": 164,
+    "ticks": 10000,
+    "timestamp": "2026-04-16T15:23:23-05:00",
+    "commit": "766bce8"
+  },
+  {
+    "id": "chennethelius_disc_bnh_floor_round1_backtest-1776371048713-round1-day-2",
+    "author": "chennethelius",
+    "strategy": "disc_bnh_floor",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 79543.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 0.0,
+      "INTARIAN_PEPPER_ROOT": 79543.0
+    },
+    "trades": 6,
+    "ticks": 10000,
+    "timestamp": "2026-04-16T15:23:23-05:00",
+    "commit": "766bce8"
+  },
+  {
+    "id": "chennethelius_disc_bnh_floor_round1_backtest-1776371048713-round1-day-1",
+    "author": "chennethelius",
+    "strategy": "disc_bnh_floor",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 79192.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 0.0,
+      "INTARIAN_PEPPER_ROOT": 79192.0
+    },
+    "trades": 6,
+    "ticks": 10000,
+    "timestamp": "2026-04-16T15:23:23-05:00",
+    "commit": "766bce8"
+  },
+  {
+    "id": "chennethelius_disc_bnh_floor_round1_backtest-1776371048713-round1-day-0",
+    "author": "chennethelius",
+    "strategy": "disc_bnh_floor",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 79319.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 0.0,
+      "INTARIAN_PEPPER_ROOT": 79319.0
+    },
+    "trades": 6,
+    "ticks": 10000,
+    "timestamp": "2026-04-16T15:23:23-05:00",
+    "commit": "766bce8"
+  },
+  {
+    "id": "chennethelius_disc_meta_v1_round1_backtest-1776371050725-round1-day-2",
+    "author": "chennethelius",
+    "strategy": "disc_meta_v1",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 82707.5,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3090.5,
+      "INTARIAN_PEPPER_ROOT": 79617.0
+    },
+    "trades": 205,
+    "ticks": 10000,
+    "timestamp": "2026-04-16T15:23:23-05:00",
+    "commit": "766bce8"
+  },
+  {
+    "id": "chennethelius_disc_meta_v1_round1_backtest-1776371050725-round1-day-1",
+    "author": "chennethelius",
+    "strategy": "disc_meta_v1",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 82514.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3217.0,
+      "INTARIAN_PEPPER_ROOT": 79297.0
+    },
+    "trades": 223,
+    "ticks": 10000,
+    "timestamp": "2026-04-16T15:23:23-05:00",
+    "commit": "766bce8"
+  },
+  {
+    "id": "chennethelius_disc_meta_v1_round1_backtest-1776371050725-round1-day-0",
+    "author": "chennethelius",
+    "strategy": "disc_meta_v1",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 82298.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3511.0,
+      "INTARIAN_PEPPER_ROOT": 78787.0
+    },
+    "trades": 252,
+    "ticks": 10000,
+    "timestamp": "2026-04-16T15:23:23-05:00",
+    "commit": "766bce8"
+  },
+  {
+    "id": "chennethelius_disc_osm_alpha_round1_backtest-1776371060281-round1-day-2",
+    "author": "chennethelius",
+    "strategy": "disc_osm_alpha",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 81989.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 2372.0,
+      "INTARIAN_PEPPER_ROOT": 79617.0
+    },
+    "trades": 168,
+    "ticks": 10000,
+    "timestamp": "2026-04-16T15:23:23-05:00",
+    "commit": "766bce8"
+  },
+  {
+    "id": "chennethelius_disc_osm_alpha_round1_backtest-1776371060281-round1-day-1",
+    "author": "chennethelius",
+    "strategy": "disc_osm_alpha",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 81550.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 2253.0,
+      "INTARIAN_PEPPER_ROOT": 79297.0
+    },
+    "trades": 164,
+    "ticks": 10000,
+    "timestamp": "2026-04-16T15:23:23-05:00",
+    "commit": "766bce8"
+  },
+  {
+    "id": "chennethelius_disc_osm_alpha_round1_backtest-1776371060281-round1-day-0",
+    "author": "chennethelius",
+    "strategy": "disc_osm_alpha",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 81059.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 2254.0,
+      "INTARIAN_PEPPER_ROOT": 78805.0
+    },
+    "trades": 189,
+    "ticks": 10000,
+    "timestamp": "2026-04-16T15:23:23-05:00",
+    "commit": "766bce8"
+  },
+  {
+    "id": "chennethelius_disc_safe_core_round1_backtest-1776371062873-round1-day-2",
+    "author": "chennethelius",
+    "strategy": "disc_safe_core",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 81059.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3297.0,
+      "INTARIAN_PEPPER_ROOT": 77762.0
+    },
+    "trades": 232,
+    "ticks": 10000,
+    "timestamp": "2026-04-16T15:23:23-05:00",
+    "commit": "766bce8"
+  },
+  {
+    "id": "chennethelius_disc_safe_core_round1_backtest-1776371062873-round1-day-1",
+    "author": "chennethelius",
+    "strategy": "disc_safe_core",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 81253.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3348.0,
+      "INTARIAN_PEPPER_ROOT": 77905.0
+    },
+    "trades": 252,
+    "ticks": 10000,
+    "timestamp": "2026-04-16T15:23:23-05:00",
+    "commit": "766bce8"
+  },
+  {
+    "id": "chennethelius_disc_safe_core_round1_backtest-1776371062873-round1-day-0",
+    "author": "chennethelius",
+    "strategy": "disc_safe_core",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 81733.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3442.0,
+      "INTARIAN_PEPPER_ROOT": 78291.0
+    },
+    "trades": 261,
+    "ticks": 10000,
+    "timestamp": "2026-04-16T15:23:23-05:00",
+    "commit": "766bce8"
+  },
+  {
+    "id": "chennethelius_disc_spartan_band_round1_backtest-1776371065502-round1-day-2",
+    "author": "chennethelius",
+    "strategy": "disc_spartan_band",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 82366.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 2823.0,
+      "INTARIAN_PEPPER_ROOT": 79543.0
+    },
+    "trades": 146,
+    "ticks": 10000,
+    "timestamp": "2026-04-16T15:23:23-05:00",
+    "commit": "766bce8"
+  },
+  {
+    "id": "chennethelius_disc_spartan_band_round1_backtest-1776371065502-round1-day-1",
+    "author": "chennethelius",
+    "strategy": "disc_spartan_band",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 83354.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 4162.0,
+      "INTARIAN_PEPPER_ROOT": 79192.0
+    },
+    "trades": 169,
+    "ticks": 10000,
+    "timestamp": "2026-04-16T15:23:23-05:00",
+    "commit": "766bce8"
+  },
+  {
+    "id": "chennethelius_disc_spartan_band_round1_backtest-1776371065502-round1-day-0",
+    "author": "chennethelius",
+    "strategy": "disc_spartan_band",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 80704.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 2908.0,
+      "INTARIAN_PEPPER_ROOT": 77796.0
+    },
+    "trades": 166,
+    "ticks": 10000,
+    "timestamp": "2026-04-16T15:23:23-05:00",
+    "commit": "766bce8"
+  },
+  {
+    "id": "chennethelius_disc_spread_regime_round1_backtest-1776371067998-round1-day-2",
+    "author": "chennethelius",
+    "strategy": "disc_spread_regime",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 82414.5,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3277.5,
+      "INTARIAN_PEPPER_ROOT": 79137.0
+    },
+    "trades": 211,
+    "ticks": 10000,
+    "timestamp": "2026-04-16T15:23:23-05:00",
+    "commit": "766bce8"
+  },
+  {
+    "id": "chennethelius_disc_spread_regime_round1_backtest-1776371067998-round1-day-1",
+    "author": "chennethelius",
+    "strategy": "disc_spread_regime",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 82275.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3213.0,
+      "INTARIAN_PEPPER_ROOT": 79062.0
+    },
+    "trades": 232,
+    "ticks": 10000,
+    "timestamp": "2026-04-16T15:23:23-05:00",
+    "commit": "766bce8"
+  },
+  {
+    "id": "chennethelius_disc_spread_regime_round1_backtest-1776371067998-round1-day-0",
+    "author": "chennethelius",
+    "strategy": "disc_spread_regime",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 82158.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3442.0,
+      "INTARIAN_PEPPER_ROOT": 78716.0
+    },
+    "trades": 253,
+    "ticks": 10000,
+    "timestamp": "2026-04-16T15:23:23-05:00",
+    "commit": "766bce8"
+  },
+  {
+    "id": "chennethelius_disc_time_phase_round1_backtest-1776371070536-round1-day-2",
+    "author": "chennethelius",
+    "strategy": "disc_time_phase",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 82303.5,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 2726.5,
+      "INTARIAN_PEPPER_ROOT": 79577.0
+    },
+    "trades": 148,
+    "ticks": 10000,
+    "timestamp": "2026-04-16T15:23:23-05:00",
+    "commit": "766bce8"
+  },
+  {
+    "id": "chennethelius_disc_time_phase_round1_backtest-1776371070536-round1-day-1",
+    "author": "chennethelius",
+    "strategy": "disc_time_phase",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 81426.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 2192.0,
+      "INTARIAN_PEPPER_ROOT": 79234.0
+    },
+    "trades": 147,
+    "ticks": 10000,
+    "timestamp": "2026-04-16T15:23:23-05:00",
+    "commit": "766bce8"
+  },
+  {
+    "id": "chennethelius_disc_time_phase_round1_backtest-1776371070536-round1-day-0",
+    "author": "chennethelius",
+    "strategy": "disc_time_phase",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 82438.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 2988.0,
+      "INTARIAN_PEPPER_ROOT": 79450.0
+    },
+    "trades": 158,
+    "ticks": 10000,
+    "timestamp": "2026-04-16T15:23:23-05:00",
+    "commit": "766bce8"
+  },
+  {
+    "id": "TommySailami_testbot_round1_backtest-1776363120740-round1-day-2",
+    "author": "TommySailami",
+    "strategy": "testbot",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 83331.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3682.0,
+      "INTARIAN_PEPPER_ROOT": 79649.0
+    },
+    "trades": 173,
+    "ticks": 10000,
+    "timestamp": "2026-04-16T13:11:26-05:00",
+    "commit": "d1c03f1"
+  },
+  {
+    "id": "TommySailami_testbot_round1_backtest-1776363120740-round1-day-1",
+    "author": "TommySailami",
+    "strategy": "testbot",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 84044.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 4736.0,
+      "INTARIAN_PEPPER_ROOT": 79308.0
+    },
+    "trades": 206,
+    "ticks": 10000,
+    "timestamp": "2026-04-16T13:11:26-05:00",
+    "commit": "d1c03f1"
+  },
+  {
+    "id": "TommySailami_testbot_round1_backtest-1776363120740-round1-day-0",
+    "author": "TommySailami",
+    "strategy": "testbot",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 83244.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3863.0,
+      "INTARIAN_PEPPER_ROOT": 79381.0
+    },
+    "trades": 196,
+    "ticks": 10000,
+    "timestamp": "2026-04-16T13:11:26-05:00",
+    "commit": "d1c03f1"
+  },
+  {
+    "id": "TommySailami_test_20_round1_backtest-1776303444385-round1-day-2",
+    "author": "TommySailami",
+    "strategy": "test_20",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 83040.5,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3497.5,
+      "INTARIAN_PEPPER_ROOT": 79543.0
+    },
+    "trades": 145,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T20:37:02-05:00",
+    "commit": "6fad138"
+  },
+  {
+    "id": "TommySailami_test_20_round1_backtest-1776303444385-round1-day-1",
+    "author": "TommySailami",
+    "strategy": "test_20",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 83598.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 4406.0,
+      "INTARIAN_PEPPER_ROOT": 79192.0
+    },
+    "trades": 169,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T20:37:02-05:00",
+    "commit": "6fad138"
+  },
+  {
+    "id": "TommySailami_test_20_round1_backtest-1776303444385-round1-day-0",
+    "author": "TommySailami",
+    "strategy": "test_20",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 82884.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3565.0,
+      "INTARIAN_PEPPER_ROOT": 79319.0
+    },
+    "trades": 149,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T20:37:02-05:00",
+    "commit": "6fad138"
+  },
+  {
+    "id": "TommySailami_test_13_round1_backtest-1776302544413-round1-day-2",
+    "author": "TommySailami",
+    "strategy": "test_13",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 82826.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3283.0,
+      "INTARIAN_PEPPER_ROOT": 79543.0
+    },
+    "trades": 144,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T20:21:52-05:00",
+    "commit": "b25aca0"
+  },
+  {
+    "id": "TommySailami_test_13_round1_backtest-1776302544413-round1-day-1",
+    "author": "TommySailami",
+    "strategy": "test_13",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 83166.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3974.0,
+      "INTARIAN_PEPPER_ROOT": 79192.0
+    },
+    "trades": 148,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T20:21:52-05:00",
+    "commit": "b25aca0"
+  },
+  {
+    "id": "TommySailami_test_13_round1_backtest-1776302544413-round1-day-0",
+    "author": "TommySailami",
+    "strategy": "test_13",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 82338.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3019.0,
+      "INTARIAN_PEPPER_ROOT": 79319.0
+    },
+    "trades": 143,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T20:21:52-05:00",
+    "commit": "b25aca0"
+  },
+  {
+    "id": "TommySailami_test_9_round1_backtest-1776302546625-round1-day-2",
+    "author": "TommySailami",
+    "strategy": "test_9",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 82900.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3283.0,
+      "INTARIAN_PEPPER_ROOT": 79617.0
+    },
+    "trades": 146,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T20:21:52-05:00",
+    "commit": "b25aca0"
+  },
+  {
+    "id": "TommySailami_test_9_round1_backtest-1776302546625-round1-day-1",
+    "author": "TommySailami",
+    "strategy": "test_9",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 83271.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3974.0,
+      "INTARIAN_PEPPER_ROOT": 79297.0
+    },
+    "trades": 150,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T20:21:52-05:00",
+    "commit": "b25aca0"
+  },
+  {
+    "id": "TommySailami_test_9_round1_backtest-1776302546625-round1-day-0",
+    "author": "TommySailami",
+    "strategy": "test_9",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 81824.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3019.0,
+      "INTARIAN_PEPPER_ROOT": 78805.0
+    },
+    "trades": 147,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T20:21:52-05:00",
+    "commit": "b25aca0"
+  },
+  {
+    "id": "chennethelius_Test_9_e3_round1_backtest-1776282849623-round1-day-2",
+    "author": "chennethelius",
+    "strategy": "Test_9_e3",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 82900.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3283.0,
+      "INTARIAN_PEPPER_ROOT": 79617.0
+    },
+    "trades": 146,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T14:53:48-05:00",
+    "commit": "62140fe"
+  },
+  {
+    "id": "chennethelius_Test_9_e3_round1_backtest-1776282849623-round1-day-1",
+    "author": "chennethelius",
+    "strategy": "Test_9_e3",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 83271.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3974.0,
+      "INTARIAN_PEPPER_ROOT": 79297.0
+    },
+    "trades": 150,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T14:53:48-05:00",
+    "commit": "62140fe"
+  },
+  {
+    "id": "chennethelius_Test_9_e3_round1_backtest-1776282849623-round1-day-0",
+    "author": "chennethelius",
+    "strategy": "Test_9_e3",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 81824.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3019.0,
+      "INTARIAN_PEPPER_ROOT": 78805.0
+    },
+    "trades": 147,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T14:53:48-05:00",
+    "commit": "62140fe"
+  },
+  {
+    "id": "chennethelius_pepper_long_round1_backtest-1776281449561-round1-day-2",
+    "author": "chennethelius",
+    "strategy": "pepper_long",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 82231.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 2688.0,
+      "INTARIAN_PEPPER_ROOT": 79543.0
+    },
+    "trades": 219,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T14:30:20-05:00",
+    "commit": "364b0fd"
+  },
+  {
+    "id": "chennethelius_pepper_long_round1_backtest-1776281449561-round1-day-1",
+    "author": "chennethelius",
+    "strategy": "pepper_long",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 82976.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3784.0,
+      "INTARIAN_PEPPER_ROOT": 79192.0
+    },
+    "trades": 242,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T14:30:20-05:00",
+    "commit": "364b0fd"
+  },
+  {
+    "id": "chennethelius_pepper_long_round1_backtest-1776281449561-round1-day-0",
+    "author": "chennethelius",
+    "strategy": "pepper_long",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 82405.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3086.0,
+      "INTARIAN_PEPPER_ROOT": 79319.0
+    },
+    "trades": 257,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T14:30:20-05:00",
+    "commit": "364b0fd"
+  },
+  {
+    "id": "chennethelius_pepper_trend_round1_backtest-1776281451806-round1-day-2",
+    "author": "chennethelius",
+    "strategy": "pepper_trend",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 67931.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 2688.0,
+      "INTARIAN_PEPPER_ROOT": 65243.0
+    },
+    "trades": 257,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T14:30:20-05:00",
+    "commit": "364b0fd"
+  },
+  {
+    "id": "chennethelius_pepper_trend_round1_backtest-1776281451806-round1-day-1",
+    "author": "chennethelius",
+    "strategy": "pepper_trend",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 68431.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3784.0,
+      "INTARIAN_PEPPER_ROOT": 64647.0
+    },
+    "trades": 284,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T14:30:20-05:00",
+    "commit": "364b0fd"
+  },
+  {
+    "id": "chennethelius_pepper_trend_round1_backtest-1776281451806-round1-day-0",
+    "author": "chennethelius",
+    "strategy": "pepper_trend",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 67901.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3086.0,
+      "INTARIAN_PEPPER_ROOT": 64815.0
+    },
+    "trades": 294,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T14:30:20-05:00",
+    "commit": "364b0fd"
+  },
+  {
+    "id": "chennethelius_pepper_drift_round1_backtest-1776278107438-round1-day-2",
+    "author": "chennethelius",
+    "strategy": "pepper_drift",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 23985.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 2688.0,
+      "INTARIAN_PEPPER_ROOT": 21297.0
+    },
+    "trades": 484,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T13:34:20-05:00",
+    "commit": "a0aa44c"
+  },
+  {
+    "id": "chennethelius_pepper_drift_round1_backtest-1776278107438-round1-day-1",
+    "author": "chennethelius",
+    "strategy": "pepper_drift",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 12793.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3784.0,
+      "INTARIAN_PEPPER_ROOT": 9009.0
+    },
+    "trades": 546,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T13:34:20-05:00",
+    "commit": "a0aa44c"
+  },
+  {
+    "id": "chennethelius_pepper_drift_round1_backtest-1776278107438-round1-day-0",
+    "author": "chennethelius",
+    "strategy": "pepper_drift",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 14445.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3086.0,
+      "INTARIAN_PEPPER_ROOT": 11359.0
+    },
+    "trades": 544,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T13:34:20-05:00",
+    "commit": "a0aa44c"
+  },
+  {
+    "id": "chennethelius_pepper_hybrid_round1_backtest-1776278110078-round1-day-2",
+    "author": "chennethelius",
+    "strategy": "pepper_hybrid",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 46983.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 2688.0,
+      "INTARIAN_PEPPER_ROOT": 44295.0
+    },
+    "trades": 493,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T13:34:20-05:00",
+    "commit": "a0aa44c"
+  },
+  {
+    "id": "chennethelius_pepper_hybrid_round1_backtest-1776278110078-round1-day-1",
+    "author": "chennethelius",
+    "strategy": "pepper_hybrid",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 36109.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3784.0,
+      "INTARIAN_PEPPER_ROOT": 32325.0
+    },
+    "trades": 548,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T13:34:20-05:00",
+    "commit": "a0aa44c"
+  },
+  {
+    "id": "chennethelius_pepper_hybrid_round1_backtest-1776278110078-round1-day-0",
+    "author": "chennethelius",
+    "strategy": "pepper_hybrid",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 26754.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 3086.0,
+      "INTARIAN_PEPPER_ROOT": 23668.0
+    },
+    "trades": 545,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T13:34:20-05:00",
+    "commit": "a0aa44c"
+  },
+  {
+    "id": "chennethelius_test_5_round1_backtest-1776237036594-round1-day-2",
+    "author": "chennethelius",
+    "strategy": "test_5",
+    "dataset": "prices_round_1_day_-2.csv",
+    "day": -2,
+    "pnl": 29195.5,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 13456.0,
+      "INTARIAN_PEPPER_ROOT": 15739.5
+    },
+    "trades": 1081,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T02:10:10-05:00",
+    "commit": "c3e862c"
+  },
+  {
+    "id": "chennethelius_test_5_round1_backtest-1776237036594-round1-day-1",
+    "author": "chennethelius",
+    "strategy": "test_5",
+    "dataset": "prices_round_1_day_-1.csv",
+    "day": -1,
+    "pnl": 31461.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 16766.0,
+      "INTARIAN_PEPPER_ROOT": 14695.0
+    },
+    "trades": 1153,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T02:10:10-05:00",
+    "commit": "c3e862c"
+  },
+  {
+    "id": "chennethelius_test_5_round1_backtest-1776237036594-round1-day-0",
+    "author": "chennethelius",
+    "strategy": "test_5",
+    "dataset": "prices_round_1_day_0.csv",
+    "day": 0,
+    "pnl": 25864.0,
+    "pnl_by_product": {
+      "ASH_COATED_OSMIUM": 13465.0,
+      "INTARIAN_PEPPER_ROOT": 12399.0
+    },
+    "trades": 1039,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T02:10:10-05:00",
+    "commit": "c3e862c"
+  },
+  {
+    "id": "chennethelius_aggressive_mm_tutorial_backtest-1776237039126-tutorial-submission-day-1",
+    "author": "chennethelius",
+    "strategy": "aggressive_mm",
+    "dataset": "submission.json",
+    "day": -1,
+    "pnl": 2735.5,
+    "pnl_by_product": {
+      "EMERALDS": 1050.0,
+      "TOMATOES": 1685.5
+    },
+    "trades": 172,
+    "ticks": 2000,
+    "timestamp": "2026-04-15T02:10:10-05:00",
+    "commit": "c3e862c"
+  },
+  {
+    "id": "chennethelius_aggressive_mm_tutorial_backtest-1776237039126-tutorial-day-2",
+    "author": "chennethelius",
+    "strategy": "aggressive_mm",
+    "dataset": "prices_round_0_day_-2.csv",
+    "day": -2,
+    "pnl": 16561.0,
+    "pnl_by_product": {
+      "EMERALDS": 7182.0,
+      "TOMATOES": 9379.0
+    },
+    "trades": 900,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T02:10:10-05:00",
+    "commit": "c3e862c"
+  },
+  {
+    "id": "chennethelius_aggressive_mm_tutorial_backtest-1776237039126-tutorial-day-1",
+    "author": "chennethelius",
+    "strategy": "aggressive_mm",
+    "dataset": "prices_round_0_day_-1.csv",
+    "day": -1,
+    "pnl": 15252.0,
+    "pnl_by_product": {
+      "EMERALDS": 7763.0,
+      "TOMATOES": 7489.0
+    },
+    "trades": 964,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T02:10:10-05:00",
+    "commit": "c3e862c"
+  },
+  {
+    "id": "chennethelius_tutorial_mm_tutorial_backtest-1776237041426-tutorial-submission-day-1",
+    "author": "chennethelius",
+    "strategy": "tutorial_mm",
+    "dataset": "submission.json",
+    "day": -1,
+    "pnl": 2313.0,
+    "pnl_by_product": {
+      "EMERALDS": 896.0,
+      "TOMATOES": 1417.0
+    },
+    "trades": 99,
+    "ticks": 2000,
+    "timestamp": "2026-04-15T02:10:10-05:00",
+    "commit": "c3e862c"
+  },
+  {
+    "id": "chennethelius_tutorial_mm_tutorial_backtest-1776237041426-tutorial-day-2",
+    "author": "chennethelius",
+    "strategy": "tutorial_mm",
+    "dataset": "prices_round_0_day_-2.csv",
+    "day": -2,
+    "pnl": 13967.0,
+    "pnl_by_product": {
+      "EMERALDS": 5748.0,
+      "TOMATOES": 8219.0
+    },
+    "trades": 584,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T02:10:10-05:00",
+    "commit": "c3e862c"
+  },
+  {
+    "id": "chennethelius_tutorial_mm_tutorial_backtest-1776237041426-tutorial-day-1",
+    "author": "chennethelius",
+    "strategy": "tutorial_mm",
+    "dataset": "prices_round_0_day_-1.csv",
+    "day": -1,
+    "pnl": 13083.0,
+    "pnl_by_product": {
+      "EMERALDS": 6348.0,
+      "TOMATOES": 6735.0
+    },
+    "trades": 623,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T02:10:10-05:00",
+    "commit": "c3e862c"
+  },
+  {
+    "id": "chennethelius_mm_tomatoes_tutorial_backtest-1776237043223-tutorial-submission-day-1",
+    "author": "chennethelius",
+    "strategy": "mm_tomatoes",
+    "dataset": "submission.json",
+    "day": -1,
+    "pnl": 915.0,
+    "pnl_by_product": {
+      "EMERALDS": 300.0,
+      "TOMATOES": 615.0
+    },
+    "trades": 98,
+    "ticks": 2000,
+    "timestamp": "2026-04-15T02:10:10-05:00",
+    "commit": "c3e862c"
+  },
+  {
+    "id": "chennethelius_mm_tomatoes_tutorial_backtest-1776237043223-tutorial-day-2",
+    "author": "chennethelius",
+    "strategy": "mm_tomatoes",
+    "dataset": "prices_round_0_day_-2.csv",
+    "day": -2,
+    "pnl": 5310.0,
+    "pnl_by_product": {
+      "EMERALDS": 1988.0,
+      "TOMATOES": 3322.0
+    },
+    "trades": 579,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T02:10:10-05:00",
+    "commit": "c3e862c"
+  },
+  {
+    "id": "chennethelius_mm_tomatoes_tutorial_backtest-1776237043223-tutorial-day-1",
+    "author": "chennethelius",
+    "strategy": "mm_tomatoes",
+    "dataset": "prices_round_0_day_-1.csv",
+    "day": -1,
+    "pnl": 4167.0,
+    "pnl_by_product": {
+      "EMERALDS": 2162.0,
+      "TOMATOES": 2005.0
+    },
+    "trades": 610,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T02:10:10-05:00",
+    "commit": "c3e862c"
+  },
+  {
+    "id": "chennethelius_combined_mm_tutorial_backtest-1776237045032-tutorial-submission-day-1",
+    "author": "chennethelius",
+    "strategy": "combined_mm",
+    "dataset": "submission.json",
+    "day": -1,
+    "pnl": 2735.5,
+    "pnl_by_product": {
+      "EMERALDS": 1050.0,
+      "TOMATOES": 1685.5
+    },
+    "trades": 172,
+    "ticks": 2000,
+    "timestamp": "2026-04-15T02:10:10-05:00",
+    "commit": "c3e862c"
+  },
+  {
+    "id": "chennethelius_combined_mm_tutorial_backtest-1776237045032-tutorial-day-2",
+    "author": "chennethelius",
+    "strategy": "combined_mm",
+    "dataset": "prices_round_0_day_-2.csv",
+    "day": -2,
+    "pnl": 16561.0,
+    "pnl_by_product": {
+      "EMERALDS": 7182.0,
+      "TOMATOES": 9379.0
+    },
+    "trades": 900,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T02:10:10-05:00",
+    "commit": "c3e862c"
+  },
+  {
+    "id": "chennethelius_combined_mm_tutorial_backtest-1776237045032-tutorial-day-1",
+    "author": "chennethelius",
+    "strategy": "combined_mm",
+    "dataset": "prices_round_0_day_-1.csv",
+    "day": -1,
+    "pnl": 15252.0,
+    "pnl_by_product": {
+      "EMERALDS": 7763.0,
+      "TOMATOES": 7489.0
+    },
+    "trades": 964,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T02:10:10-05:00",
+    "commit": "c3e862c"
+  },
+  {
+    "id": "chennethelius_reference_mm_tutorial_backtest-1776237047296-tutorial-submission-day-1",
+    "author": "chennethelius",
+    "strategy": "reference_mm",
+    "dataset": "submission.json",
+    "day": -1,
+    "pnl": 2467.0,
+    "pnl_by_product": {
+      "EMERALDS": 1050.0,
+      "TOMATOES": 1417.0
+    },
+    "trades": 99,
+    "ticks": 2000,
+    "timestamp": "2026-04-15T02:10:10-05:00",
+    "commit": "c3e862c"
+  },
+  {
+    "id": "chennethelius_reference_mm_tutorial_backtest-1776237047296-tutorial-day-2",
+    "author": "chennethelius",
+    "strategy": "reference_mm",
+    "dataset": "prices_round_0_day_-2.csv",
+    "day": -2,
+    "pnl": 15200.5,
+    "pnl_by_product": {
+      "EMERALDS": 6958.0,
+      "TOMATOES": 8242.5
+    },
+    "trades": 580,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T02:10:10-05:00",
+    "commit": "c3e862c"
+  },
+  {
+    "id": "chennethelius_reference_mm_tutorial_backtest-1776237047296-tutorial-day-1",
+    "author": "chennethelius",
+    "strategy": "reference_mm",
+    "dataset": "prices_round_0_day_-1.csv",
+    "day": -1,
+    "pnl": 14343.0,
+    "pnl_by_product": {
+      "EMERALDS": 7567.0,
+      "TOMATOES": 6776.0
+    },
+    "trades": 613,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T02:10:10-05:00",
+    "commit": "c3e862c"
+  },
+  {
+    "id": "chennethelius_emeralds_mm_tutorial_backtest-1776237049118-tutorial-submission-day-1",
+    "author": "chennethelius",
+    "strategy": "emeralds_mm",
+    "dataset": "submission.json",
+    "day": -1,
+    "pnl": 300.0,
+    "pnl_by_product": {
+      "EMERALDS": 300.0,
+      "TOMATOES": 0.0
+    },
+    "trades": 29,
+    "ticks": 2000,
+    "timestamp": "2026-04-15T02:10:10-05:00",
+    "commit": "c3e862c"
+  },
+  {
+    "id": "chennethelius_emeralds_mm_tutorial_backtest-1776237049118-tutorial-day-2",
+    "author": "chennethelius",
+    "strategy": "emeralds_mm",
+    "dataset": "prices_round_0_day_-2.csv",
+    "day": -2,
+    "pnl": 1988.0,
+    "pnl_by_product": {
+      "EMERALDS": 1988.0,
+      "TOMATOES": 0.0
+    },
+    "trades": 183,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T02:10:10-05:00",
+    "commit": "c3e862c"
+  },
+  {
+    "id": "chennethelius_emeralds_mm_tutorial_backtest-1776237049118-tutorial-day-1",
+    "author": "chennethelius",
+    "strategy": "emeralds_mm",
+    "dataset": "prices_round_0_day_-1.csv",
+    "day": -1,
+    "pnl": 2162.0,
+    "pnl_by_product": {
+      "EMERALDS": 2162.0,
+      "TOMATOES": 0.0
+    },
+    "trades": 197,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T02:10:10-05:00",
+    "commit": "c3e862c"
+  },
+  {
+    "id": "chennethelius_43088_tutorial_backtest-1776237050724-tutorial-submission-day-1",
+    "author": "chennethelius",
+    "strategy": "43088",
+    "dataset": "submission.json",
+    "day": -1,
+    "pnl": 2509.0,
+    "pnl_by_product": {
+      "EMERALDS": 1050.0,
+      "TOMATOES": 1459.0
+    },
+    "trades": 97,
+    "ticks": 2000,
+    "timestamp": "2026-04-15T02:10:10-05:00",
+    "commit": "c3e862c"
+  },
+  {
+    "id": "chennethelius_43088_tutorial_backtest-1776237050724-tutorial-day-2",
+    "author": "chennethelius",
+    "strategy": "43088",
+    "dataset": "prices_round_0_day_-2.csv",
+    "day": -2,
+    "pnl": 14845.0,
+    "pnl_by_product": {
+      "EMERALDS": 6958.0,
+      "TOMATOES": 7887.0
+    },
+    "trades": 567,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T02:10:10-05:00",
+    "commit": "c3e862c"
+  },
+  {
+    "id": "chennethelius_43088_tutorial_backtest-1776237050724-tutorial-day-1",
+    "author": "chennethelius",
+    "strategy": "43088",
+    "dataset": "prices_round_0_day_-1.csv",
+    "day": -1,
+    "pnl": 14490.0,
+    "pnl_by_product": {
+      "EMERALDS": 7567.0,
+      "TOMATOES": 6923.0
+    },
+    "trades": 578,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T02:10:10-05:00",
+    "commit": "c3e862c"
+  },
+  {
+    "id": "chennethelius_optimized_mm_tutorial_backtest-1776237052766-tutorial-submission-day-1",
+    "author": "chennethelius",
+    "strategy": "optimized_mm",
+    "dataset": "submission.json",
+    "day": -1,
+    "pnl": 2514.5,
+    "pnl_by_product": {
+      "EMERALDS": 1050.0,
+      "TOMATOES": 1464.5
+    },
+    "trades": 174,
+    "ticks": 2000,
+    "timestamp": "2026-04-15T02:10:10-05:00",
+    "commit": "c3e862c"
+  },
+  {
+    "id": "chennethelius_optimized_mm_tutorial_backtest-1776237052766-tutorial-day-2",
+    "author": "chennethelius",
+    "strategy": "optimized_mm",
+    "dataset": "prices_round_0_day_-2.csv",
+    "day": -2,
+    "pnl": 16099.5,
+    "pnl_by_product": {
+      "EMERALDS": 7182.0,
+      "TOMATOES": 8917.5
+    },
+    "trades": 1019,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T02:10:10-05:00",
+    "commit": "c3e862c"
+  },
+  {
+    "id": "chennethelius_optimized_mm_tutorial_backtest-1776237052766-tutorial-day-1",
+    "author": "chennethelius",
+    "strategy": "optimized_mm",
+    "dataset": "prices_round_0_day_-1.csv",
+    "day": -1,
+    "pnl": 16267.0,
+    "pnl_by_product": {
+      "EMERALDS": 7758.0,
+      "TOMATOES": 8509.0
+    },
+    "trades": 1035,
+    "ticks": 10000,
+    "timestamp": "2026-04-15T02:10:10-05:00",
+    "commit": "c3e862c"
+  },
+  {
+    "id": "TommySailami_optimized_mm_tutorial_backtest-1775159351927-tutorial-submission-day-1",
+    "author": "TommySailami",
+    "strategy": "optimized_mm",
+    "dataset": "submission.json",
+    "day": -1,
+    "pnl": 2327.0,
+    "pnl_by_product": {
+      "EMERALDS": 868.0,
+      "TOMATOES": 1459.0
+    },
+    "trades": 92,
+    "ticks": 2000,
+    "timestamp": "2026-04-02T14:48:47-05:00",
+    "commit": "9e8dc50"
+  },
+  {
+    "id": "TommySailami_optimized_mm_tutorial_backtest-1775159351927-tutorial-day-2",
+    "author": "TommySailami",
+    "strategy": "optimized_mm",
+    "dataset": "prices_round_0_day_-2.csv",
+    "day": -2,
+    "pnl": 14065.0,
+    "pnl_by_product": {
+      "EMERALDS": 6178.0,
+      "TOMATOES": 7887.0
+    },
+    "trades": 549,
+    "ticks": 10000,
+    "timestamp": "2026-04-02T14:48:47-05:00",
+    "commit": "9e8dc50"
+  },
+  {
+    "id": "TommySailami_optimized_mm_tutorial_backtest-1775159351927-tutorial-day-1",
+    "author": "TommySailami",
+    "strategy": "optimized_mm",
+    "dataset": "prices_round_0_day_-1.csv",
+    "day": -1,
+    "pnl": 13574.0,
+    "pnl_by_product": {
+      "EMERALDS": 6651.0,
+      "TOMATOES": 6923.0
+    },
+    "trades": 564,
+    "ticks": 10000,
+    "timestamp": "2026-04-02T14:48:47-05:00",
+    "commit": "9e8dc50"
+  }
+]

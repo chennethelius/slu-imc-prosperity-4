@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manual Auction - Prosperity</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-base: #f8f9fb;
+    --bg-surface: #ffffff;
+    --bg-raised: #f0f2f5;
+    --bg-hover: #f0f2f5;
+    --bg-book: #1a1d26;
+    --bg-book-tile: #242832;
+    --border: #e2e5ea;
+    --border-subtle: #ebedf0;
+    --text-primary: #111827;
+    --text-secondary: #4b5563;
+    --text-muted: #9ca3af;
+    --accent: #003DA5;
+    --green: #10b981;
+    --green-dim: rgba(16,185,129,.12);
+    --green-bar: rgba(16,185,129,.35);
+    --red: #ef4444;
+    --red-dim: rgba(239,68,68,.12);
+    --red-bar: rgba(239,68,68,.35);
+    --amber: #d97706;
+    --purple: #7c3aed;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Inter',system-ui,sans-serif; background:var(--bg-base); color:var(--text-primary); font-size:13px; line-height:1.5; -webkit-font-smoothing:antialiased; }
+
+  .topbar { background:var(--bg-surface); border-bottom:1px solid var(--border); padding:0 24px; height:48px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:20; }
+  .topbar-left { display:flex; align-items:center; gap:20px; }
+  .logo { display:flex; align-items:center; gap:10px; text-decoration:none; }
+  .logo-img { width:28px; height:28px; object-fit:contain; flex-shrink:0; }
+  .logo h1 { color:var(--accent); font-size:14px; font-weight:700; letter-spacing:-.2px; }
+  .nav { display:flex; gap:2px; }
+  .nav-link { color:var(--text-muted); font-size:12px; font-weight:500; text-decoration:none; padding:6px 12px; border-radius:6px; transition:all .15s; }
+  .nav-link:hover { color:var(--text-secondary); background:var(--bg-hover); }
+  .nav-link.active { color:var(--accent); background:rgba(0,61,165,.06); font-weight:600; }
+  .badge { color:var(--text-muted); font-size:11px; font-weight:500; }
+
+  .content { padding:20px 24px; max-width:1600px; margin:0 auto; }
+  .title { font-size:18px; font-weight:700; margin-bottom:4px; }
+  .subtitle { color:var(--text-muted); font-size:12px; margin-bottom:16px; }
+
+  .product-tabs { display:flex; gap:0; border:1px solid var(--border); border-radius:8px; overflow:hidden; margin-bottom:16px; width:fit-content; background:var(--bg-surface); }
+  .prod-tab { background:transparent; border:none; padding:8px 18px; font-size:12px; font-weight:500; color:var(--text-muted); cursor:pointer; font-family:inherit; border-right:1px solid var(--border); }
+  .prod-tab:last-child { border-right:none; }
+  .prod-tab:hover { color:var(--text-secondary); background:var(--bg-hover); }
+  .prod-tab.active { background:var(--accent); color:#fff; }
+
+  .grid { display:grid; grid-template-columns: minmax(360px, 1.1fr) minmax(280px, 1fr) minmax(280px, 1fr); gap:16px; }
+  @media(max-width:1200px) { .grid { grid-template-columns:1fr; } }
+
+  .card { background:var(--bg-surface); border:1px solid var(--border); border-radius:10px; padding:14px 16px; }
+  .card h3 { font-size:10px; text-transform:uppercase; letter-spacing:.5px; color:var(--text-muted); margin-bottom:10px; font-weight:600; display:flex; justify-content:space-between; align-items:center; }
+  .card h3 .hint { text-transform:none; letter-spacing:0; font-weight:500; color:var(--text-muted); }
+
+  /* ── Visual order book (dark, bar-chart) ── */
+  .visual-book { background:var(--bg-book); border-radius:8px; padding:12px; margin:-2px -4px 0; }
+  .vb-header { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:8px; padding:0 6px 8px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; }
+  .vb-header .vol-l { color:#10b981; text-align:left; }
+  .vb-header .px-l { color:#10b981; text-align:right; padding-right:10px; }
+  .vb-header .px-r { color:#ef4444; text-align:left; padding-left:10px; }
+  .vb-header .vol-r { color:#ef4444; text-align:right; }
+  .vb-row { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:8px; margin-bottom:5px; align-items:stretch; }
+  .vb-cell {
+    position:relative; background:var(--bg-book-tile); border-radius:6px; padding:7px 12px;
+    font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:600; color:#d1d5db;
+    overflow:hidden; min-height:30px; display:flex; align-items:center;
+  }
+  .vb-bid-vol { justify-content:flex-start; }
+  .vb-bid-px { justify-content:flex-end; color:#e5e7eb; }
+  .vb-ask-px { justify-content:flex-start; color:#e5e7eb; }
+  .vb-ask-vol { justify-content:flex-end; }
+  .vb-bar {
+    position:absolute; top:0; bottom:0; pointer-events:none; border-radius:6px;
+  }
+  .vb-bid-vol .vb-bar { left:0; background:linear-gradient(90deg, var(--green-bar), transparent); }
+  .vb-bid-px   .vb-bar { right:0; background:linear-gradient(270deg, var(--green-dim), transparent); }
+  .vb-ask-px   .vb-bar { left:0; background:linear-gradient(90deg, var(--red-dim), transparent); }
+  .vb-ask-vol  .vb-bar { right:0; background:linear-gradient(270deg, var(--red-bar), transparent); }
+  .vb-cell span { position:relative; z-index:1; }
+  .vb-you { outline:2px solid var(--accent); outline-offset:-2px; box-shadow:0 0 0 1px rgba(0,61,165,.3); }
+  .vb-you::after {
+    content:'YOU'; position:absolute; top:2px; left:50%; transform:translateX(-50%); z-index:2;
+    font-size:8px; font-weight:700; color:#60a5fa; letter-spacing:.5px;
+  }
+  .vb-empty { color:#4b5563; font-size:11px; }
+  .vb-fill { box-shadow: inset 0 0 0 1px rgba(96,165,250,.45); }
+  .vb-skip { opacity:.4; }
+  .vb-pct { font-style:normal; color:#60a5fa; font-size:10px; margin-left:6px; font-weight:700; }
+  .vb-clear-line {
+    background:rgba(96,165,250,.12); border:1px dashed rgba(96,165,250,.7);
+    border-radius:6px; padding:4px 10px; margin-top:8px; text-align:center;
+    color:#60a5fa; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; letter-spacing:.5px;
+  }
+
+  /* ── Form ── */
+  .form-row { display:flex; flex-direction:column; gap:5px; margin-bottom:10px; }
+  .form-row label { font-size:10px; text-transform:uppercase; letter-spacing:.5px; color:var(--text-muted); font-weight:600; display:flex; justify-content:space-between; }
+  .form-row input, .form-row select { background:var(--bg-base); border:1px solid var(--border); border-radius:6px; padding:7px 10px; font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--text-primary); outline:none; transition:border-color .15s; width:100%; }
+  .form-row input:focus { border-color:var(--accent); }
+  .side-group { display:flex; gap:0; border:1px solid var(--border); border-radius:6px; overflow:hidden; }
+  .side-btn { flex:1; background:transparent; border:none; padding:7px 0; font-family:inherit; font-size:12px; font-weight:600; cursor:pointer; color:var(--text-muted); border-right:1px solid var(--border); }
+  .side-btn:last-child { border-right:none; }
+  .side-btn.active.buy { background:var(--green); color:#fff; }
+  .side-btn.active.sell { background:var(--red); color:#fff; }
+  .econ-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:10px; }
+  .econ-grid .form-row { margin-bottom:0; }
+
+  .btn { background:var(--bg-raised); border:1px solid var(--border); border-radius:6px; padding:7px 14px; font-size:12px; font-weight:500; color:var(--text-secondary); cursor:pointer; font-family:inherit; transition:all .15s; }
+  .btn:hover { border-color:var(--text-muted); color:var(--text-primary); }
+  .btn.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .btn.primary:hover { background:#002d7a; }
+  .btn.accent { background:var(--purple); border-color:var(--purple); color:#fff; }
+  .btn.accent:hover { filter:brightness(0.9); }
+  .btn.ghost { background:transparent; }
+  .row-add { display:flex; gap:6px; margin-top:8px; }
+
+  /* ── Result card ── */
+  .result-hero { text-align:center; padding:12px 10px; background:var(--bg-base); border-radius:8px; margin-bottom:10px; }
+  .result-hero .lbl { font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; font-weight:600; }
+  .result-hero .val { font-family:'JetBrains Mono',monospace; font-size:28px; font-weight:700; color:var(--accent); margin-top:2px; }
+  .result-hero.none .val { color:var(--text-muted); font-size:16px; }
+  .result-hero.pnl { background:linear-gradient(135deg, rgba(16,185,129,.08), rgba(16,185,129,.02)); border:1px solid rgba(16,185,129,.25); }
+  .result-hero.pnl.neg { background:linear-gradient(135deg, rgba(239,68,68,.08), rgba(239,68,68,.02)); border:1px solid rgba(239,68,68,.25); }
+  .result-hero.pnl .val.pos { color:var(--green); }
+  .result-hero.pnl .val.neg { color:var(--red); }
+
+  .kv-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px 10px; }
+  .kv { background:var(--bg-base); border-radius:6px; padding:7px 10px; }
+  .kv .lbl { font-size:9px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; font-weight:600; }
+  .kv .val { font-family:'JetBrains Mono',monospace; font-weight:700; font-size:14px; margin-top:2px; }
+  .kv .val.pos { color:var(--green); }
+  .kv .val.neg { color:var(--red); }
+  .kv .val.muted { color:var(--text-muted); font-size:12px; }
+
+  /* ── Editable book table ── */
+  table.book { width:100%; border-collapse:collapse; font-family:'JetBrains Mono',monospace; font-size:12px; }
+  table.book th { text-align:left; padding:4px 8px; color:var(--text-muted); font-weight:600; font-size:10px; text-transform:uppercase; border-bottom:1px solid var(--border); }
+  table.book td { padding:3px 6px; border-bottom:1px solid var(--border-subtle); }
+  table.book input.px, table.book input.qty { width:100%; background:transparent; border:none; outline:none; font-family:inherit; font-size:12px; color:inherit; padding:2px 4px; border-radius:4px; }
+  table.book input.px:focus, table.book input.qty:focus { background:var(--bg-base); outline:1px solid var(--accent); }
+  table.book .bid-row { background:rgba(16,185,129,.06); }
+  table.book .ask-row { background:rgba(239,68,68,.06); }
+  table.book .bid-px { color:var(--green); font-weight:700; font-size:10px; }
+  table.book .ask-px { color:var(--red); font-weight:700; font-size:10px; }
+  table.book td.actions { text-align:right; width:30px; }
+  table.book button.del { background:transparent; border:none; color:var(--text-muted); cursor:pointer; font-family:inherit; font-size:14px; padding:2px 6px; border-radius:4px; }
+  table.book button.del:hover { background:var(--red-dim); color:var(--red); }
+
+  /* ── Allocation table ── */
+  table.alloc { width:100%; border-collapse:collapse; font-family:'JetBrains Mono',monospace; font-size:11px; }
+  table.alloc th { text-align:left; padding:5px 8px; color:var(--text-muted); font-weight:600; font-size:9px; text-transform:uppercase; border-bottom:1px solid var(--border); }
+  table.alloc td { padding:4px 8px; border-bottom:1px solid var(--border-subtle); }
+  table.alloc tr.you { background:rgba(0,61,165,.08); font-weight:700; }
+  table.alloc td.side-buy { color:var(--green); font-weight:600; }
+  table.alloc td.side-sell { color:var(--red); font-weight:600; }
+  .fill-bar-cell { min-width:90px; }
+  .fill-bar { width:100%; height:8px; background:var(--bg-raised); border-radius:4px; overflow:hidden; margin-top:2px; }
+  .fill-bar > div { height:100%; background:var(--accent); }
+
+  .curve-wrap { background:var(--bg-base); border-radius:6px; padding:8px; }
+  .curve-wrap svg { display:block; width:100%; height:200px; }
+
+  .note { font-size:11px; color:var(--text-muted); padding:10px 12px; background:var(--bg-base); border-radius:6px; border-left:2px solid var(--accent); margin-top:8px; }
+  .note b { color:var(--text-secondary); }
+
+  /* ── Optimal scan ── */
+  table.scan { width:100%; border-collapse:collapse; font-family:'JetBrains Mono',monospace; font-size:11px; }
+  table.scan th { text-align:left; padding:5px 8px; color:var(--text-muted); font-weight:600; font-size:9px; text-transform:uppercase; border-bottom:1px solid var(--border); }
+  table.scan td { padding:5px 8px; border-bottom:1px solid var(--border-subtle); }
+  table.scan tr:hover { background:var(--bg-hover); cursor:pointer; }
+  table.scan tr.top { background:rgba(124,58,237,.08); font-weight:700; }
+  table.scan .num { text-align:right; }
+  table.scan .pos { color:var(--green); }
+  table.scan .neg { color:var(--red); }
+  .scan-empty { color:var(--text-muted); font-size:11px; padding:12px; text-align:center; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <a class="logo" href="./index.html">
+      <img src="./billiken-logo.jpg" alt="SLU" class="logo-img">
+      <h1>Prosperity</h1>
+    </a>
+    <nav class="nav">
+      <a class="nav-link" href="./index.html">Terminal</a>
+      <a class="nav-link" href="./discord-intel.html">Discord Intel</a>
+      <a class="nav-link active" href="./auction.html">Manual Auction</a>
+    </nav>
+  </div>
+  <div class="topbar-right">
+    <span class="badge">An Intarian Welcome</span>
+  </div>
+</div>
+
+<div class="content">
+  <div class="title">Opening Auction Simulator</div>
+  <div class="subtitle">Uniform-price call auction &mdash; maximize traded volume, tie-break by higher price. You submit last; within a price level you are last in line. Fees and post-auction fair value apply.</div>
+
+  <div class="product-tabs" id="prod-tabs">
+    <button class="prod-tab active" data-prod="DRYLAND_FLAX">DRYLAND_FLAX</button>
+    <button class="prod-tab" data-prod="EMBER_MUSHROOM">EMBER_MUSHROOM</button>
+  </div>
+
+  <div class="grid">
+    <!-- ── LEFT: Visual Book ── -->
+    <div class="card">
+      <h3><span>Order Book</span><span class="hint" id="book-title">DRYLAND_FLAX</span></h3>
+      <div class="visual-book">
+        <div class="vb-header">
+          <div class="vol-l">Volume</div>
+          <div class="px-l">Price</div>
+          <div class="px-r">Price</div>
+          <div class="vol-r">Volume</div>
+        </div>
+        <div id="visual-book-body"></div>
+      </div>
+    </div>
+
+    <!-- ── MIDDLE: Your order + economics ── -->
+    <div class="card">
+      <h3><span>Your Limit Order</span><span class="hint" id="order-hint">queue rank 0 = first</span></h3>
+      <div class="form-row">
+        <label>Side</label>
+        <div class="side-group">
+          <button class="side-btn buy active" id="side-buy" onclick="setSide('buy')">BUY</button>
+          <button class="side-btn sell" id="side-sell" onclick="setSide('sell')">SELL</button>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Price <span id="price-hint" style="color:var(--text-muted);font-weight:500;text-transform:none;letter-spacing:0;"></span></label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="range" id="my-price-slider" style="flex:1;accent-color:var(--accent)">
+          <input type="number" id="my-price" value="30" step="1" style="width:90px">
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Quantity <span id="qty-hint" style="color:var(--text-muted);font-weight:500;text-transform:none;letter-spacing:0;"></span></label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="range" id="my-qty-slider" style="flex:1;accent-color:var(--accent)">
+          <input type="number" id="my-qty" value="10000" step="1000" min="0" style="width:90px">
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Queue rank <span style="color:var(--text-muted);font-weight:500;text-transform:none;letter-spacing:0;">at your price · 0 = first, blank = last</span></label>
+        <input type="number" id="my-tpri" min="0" step="1" style="width:110px" placeholder="last">
+      </div>
+
+      <h3 style="margin-top:14px"><span>Economics</span><span class="hint">post-auction FV &amp; fees</span></h3>
+      <div class="econ-grid">
+        <div class="form-row">
+          <label>Fair Value</label>
+          <input type="number" id="econ-fv" step="0.01" placeholder="—">
+        </div>
+        <div class="form-row">
+          <label>Buy fee</label>
+          <input type="number" id="econ-buyfee" step="0.01" value="0">
+        </div>
+        <div class="form-row">
+          <label>Sell fee</label>
+          <input type="number" id="econ-sellfee" step="0.01" value="0">
+        </div>
+      </div>
+
+      <div class="row-add">
+        <button class="btn primary" onclick="simulate()" style="flex:1">Simulate</button>
+        <button class="btn accent" onclick="runOptimal()">Find Optimal</button>
+        <button class="btn ghost" onclick="clearOrder()">Skip</button>
+      </div>
+
+      <div class="note">
+        <b>Rules:</b> Clearing P* maximizes <code>min(demand≥P, supply≤P)</code>, ties broken by higher P. Strictly-better orders fill fully; at P* the long side rations by time (you last). Net per unit = <code>(FV − P* − fees)</code> on your filled qty.
+      </div>
+    </div>
+
+    <!-- ── RIGHT: Result ── -->
+    <div class="card">
+      <h3><span>Clearing Result</span><span class="hint" id="res-volume"></span></h3>
+      <div class="result-hero" id="hero">
+        <div class="lbl">Clearing Price P*</div>
+        <div class="val" id="hero-val">—</div>
+      </div>
+      <div class="result-hero pnl" id="pnl-hero" style="display:none">
+        <div class="lbl">Net Profit</div>
+        <div class="val" id="pnl-val">—</div>
+      </div>
+      <div class="kv-grid">
+        <div class="kv"><div class="lbl">Your Fill</div><div class="val" id="my-fill">—</div></div>
+        <div class="kv"><div class="lbl">Avg Price</div><div class="val" id="avg-px">—</div></div>
+        <div class="kv"><div class="lbl">Gross PnL</div><div class="val" id="gross-pnl">—</div></div>
+        <div class="kv"><div class="lbl">Fees Paid</div><div class="val muted" id="fees-paid">—</div></div>
+        <div class="kv"><div class="lbl">Total Traded</div><div class="val muted" id="tot-vol">—</div></div>
+        <div class="kv"><div class="lbl">Ties</div><div class="val muted" id="ties">—</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Editable book ── -->
+  <div class="card" style="margin-top:16px">
+    <h3>
+      <span>Edit Book (resting orders, fixed at auction time)</span>
+      <span>
+        <button class="btn ghost" style="padding:4px 10px" onclick="addRow('bid')">+ Bid</button>
+        <button class="btn ghost" style="padding:4px 10px" onclick="addRow('ask')">+ Ask</button>
+        <button class="btn ghost" style="padding:4px 10px" onclick="resetBook()">Reset</button>
+      </span>
+    </h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div>
+        <table class="book">
+          <thead><tr><th>BID</th><th>Price</th><th>Qty</th><th></th></tr></thead>
+          <tbody id="bid-body"></tbody>
+        </table>
+      </div>
+      <div>
+        <table class="book">
+          <thead><tr><th>ASK</th><th>Price</th><th>Qty</th><th></th></tr></thead>
+          <tbody id="ask-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Allocation + Curve ── -->
+  <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-top:16px" class="alloc-grid">
+    <div class="card">
+      <h3><span>Allocation at Clearing</span><span class="hint">price-then-time; you are last at any level you join</span></h3>
+      <table class="alloc">
+        <thead><tr><th>Side</th><th>Price</th><th>Order Qty</th><th>Filled</th><th>%</th><th>Note</th></tr></thead>
+        <tbody id="alloc-body"></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h3><span>Demand / Supply</span><span class="hint">traded = min(d, s)</span></h3>
+      <div class="curve-wrap"><svg id="curve" viewBox="0 0 400 200" preserveAspectRatio="none"></svg></div>
+    </div>
+  </div>
+
+  <!-- ── Find Optimal Results ── -->
+  <div class="card" style="margin-top:16px">
+    <h3><span>Find Optimal — scan (bid_price, qty) for max net profit</span><span class="hint" id="scan-meta">click a row to load</span></h3>
+    <div id="scan-results"><div class="scan-empty">Set FV and fees, then click <b>Find Optimal</b>.</div></div>
+  </div>
+</div>
+
+<script>
+/* ── default books ── */
+const DEFAULT_BOOKS = {
+  DRYLAND_FLAX: {
+    bids: [{px:30,qty:30000},{px:29,qty:5000},{px:28,qty:12000},{px:27,qty:28000}],
+    asks: [{px:28,qty:40000},{px:31,qty:20000},{px:32,qty:20000},{px:33,qty:30000}],
+    econ: { fv: 30, buyFee: 0, sellFee: 0 }
+  },
+  EMBER_MUSHROOM: {
+    bids: [
+      {px:20,qty:43000},{px:19,qty:17000},{px:18,qty:6000},{px:17,qty:5000},
+      {px:16,qty:10000},{px:15,qty:5000},{px:14,qty:10000},{px:13,qty:7000}
+    ],
+    asks: [
+      {px:12,qty:20000},{px:13,qty:25000},{px:14,qty:35000},{px:15,qty:6000},
+      {px:16,qty:5000},{px:17,qty:0},{px:18,qty:10000},{px:19,qty:12000}
+    ],
+    econ: { fv: 20, buyFee: 0.05, sellFee: 0.05 }
+  }
+};
+
+const BOOKS = JSON.parse(JSON.stringify(DEFAULT_BOOKS));
+let CURRENT = 'DRYLAND_FLAX';
+let MY_SIDE = 'buy';
+
+function setProduct(p){
+  CURRENT = p;
+  document.querySelectorAll('.prod-tab').forEach(t=>t.classList.toggle('active', t.dataset.prod===p));
+  document.getElementById('book-title').textContent = p;
+  loadEconForProduct();
+  renderBook();
+  syncSliders();
+  simulate();
+  document.getElementById('scan-results').innerHTML = '<div class="scan-empty">Click <b>Find Optimal</b> to scan.</div>';
+}
+
+function loadEconForProduct(){
+  const e = BOOKS[CURRENT].econ;
+  document.getElementById('econ-fv').value = e.fv ?? '';
+  document.getElementById('econ-buyfee').value = e.buyFee ?? 0;
+  document.getElementById('econ-sellfee').value = e.sellFee ?? 0;
+}
+
+function setSide(s){
+  MY_SIDE = s;
+  document.getElementById('side-buy').classList.toggle('active', s==='buy');
+  document.getElementById('side-sell').classList.toggle('active', s==='sell');
+  simulate();
+}
+
+function resetBook(){
+  BOOKS[CURRENT] = JSON.parse(JSON.stringify(DEFAULT_BOOKS[CURRENT]));
+  loadEconForProduct();
+  renderBook();
+  simulate();
+}
+
+function addRow(side){
+  const b = BOOKS[CURRENT];
+  (side==='bid'?b.bids:b.asks).push({px:0, qty:0});
+  renderBook();
+  simulate();
+}
+
+function delRow(side, i){
+  const b = BOOKS[CURRENT];
+  (side==='bid'?b.bids:b.asks).splice(i,1);
+  renderBook();
+  simulate();
+}
+
+function editRow(side, i, field, v){
+  const b = BOOKS[CURRENT];
+  const arr = side==='bid' ? b.bids : b.asks;
+  const num = Number(v); if (!isFinite(num)) return;
+  arr[i][field] = num;
+  simulate();
+}
+
+function renderBook(){
+  const b = BOOKS[CURRENT];
+  b.bids.sort((a,b)=>b.px-a.px);
+  b.asks.sort((a,b)=>a.px-b.px);
+  const bidBody = document.getElementById('bid-body');
+  const askBody = document.getElementById('ask-body');
+  bidBody.innerHTML = b.bids.map((o,i)=>`<tr class="bid-row">
+    <td class="bid-px">BID</td>
+    <td><input class="px" type="number" value="${o.px}" oninput="editRow('bid',${i},'px',this.value)"></td>
+    <td><input class="qty" type="number" value="${o.qty}" oninput="editRow('bid',${i},'qty',this.value)"></td>
+    <td class="actions"><button class="del" onclick="delRow('bid',${i})">&times;</button></td>
+  </tr>`).join('');
+  askBody.innerHTML = b.asks.map((o,i)=>`<tr class="ask-row">
+    <td class="ask-px">ASK</td>
+    <td><input class="px" type="number" value="${o.px}" oninput="editRow('ask',${i},'px',this.value)"></td>
+    <td><input class="qty" type="number" value="${o.qty}" oninput="editRow('ask',${i},'qty',this.value)"></td>
+    <td class="actions"><button class="del" onclick="delRow('ask',${i})">&times;</button></td>
+  </tr>`).join('');
+}
+
+/* ── Visual book: bar chart tiles matching competition UI ── */
+function fmtVol(v){
+  if (v === 0) return '0';
+  if (Math.abs(v) >= 1000) return (v/1000).toFixed(v%1000===0?0:1).replace(/\.0$/,'') + 'k';
+  return String(v);
+}
+function renderVisualBook(pStar, allocByKey){
+  const b = BOOKS[CURRENT];
+  const yourPrice = Math.floor(Number(document.getElementById('my-price').value)||0);
+  const yourQty = Math.max(0, Math.floor(Number(document.getElementById('my-qty').value)||0));
+  const youActive = yourQty>0 && yourPrice>0;
+
+  // Build sides with the user's order INSERTED as a distinct row
+  let bids = b.bids.filter(o=>o.qty>0&&o.px>0).map(o=>({px:o.px, qty:o.qty, who:'mkt'}));
+  let asks = b.asks.filter(o=>o.qty>0&&o.px>0).map(o=>({px:o.px, qty:o.qty, who:'mkt'}));
+  if (youActive) {
+    if (MY_SIDE==='buy') bids.push({px:yourPrice, qty:yourQty, who:'you'});
+    else                 asks.push({px:yourPrice, qty:yourQty, who:'you'});
+  }
+  // Sort: bids desc px (you-last among ties); asks asc px (you-last among ties)
+  bids.sort((a,b)=> b.px-a.px || (a.who==='you'?1:b.who==='you'?-1:0));
+  asks.sort((a,b)=> a.px-b.px || (a.who==='you'?1:b.who==='you'?-1:0));
+
+  const N = Math.max(bids.length, asks.length);
+  const maxVol = Math.max(1, ...bids.map(o=>o.qty), ...asks.map(o=>o.qty));
+
+  const fillPct = (side, o) => {
+    if (!allocByKey) return null;
+    const k = `${side}|${o.px}|${o.who}|${o.qty}`;
+    const filled = allocByKey.get(k);
+    if (filled == null) return null;
+    return o.qty>0 ? Math.round(filled/o.qty*100) : 0;
+  };
+
+  const body = document.getElementById('visual-book-body');
+  const rows = [];
+  for (let i = 0; i < N; i++) {
+    const bid = bids[i], ask = asks[i];
+    const cells = [];
+
+    if (bid) {
+      const bidPct = fillPct('BID', bid);
+      const willFill = pStar!=null && bid.px>=pStar;
+      const youCls = bid.who==='you' ? 'vb-you' : '';
+      const fillCls = willFill ? 'vb-fill' : (pStar!=null ? 'vb-skip' : '');
+      const tag = bidPct!=null && bidPct<100 && willFill ? ` <em class="vb-pct">${bidPct}%</em>` : '';
+      cells.push(`<div class="vb-cell vb-bid-vol ${youCls} ${fillCls}"><div class="vb-bar" style="width:${(bid.qty/maxVol*100).toFixed(1)}%"></div><span>${fmtVol(bid.qty)}${tag}</span></div>`);
+      cells.push(`<div class="vb-cell vb-bid-px ${youCls} ${fillCls}"><div class="vb-bar" style="width:${(bid.qty/maxVol*60).toFixed(1)}%"></div><span>${bid.px}</span></div>`);
+    } else {
+      cells.push(`<div class="vb-cell vb-empty"></div><div class="vb-cell vb-empty"></div>`);
+    }
+    if (ask) {
+      const askPct = fillPct('ASK', ask);
+      const willFill = pStar!=null && ask.px<=pStar;
+      const youCls = ask.who==='you' ? 'vb-you' : '';
+      const fillCls = willFill ? 'vb-fill' : (pStar!=null ? 'vb-skip' : '');
+      const tag = askPct!=null && askPct<100 && willFill ? ` <em class="vb-pct">${askPct}%</em>` : '';
+      cells.push(`<div class="vb-cell vb-ask-px ${youCls} ${fillCls}"><div class="vb-bar" style="width:${(ask.qty/maxVol*60).toFixed(1)}%"></div><span>${ask.px}</span></div>`);
+      cells.push(`<div class="vb-cell vb-ask-vol ${youCls} ${fillCls}"><div class="vb-bar" style="width:${(ask.qty/maxVol*100).toFixed(1)}%"></div><span>${fmtVol(ask.qty)}${tag}</span></div>`);
+    } else {
+      cells.push(`<div class="vb-cell vb-empty"></div><div class="vb-cell vb-empty"></div>`);
+    }
+    rows.push(`<div class="vb-row">${cells.join('')}</div>`);
+  }
+  if (pStar!=null) {
+    rows.push(`<div class="vb-clear-line"><span>P* = ${pStar}</span></div>`);
+  }
+  body.innerHTML = rows.join('');
+}
+
+function clearOrder(){
+  document.getElementById('my-qty').value = 0;
+  simulate();
+}
+
+/* ── Core auction ── */
+/* Time priority is per-price-level: at each price, orders fill in ascending `t`.
+   Market orders get `t = 0..N-1` in book order at each price.
+   User's `t` is set from `queueRank` (null = last). Same-rank ties broken by who='mkt' first. */
+function clearAuction(book, side, myPrice, myQty, queueRank){
+  const mkt = list => {
+    const perPx = {};
+    return list.filter(o=>o.qty>0 && o.px>0).map(o=>{
+      perPx[o.px] = (perPx[o.px] ?? 0);
+      return {px:o.px, qty:o.qty, t:perPx[o.px]++, who:'mkt'};
+    });
+  };
+  const bids = mkt(book.bids);
+  const asks = mkt(book.asks);
+
+  if (myQty > 0 && myPrice > 0) {
+    const target = side === 'buy' ? bids : asks;
+    const sameN = target.filter(o => o.px === myPrice).length;
+    const rank = (queueRank == null || !isFinite(queueRank))
+      ? sameN                    // default: last in queue
+      : Math.max(0, Math.min(queueRank, sameN));
+    // Shift existing market orders at same price with t >= rank up by 1
+    target.forEach(o => { if (o.px === myPrice && o.t >= rank) o.t += 1; });
+    target.push({px:myPrice, qty:myQty, t:rank, who:'you'});
+  }
+
+  const set = new Set();
+  bids.forEach(o=>set.add(o.px));
+  asks.forEach(o=>set.add(o.px));
+  const prices = [...set].sort((a,b)=>a-b);
+
+  const demand = P => bids.reduce((s,o)=> s + (o.px>=P ? o.qty : 0), 0);
+  const supply = P => asks.reduce((s,o)=> s + (o.px<=P ? o.qty : 0), 0);
+
+  const curve = prices.map(P=>({P, d:demand(P), s:supply(P), t:Math.min(demand(P), supply(P))}));
+  let maxT = 0;
+  curve.forEach(c => { if (c.t > maxT) maxT = c.t; });
+  if (maxT === 0) return { pStar:null, traded:0, alloc:[], curve, ties:[], bids, asks };
+  const winners = curve.filter(c => c.t === maxT);
+  const pStar = winners[winners.length-1].P;
+  const ties = winners.map(w=>w.P);
+
+  const bidBetter = bids.filter(o=>o.px>pStar);
+  const bidMarg   = bids.filter(o=>o.px===pStar).sort((a,b)=>a.t-b.t);
+  const bidFullQ  = bidBetter.reduce((s,o)=>s+o.qty,0);
+  const bidMargRemain = Math.max(0, maxT - bidFullQ);
+
+  const askBetter = asks.filter(o=>o.px<pStar);
+  const askMarg   = asks.filter(o=>o.px===pStar).sort((a,b)=>a.t-b.t);
+  const askFullQ  = askBetter.reduce((s,o)=>s+o.qty,0);
+  const askMargRemain = Math.max(0, maxT - askFullQ);
+
+  const ration = (list, rem) => { const out=[]; let left=rem; for (const o of list){ const f=Math.min(o.qty,left); left-=f; out.push({...o,filled:f}); } return out; };
+  const alloc = [];
+  bidBetter.forEach(o=>alloc.push({side:'BID',...o,filled:o.qty,note:'filled (price priority)'}));
+  ration(bidMarg, bidMargRemain).forEach(o=>{
+    let note = o.filled===o.qty?'filled at clearing':o.filled===0?'unfilled (rationed behind time)':`partial (${o.filled}/${o.qty})`;
+    if (o.who==='you') note = 'YOU — '+note;
+    alloc.push({side:'BID',...o,note});
+  });
+  bids.filter(o=>o.px<pStar).forEach(o=>alloc.push({side:'BID',...o,filled:0,note:'below clearing'}));
+  askBetter.forEach(o=>alloc.push({side:'ASK',...o,filled:o.qty,note:'filled (price priority)'}));
+  ration(askMarg, askMargRemain).forEach(o=>{
+    let note = o.filled===o.qty?'filled at clearing':o.filled===0?'unfilled (rationed behind time)':`partial (${o.filled}/${o.qty})`;
+    if (o.who==='you') note = 'YOU — '+note;
+    alloc.push({side:'ASK',...o,note});
+  });
+  asks.filter(o=>o.px>pStar).forEach(o=>alloc.push({side:'ASK',...o,filled:0,note:'above clearing'}));
+
+  return { pStar, traded:maxT, alloc, curve, ties, bids, asks };
+}
+
+/* ── Simulate ── */
+function simulate(){
+  const book = BOOKS[CURRENT];
+  const qty  = Math.max(0, Math.floor(Number(document.getElementById('my-qty').value)||0));
+  const price= Math.floor(Number(document.getElementById('my-price').value)||0);
+  const fvRaw= document.getElementById('econ-fv').value;
+  const fv   = fvRaw==='' ? null : Number(fvRaw);
+  const bf   = Number(document.getElementById('econ-buyfee').value)||0;
+  const sf   = Number(document.getElementById('econ-sellfee').value)||0;
+
+  const res = clearAuction(book, MY_SIDE, price, qty);
+
+  // Build allocation lookup keyed by (side|px|who|qty) for visual book annotations
+  const allocByKey = new Map();
+  for (const r of res.alloc || []) {
+    allocByKey.set(`${r.side}|${r.px}|${r.who}|${r.qty}`, r.filled);
+  }
+  renderVisualBook(res.pStar, allocByKey);
+
+  const hero = document.getElementById('hero');
+  const hv   = document.getElementById('hero-val');
+  const pnlHero = document.getElementById('pnl-hero');
+  const pnlVal  = document.getElementById('pnl-val');
+
+  if (res.pStar == null) {
+    hero.classList.add('none');
+    hv.textContent = 'No trade';
+    document.getElementById('res-volume').textContent='';
+    ['my-fill','avg-px','gross-pnl','fees-paid','tot-vol','ties'].forEach(id=>{document.getElementById(id).textContent='—';});
+    pnlHero.style.display='none';
+    renderAlloc([], null);
+    renderCurve(res.curve, null);
+    syncSliders();
+    return;
+  }
+  hero.classList.remove('none');
+  hv.textContent = res.pStar.toLocaleString();
+  document.getElementById('res-volume').textContent = `${res.traded.toLocaleString()} units cleared`;
+
+  const yourRow = res.alloc.find(r=>r.who==='you');
+  const myFill = yourRow ? yourRow.filled : 0;
+  const myFillEl = document.getElementById('my-fill');
+  myFillEl.textContent = myFill.toLocaleString() + (qty>0 ? ` / ${qty.toLocaleString()}` : '');
+  myFillEl.className = 'val ' + (MY_SIDE==='buy' ? 'pos' : 'neg');
+
+  document.getElementById('avg-px').textContent = myFill>0 ? res.pStar.toLocaleString() : '—';
+  document.getElementById('tot-vol').textContent = res.traded.toLocaleString();
+  document.getElementById('ties').textContent = res.ties.length>1 ? res.ties.join(', ') : 'none';
+
+  if (fv != null && myFill > 0) {
+    const gross = MY_SIDE==='buy' ? (fv - res.pStar) * myFill : (res.pStar - fv) * myFill;
+    const fees  = (bf + sf) * myFill;
+    const net   = gross - fees;
+    document.getElementById('gross-pnl').textContent = (gross>=0?'+':'') + gross.toLocaleString(undefined,{maximumFractionDigits:2});
+    document.getElementById('gross-pnl').className = 'val ' + (gross>=0?'pos':'neg');
+    document.getElementById('fees-paid').textContent = '−' + fees.toLocaleString(undefined,{maximumFractionDigits:2});
+    pnlHero.style.display='block';
+    pnlHero.classList.toggle('neg', net<0);
+    pnlVal.textContent = (net>=0?'+':'−') + Math.abs(net).toLocaleString(undefined,{maximumFractionDigits:2});
+    pnlVal.className = 'val ' + (net>=0?'pos':'neg');
+  } else {
+    document.getElementById('gross-pnl').textContent = '—';
+    document.getElementById('fees-paid').textContent = '—';
+    pnlHero.style.display='none';
+  }
+
+  renderAlloc(res.alloc, res.pStar);
+  renderCurve(res.curve, res.pStar);
+}
+
+function renderAlloc(rows, pStar){
+  const body = document.getElementById('alloc-body');
+  if (!rows.length) { body.innerHTML='<tr><td colspan="6" class="scan-empty">No orders</td></tr>'; return; }
+  const bids = rows.filter(r=>r.side==='BID').sort((a,b)=>b.px-a.px || a.t-b.t);
+  const asks = rows.filter(r=>r.side==='ASK').sort((a,b)=>a.px-b.px || a.t-b.t);
+  body.innerHTML = [...bids, ...asks].map(r=>{
+    const pct = r.qty>0 ? Math.round(r.filled/r.qty*100) : 0;
+    return `<tr class="${r.who==='you'?'you':''}">
+      <td class="${r.side==='BID'?'side-buy':'side-sell'}">${r.side}</td>
+      <td>${r.px}</td>
+      <td>${r.qty.toLocaleString()}</td>
+      <td>${r.filled.toLocaleString()}</td>
+      <td class="fill-bar-cell">${pct}%<div class="fill-bar"><div style="width:${pct}%"></div></div></td>
+      <td>${r.note}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderCurve(curve, pStar){
+  const svg = document.getElementById('curve');
+  if (!curve.length){svg.innerHTML='';return;}
+  const W=400,H=200,pad=30;
+  const xs=curve.map(c=>c.P); const minP=Math.min(...xs), maxP=Math.max(...xs);
+  const maxY=Math.max(1,...curve.map(c=>Math.max(c.d,c.s)));
+  const sx=P=>pad+(maxP===minP?W/2-pad:(P-minP)/(maxP-minP)*(W-2*pad));
+  const sy=Y=>H-pad-Y/maxY*(H-2*pad);
+  const demPath='M'+curve.map(c=>`${sx(c.P)},${sy(c.d)}`).join(' L');
+  const supPath='M'+curve.map(c=>`${sx(c.P)},${sy(c.s)}`).join(' L');
+  const traPath='M'+curve.map(c=>`${sx(c.P)},${sy(c.t)}`).join(' L');
+  let star='';
+  if (pStar!=null){
+    const pt=curve.find(c=>c.P===pStar);
+    if (pt){
+      star=`<line x1="${sx(pStar)}" y1="${pad}" x2="${sx(pStar)}" y2="${H-pad}" stroke="#003DA5" stroke-width="1" stroke-dasharray="3 3"/>
+            <circle cx="${sx(pStar)}" cy="${sy(pt.t)}" r="4" fill="#003DA5"/>
+            <text x="${sx(pStar)+6}" y="${sy(pt.t)-6}" font-size="10" fill="#003DA5" font-family="JetBrains Mono">P*=${pStar}, traded=${pt.t.toLocaleString()}</text>`;
+    }
+  }
+  const legend=`<g font-family="Inter" font-size="10">
+    <rect x="${pad}" y="4" width="10" height="2" fill="#10b981"/><text x="${pad+14}" y="9" fill="#10b981">demand</text>
+    <rect x="${pad+72}" y="4" width="10" height="2" fill="#ef4444"/><text x="${pad+86}" y="9" fill="#ef4444">supply</text>
+    <rect x="${pad+144}" y="4" width="10" height="2" fill="#111827"/><text x="${pad+158}" y="9" fill="#111827">traded=min</text>
+  </g>`;
+  const ticks=`
+    <text x="${pad}" y="${H-10}" font-size="10" fill="#9ca3af">${minP}</text>
+    <text x="${W-pad}" y="${H-10}" font-size="10" fill="#9ca3af" text-anchor="end">${maxP}</text>
+    <text x="4" y="${pad+4}" font-size="9" fill="#9ca3af">${maxY.toLocaleString()}</text>
+    <text x="4" y="${H-pad}" font-size="9" fill="#9ca3af">0</text>
+    <text x="${W/2}" y="${H-2}" font-size="10" fill="#6b7280" text-anchor="middle">price</text>`;
+  svg.innerHTML=`<path d="${demPath}" fill="none" stroke="#10b981" stroke-width="1.5"/>
+    <path d="${supPath}" fill="none" stroke="#ef4444" stroke-width="1.5"/>
+    <path d="${traPath}" fill="none" stroke="#111827" stroke-width="2"/>
+    ${star}${ticks}${legend}`;
+}
+
+/* ── Find Optimal: scan (bid_price, qty) and rank by net profit ── */
+function runOptimal(){
+  const book = BOOKS[CURRENT];
+  const fvRaw= document.getElementById('econ-fv').value;
+  const fv   = fvRaw==='' ? null : Number(fvRaw);
+  if (fv == null || !isFinite(fv)) {
+    document.getElementById('scan-results').innerHTML = '<div class="scan-empty">Set a <b>Fair Value</b> first — without it, profit is undefined.</div>';
+    return;
+  }
+  const bf = Number(document.getElementById('econ-buyfee').value)||0;
+  const sf = Number(document.getElementById('econ-sellfee').value)||0;
+  const feePerUnit = bf + sf;
+
+  // Scan integer prices in a relevant window, fine Q grid.
+  const allPx = [...book.bids.map(o=>o.px), ...book.asks.map(o=>o.px)];
+  const minP = Math.min(...allPx) - 1;
+  const maxP = Math.max(...allPx) + 2;
+  const totalSupply = book.asks.reduce((s,o)=>s+o.qty,0);
+  const totalDemand = book.bids.reduce((s,o)=>s+o.qty,0);
+  const qMax = Math.max(totalSupply, totalDemand) + 1;
+
+  // We search over candidate Qs: cliffs are where traded(P) crosses key thresholds.
+  // Use a combination of grid + cliff candidates.
+  const cliffQs = new Set();
+  cliffQs.add(0);
+  for (let step = 1; step <= qMax; step *= 2) cliffQs.add(step);
+  // Also add all crossing points: for each P, the Q where 60+Q hits each supply level
+  for (let P = minP; P <= maxP; P++) {
+    const baseDem = book.bids.filter(o=>o.px>=P).reduce((s,o)=>s+o.qty,0);
+    for (let P2 = minP; P2 <= maxP; P2++) {
+      const s2 = book.asks.filter(o=>o.px<=P2).reduce((s,o)=>s+o.qty,0);
+      const q = s2 - baseDem;
+      if (q >= 0 && q <= qMax) { cliffQs.add(q); cliffQs.add(Math.max(0,q-1)); cliffQs.add(q+1); }
+    }
+  }
+  // Dense sweep too
+  const step = Math.max(1, Math.floor(qMax/500));
+  for (let q = 0; q <= qMax; q += step) cliffQs.add(q);
+
+  const results = [];
+  for (let p = minP; p <= maxP; p++) {
+    for (const q of cliffQs) {
+      if (q === 0) continue;
+      const r = clearAuction(book, MY_SIDE, p, q);
+      if (r.pStar == null) continue;
+      const your = r.alloc.find(a=>a.who==='you');
+      const fill = your ? your.filled : 0;
+      if (fill === 0) continue;
+      const gross = MY_SIDE==='buy' ? (fv - r.pStar)*fill : (r.pStar - fv)*fill;
+      const net = gross - feePerUnit*fill;
+      results.push({ p, q, pStar:r.pStar, fill, gross, fees:feePerUnit*fill, net });
+    }
+  }
+
+  // Keep best-per-(price, P*) combo then top N overall
+  const bestByKey = new Map();
+  for (const r of results) {
+    const k = `${r.p}|${r.pStar}`;
+    const cur = bestByKey.get(k);
+    if (!cur || r.net > cur.net) bestByKey.set(k, r);
+  }
+  const top = [...bestByKey.values()].sort((a,b)=>b.net-a.net).slice(0, 12);
+
+  if (!top.length) {
+    document.getElementById('scan-results').innerHTML = '<div class="scan-empty">No profitable fills found. Try adjusting FV or side.</div>';
+    return;
+  }
+  document.getElementById('scan-meta').textContent = `${top.length} candidates — click to load into the form`;
+  const rows = top.map((r,i)=>`<tr class="${i===0?'top':''}" onclick="loadScan(${r.p},${r.q})">
+    <td>${i+1}</td>
+    <td>${MY_SIDE==='buy'?'BUY':'SELL'} @ ${r.p}</td>
+    <td class="num">${r.q.toLocaleString()}</td>
+    <td class="num">${r.pStar}</td>
+    <td class="num">${r.fill.toLocaleString()}</td>
+    <td class="num ${r.gross>=0?'pos':'neg'}">${(r.gross>=0?'+':'')}${r.gross.toLocaleString(undefined,{maximumFractionDigits:2})}</td>
+    <td class="num">−${r.fees.toLocaleString(undefined,{maximumFractionDigits:2})}</td>
+    <td class="num ${r.net>=0?'pos':'neg'}"><b>${(r.net>=0?'+':'−')}${Math.abs(r.net).toLocaleString(undefined,{maximumFractionDigits:2})}</b></td>
+  </tr>`).join('');
+  document.getElementById('scan-results').innerHTML = `<table class="scan"><thead><tr>
+    <th>#</th><th>Your order</th><th class="num">Qty</th><th class="num">P*</th><th class="num">Fill</th><th class="num">Gross</th><th class="num">Fees</th><th class="num">Net</th>
+  </tr></thead><tbody>${rows}</tbody></table>`;
+
+  // auto-load best
+  if (top[0]) loadScan(top[0].p, top[0].q);
+}
+
+function loadScan(p, q){
+  document.getElementById('my-price').value = p;
+  document.getElementById('my-qty').value = q;
+  simulate();
+}
+
+/* ── Slider <-> number sync ── */
+function syncSliders(){
+  const b = BOOKS[CURRENT];
+  const allPx = [...b.bids.map(o=>o.px), ...b.asks.map(o=>o.px)].filter(p=>p>0);
+  const lo = allPx.length ? Math.min(...allPx) - 2 : 0;
+  const hi = allPx.length ? Math.max(...allPx) + 2 : 100;
+  const ps = document.getElementById('my-price-slider');
+  ps.min = lo; ps.max = hi; ps.step = 1; ps.value = document.getElementById('my-price').value;
+  const totalSupply = b.asks.reduce((s,o)=>s+o.qty,0);
+  const totalDemand = b.bids.reduce((s,o)=>s+o.qty,0);
+  const qmax = Math.max(1000, totalSupply, totalDemand) * 1.2 | 0;
+  const qs = document.getElementById('my-qty-slider');
+  qs.min = 0; qs.max = qmax; qs.step = Math.max(1, qmax/200|0); qs.value = document.getElementById('my-qty').value;
+}
+
+function bindSync(numId, sliderId){
+  const num = document.getElementById(numId), slider = document.getElementById(sliderId);
+  num.addEventListener('input', () => { slider.value = num.value; simulate(); });
+  slider.addEventListener('input', () => { num.value = slider.value; simulate(); });
+}
+
+/* ── Wire ── */
+document.querySelectorAll('.prod-tab').forEach(t => t.addEventListener('click', () => setProduct(t.dataset.prod)));
+bindSync('my-price', 'my-price-slider');
+bindSync('my-qty', 'my-qty-slider');
+['econ-fv','econ-buyfee','econ-sellfee'].forEach(id=>document.getElementById(id).addEventListener('input', simulate));
+
+loadEconForProduct();
+renderBook();
+syncSliders();
+simulate();
+</script>
+</body>
+</html>

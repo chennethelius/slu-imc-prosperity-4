@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prosperity Terminal</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-base: #f8f9fb;
+    --bg-surface: #ffffff;
+    --bg-raised: #f0f2f5;
+    --bg-hover: #f0f2f5;
+    --border: #e2e5ea;
+    --border-subtle: #ebedf0;
+    --text-primary: #111827;
+    --text-secondary: #4b5563;
+    --text-muted: #9ca3af;
+    --accent: #003DA5;
+    --accent-dim: #002d7a;
+    --green: #059669;
+    --green-dim: rgba(5,150,105,.08);
+    --red: #dc2626;
+    --red-dim: rgba(220,38,38,.06);
+    --amber: #d97706;
+    --amber-dim: rgba(217,119,6,.06);
+    --purple: #7c3aed;
+    --purple-dim: rgba(124,58,237,.06);
+    --cyan: #0891b2;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Inter',system-ui,sans-serif; background:var(--bg-base); color:var(--text-primary); font-size:13px; line-height:1.5; -webkit-font-smoothing:antialiased; }
+
+  /* ── Topbar ── */
+  .topbar {
+    background:var(--bg-surface); border-bottom:1px solid var(--border);
+    padding:0 24px; height:48px; display:flex; align-items:center; justify-content:space-between;
+    position:sticky; top:0; z-index:20;
+  }
+  .topbar-left { display:flex; align-items:center; gap:20px; }
+  .logo { display:flex; align-items:center; gap:10px; text-decoration:none; }
+  .logo-img { width:28px; height:28px; object-fit:contain; flex-shrink:0; }
+  .logo-mark { width:8px; height:8px; border-radius:50%; background:var(--green); flex-shrink:0; }
+  .logo h1 { color:var(--accent); font-size:14px; font-weight:700; letter-spacing:-.2px; }
+  .nav { display:flex; gap:2px; }
+  .nav-link {
+    color:var(--text-muted); font-size:12px; font-weight:500; text-decoration:none;
+    padding:6px 12px; border-radius:6px; transition:all .15s;
+  }
+  .nav-link:hover { color:var(--text-secondary); background:var(--bg-hover); }
+  .nav-link.active { color:var(--accent); background:rgba(0,61,165,.06); font-weight:600; }
+
+  .topbar-right { display:flex; align-items:center; gap:12px; }
+  .search-wrap { position:relative; }
+  .search-icon { position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--text-muted); pointer-events:none; }
+  .search {
+    background:var(--bg-base); border:1px solid var(--border); border-radius:8px;
+    padding:6px 12px 6px 32px; color:var(--text-primary); font-family:inherit; font-size:12px;
+    width:200px; outline:none; transition:border-color .2s;
+  }
+  .search:focus { border-color:var(--accent); }
+  .search::placeholder { color:var(--text-muted); }
+  .badge { color:var(--text-muted); font-size:11px; font-weight:500; }
+
+  /* ── Toolbar ── */
+  .toolbar {
+    display:flex; align-items:center; gap:8px; padding:8px 24px;
+    border-bottom:1px solid var(--border); background:var(--bg-surface); flex-wrap:wrap;
+  }
+  .chip {
+    background:transparent; border:1px solid var(--border); border-radius:6px;
+    padding:4px 12px; font-size:11px; font-weight:500; color:var(--text-muted);
+    cursor:pointer; font-family:inherit; transition:all .15s; white-space:nowrap;
+  }
+  .chip:hover { border-color:var(--text-muted); color:var(--text-secondary); }
+  .chip.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .sep { width:1px; height:20px; background:var(--border); margin:0 4px; }
+
+  .tab-group { margin-left:auto; display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+  .tab-btn {
+    background:transparent; border:none; padding:5px 14px; font-size:11px; font-weight:500;
+    color:var(--text-muted); cursor:pointer; font-family:inherit; transition:all .15s;
+    border-right:1px solid var(--border);
+  }
+  .tab-btn:last-child { border-right:none; }
+  .tab-btn:hover { color:var(--text-secondary); background:var(--bg-hover); }
+  .tab-btn.active { background:var(--accent); color:#fff; }
+
+  .content { padding:16px 24px; max-width:1400px; }
+
+  /* ── Commit Cards ── */
+  .commit-card {
+    background:var(--bg-surface); border:1px solid var(--border); border-radius:10px;
+    margin-bottom:8px; overflow:hidden; transition:border-color .15s;
+  }
+  .commit-card:hover { border-color:var(--text-muted); }
+  .commit-header {
+    display:flex; align-items:center; padding:14px 18px; cursor:pointer; gap:14px; transition:background .15s;
+  }
+  .commit-header:hover { background:var(--bg-hover); }
+  .commit-arrow { color:var(--text-muted); font-size:10px; transition:transform .2s; width:14px; flex-shrink:0; }
+  .commit-card.expanded .commit-arrow { transform:rotate(90deg); }
+  .commit-info { flex:1; min-width:0; }
+  .commit-title { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+  .commit-author { color:var(--accent); font-weight:600; font-size:13px; }
+  .commit-strat { color:var(--purple); font-size:13px; font-weight:500; }
+  .commit-hash { color:var(--text-muted); font-size:11px; font-family:'JetBrains Mono',monospace; }
+  .commit-time { color:var(--text-muted); font-size:11px; white-space:nowrap; }
+  .commit-runs { display:flex; gap:8px; margin-top:6px; flex-wrap:wrap; }
+  .run-chip {
+    background:var(--bg-raised); border:1px solid var(--border); border-radius:6px;
+    padding:3px 10px; font-size:10px; display:flex; gap:6px; align-items:center; font-weight:500;
+  }
+  .run-chip .label { color:var(--text-muted); }
+  .run-chip .val { font-family:'JetBrains Mono',monospace; font-weight:600; }
+  .commit-total { text-align:right; min-width:100px; }
+  .commit-total .sub-label { font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; font-weight:600; }
+  .commit-total .sub-pnl { font-family:'JetBrains Mono',monospace; font-size:18px; font-weight:700; }
+
+  .commit-detail { display:none; border-top:1px solid var(--border); background:var(--bg-base); }
+  .commit-card.expanded .commit-detail { display:block; }
+
+  /* ── Day Tabs ── */
+  .day-tabs { display:flex; gap:0; border-bottom:1px solid var(--border); padding:0 18px; }
+  .day-tab {
+    padding:10px 18px; font-size:12px; color:var(--text-muted); cursor:pointer; border:none;
+    border-bottom:2px solid transparent; font-family:inherit; background:transparent;
+    transition:all .15s; font-weight:500;
+  }
+  .day-tab:hover { color:var(--text-secondary); }
+  .day-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+  .day-panel { display:none; padding:18px; }
+  .day-panel.active { display:block; }
+
+  .stats { display:flex; gap:24px; margin-bottom:16px; flex-wrap:wrap; }
+  .stat-label { font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; font-weight:600; }
+  .stat-value { font-family:'JetBrains Mono',monospace; font-size:15px; font-weight:700; }
+
+  .charts { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
+  .chart-box {
+    background:var(--bg-surface); border:1px solid var(--border); border-radius:8px; padding:14px;
+  }
+  .chart-box.wide { grid-column:1/-1; }
+  .chart-box h3 { color:var(--text-muted); font-size:10px; text-transform:uppercase; letter-spacing:.5px; margin-bottom:10px; font-weight:600; }
+
+  .trades-box {
+    background:var(--bg-surface); border:1px solid var(--border); border-radius:8px;
+    padding:14px; max-height:280px; overflow-y:auto; margin-bottom:16px;
+  }
+  .trades-box h3 { color:var(--text-muted); font-size:10px; text-transform:uppercase; letter-spacing:.5px; margin-bottom:10px; font-weight:600; }
+  .trades-box table { width:100%; border-collapse:collapse; font-size:11px; }
+  .trades-box th { text-align:left; padding:4px 10px; color:var(--text-muted); border-bottom:1px solid var(--border); font-weight:600; font-size:10px; text-transform:uppercase; }
+  .trades-box td { padding:4px 10px; border-bottom:1px solid var(--border-subtle); font-family:'JetBrains Mono',monospace; font-size:11px; }
+
+  .code-box {
+    background:var(--bg-surface); border:1px solid var(--border); border-radius:8px;
+    padding:14px; margin:0 18px 18px;
+  }
+  .code-box h3 {
+    color:var(--text-muted); font-size:10px; text-transform:uppercase; letter-spacing:.5px;
+    margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; font-weight:600;
+  }
+  .code-box pre {
+    color:var(--text-secondary); font-family:'JetBrains Mono',monospace; font-size:11px;
+    line-height:1.6; overflow-x:auto; white-space:pre; max-height:400px; overflow-y:auto;
+  }
+  .copy-btn {
+    background:var(--bg-raised); border:1px solid var(--border); border-radius:6px;
+    color:var(--text-muted); font-size:10px; padding:3px 10px; cursor:pointer;
+    font-family:inherit; transition:all .15s; font-weight:500;
+  }
+  .copy-btn:hover { color:var(--text-primary); border-color:var(--text-muted); }
+
+  /* ── Leaderboard ── */
+  .lb { display:none; }
+  .lb.active { display:block; }
+  .lb table { width:100%; border-collapse:collapse; font-size:13px; }
+  .lb th {
+    text-align:left; padding:10px 14px; border-bottom:2px solid var(--border); color:var(--text-muted);
+    font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:.5px; cursor:pointer; transition:color .15s;
+  }
+  .lb th:hover { color:var(--text-secondary); }
+  .lb th .arr { margin-left:4px; font-size:9px; }
+  .lb td { padding:10px 14px; border-bottom:1px solid var(--border); }
+  .lb tr:hover { background:var(--bg-hover); }
+  .lb .rank { color:var(--text-muted); width:30px; font-family:'JetBrains Mono',monospace; }
+  .lb .rank.g { color:var(--amber); font-weight:700; }
+  .lb .rank.s { color:var(--text-secondary); font-weight:600; }
+  .lb .rank.b { color:#cd7f32; font-weight:600; }
+  .lb .author { color:var(--accent); font-weight:600; }
+  .lb .strat { color:var(--purple); }
+  .lb .pnl { font-family:'JetBrains Mono',monospace; font-weight:700; font-size:14px; }
+  .lb .meta { color:var(--text-muted); font-size:11px; font-family:'JetBrains Mono',monospace; }
+
+  .feed { display:block; }
+  .feed.hidden { display:none; }
+
+  .pos { color:var(--green); }
+  .neg { color:var(--red); }
+  .buy { color:var(--green); }
+  .sell { color:var(--red); }
+  .empty { color:var(--text-muted); text-align:center; padding:60px; font-size:13px; }
+  .no-results { color:var(--text-muted); text-align:center; padding:40px; display:none; }
+
+  @media(max-width:900px) {
+    .topbar { padding:0 16px; }
+    .toolbar, .content { padding-left:16px; padding-right:16px; }
+    .search { width:140px; }
+    .charts { grid-template-columns:1fr; }
+    .commit-header { flex-wrap:wrap; }
+    .commit-total { min-width:auto; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <a class="logo" href="#">
+      <img src="./billiken-logo.jpg" alt="SLU" class="logo-img">
+      <h1>Prosperity</h1>
+    </a>
+    <nav class="nav">
+      <a class="nav-link active" href="./index.html">Terminal</a>
+      <a class="nav-link" href="./discord-intel.html">Discord Intel</a>
+      <a class="nav-link" href="./auction.html">Manual Auction</a>
+    </nav>
+  </div>
+  <div class="topbar-right">
+    <div class="search-wrap">
+      <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input class="search" id="search" type="text" placeholder="Filter strategies..." />
+    </div>
+    <span class="badge" id="run-count"></span>
+  </div>
+</div>
+
+<div class="toolbar" id="toolbar">
+  <div class="tab-group">
+    <button class="tab-btn active" id="btn-feed" onclick="setView('feed')">Feed</button>
+    <button class="tab-btn" id="btn-lb" onclick="setView('lb')">Leaderboard</button>
+  </div>
+</div>
+
+<div class="content">
+  <div class="no-results" id="no-results">No matching submissions.</div>
+  <div class="feed" id="feed"></div>
+  <div class="lb" id="lb"></div>
+</div>
+
+<script>
+const BASE='./runs';
+let RUNS=[],groups=[],filtered=[];
+const allCharts={};
+let activeFilters={author:null,strategy:null,round:null};
+let currentView='feed';
+let lbSort={key:'pnl',desc:true};
+
+const pc=v=>v>=0?'pos':'neg';
+const fp=v=>(v>=0?'+':'')+v.toLocaleString(undefined,{minimumFractionDigits:1,maximumFractionDigits:1});
+function normRound(ds){
+  const s=String(ds||'').toLowerCase();
+  if(s.includes('tutorial'))return'Tutorial';
+  const m=s.match(/round[_-]?(\d+)/);
+  if(m)return'Round '+m[1];
+  if(s.includes('submission'))return'Submission';
+  return null;
+}
+const roundRank=r=>r==='Tutorial'?0:r==='Submission'?99:parseInt((r||'').replace(/\D/g,''))||50;
+
+async function init(){
+  try{const r=await fetch('./results.json');if(!r.ok)throw 0;RUNS=await r.json()}
+  catch{document.getElementById('feed').innerHTML='<div class="empty">No submissions yet. Push a strategy to get started.</div>';return}
+
+  const gm={};
+  for(const r of RUNS){
+    const k=`${r.author}|${r.strategy}|${r.commit}`;
+    if(!gm[k])gm[k]={author:r.author,strategy:r.strategy,commit:r.commit,timestamp:r.timestamp,runs:[]};
+    gm[k].runs.push(r);
+  }
+  groups=Object.values(gm);
+  for(const g of groups){
+    const sub=g.runs.find(r=>String(r.dataset).includes('submission'));
+    g.sub_pnl=sub?sub.pnl:null;
+    g.total_pnl=g.runs.reduce((s,r)=>s+(r.pnl||0),0);
+    g.total_trades=g.runs.reduce((s,r)=>s+(r.trades||0),0);
+    g.rounds=[...new Set(g.runs.map(r=>normRound(r.dataset)).filter(Boolean))];
+  }
+
+  const authors=[...new Set(groups.map(g=>g.author))];
+  const strategies=[...new Set(groups.map(g=>g.strategy))];
+  const rounds=[...new Set(groups.flatMap(g=>g.rounds))].sort((a,b)=>roundRank(a)-roundRank(b));
+  const tb=document.getElementById('toolbar');
+  const tg=tb.querySelector('.tab-group');
+  const addPills=(vals,key)=>{
+    const sep=document.createElement('span');sep.className='sep';
+    tb.insertBefore(sep,tg);
+    vals.forEach(v=>{
+      const p=document.createElement('span');p.className='chip';p.textContent=v;
+      p.onclick=()=>{
+        if(activeFilters[key]===v){activeFilters[key]=null;p.classList.remove('active')}
+        else{tb.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));activeFilters[key]=v;p.classList.add('active')}
+        applyFilters();
+      };
+      tb.insertBefore(p,tg);
+    });
+  };
+  if(rounds.length>1)addPills(rounds,'round');
+  if(authors.length>1)addPills(authors,'author');
+  if(strategies.length>1)addPills(strategies,'strategy');
+
+  document.getElementById('search').addEventListener('input',applyFilters);
+  applyFilters();
+}
+
+function setView(v){
+  currentView=v;
+  document.getElementById('btn-feed').classList.toggle('active',v==='feed');
+  document.getElementById('btn-lb').classList.toggle('active',v==='lb');
+  document.getElementById('feed').classList.toggle('hidden',v!=='feed');
+  document.getElementById('lb').classList.toggle('active',v==='lb');
+}
+
+function applyFilters(){
+  const q=document.getElementById('search').value.toLowerCase().trim();
+  filtered=groups.filter(g=>{
+    if(activeFilters.author&&g.author!==activeFilters.author)return false;
+    if(activeFilters.strategy&&g.strategy!==activeFilters.strategy)return false;
+    if(activeFilters.round&&!g.rounds.includes(activeFilters.round))return false;
+    if(q&&!(g.author.toLowerCase().includes(q)||g.strategy.toLowerCase().includes(q)||(g.commit||'').toLowerCase().includes(q)))return false;
+    return true;
+  });
+  renderFeed();
+  renderLb();
+  document.getElementById('run-count').textContent=`${filtered.length} submissions`;
+  document.getElementById('no-results').style.display=filtered.length===0?'block':'none';
+}
+
+function renderFeed(){
+  Object.values(allCharts).flat().forEach(c=>c.destroy());
+  for(const k in allCharts)delete allCharts[k];
+  const fd=document.getElementById('feed');
+  fd.innerHTML='';
+
+  const sorted=[...filtered].sort((a,b)=>{
+    const ta=new Date(a.timestamp||0).getTime(),tb_=new Date(b.timestamp||0).getTime();
+    return tb_-ta;
+  });
+
+  sorted.forEach((g,gi)=>{
+    const subPnl=g.sub_pnl!=null?g.sub_pnl:g.total_pnl;
+    const time=g.timestamp?new Date(g.timestamp).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'';
+
+    const card=document.createElement('div');
+    card.className='commit-card';card.id=`card-${gi}`;
+
+    const chips=g.runs.map(r=>{
+      const lbl=String(r.dataset).includes('submission')?'SUB':`D${r.day}`;
+      return `<span class="run-chip"><span class="label">${lbl}</span><span class="val ${pc(r.pnl)}">${fp(r.pnl)}</span></span>`;
+    }).join('');
+
+    card.innerHTML=`
+      <div class="commit-header" onclick="toggleCard(${gi})">
+        <span class="commit-arrow">&#9654;</span>
+        <div class="commit-info">
+          <div class="commit-title">
+            <span class="commit-author">${g.author}</span>
+            <span class="commit-strat">${g.strategy}</span>
+            <span class="commit-hash">${g.commit||''}</span>
+            <span class="commit-time">${time}</span>
+          </div>
+          <div class="commit-runs">${chips}</div>
+        </div>
+        <div class="commit-total">
+          <div class="sub-label">Sub PnL</div>
+          <div class="sub-pnl ${pc(subPnl)}">${fp(subPnl)}</div>
+        </div>
+      </div>
+      <div class="commit-detail" id="detail-${gi}"></div>
+    `;
+    fd.appendChild(card);
+  });
+}
+
+async function toggleCard(gi){
+  const card=document.getElementById(`card-${gi}`);
+  const detail=document.getElementById(`detail-${gi}`);
+  if(card.classList.contains('expanded')){
+    card.classList.remove('expanded');
+    (allCharts[gi]||[]).forEach(c=>c.destroy());allCharts[gi]=[];
+    detail.innerHTML='';return;
+  }
+  card.classList.add('expanded');
+  detail.innerHTML='<div style="padding:18px;color:var(--text-muted)">Loading...</div>';
+  allCharts[gi]=[];
+
+  const sorted=[...filtered].sort((a,b)=>new Date(b.timestamp||0)-new Date(a.timestamp||0));
+  const g=sorted[gi];
+
+  const runData=await Promise.all(g.runs.map(async r=>({
+    ...r,pnlCsv:await fetchCsv(`${BASE}/${r.id}/pnl_by_product.csv`),
+    tradesCsv:await fetchCsv(`${BASE}/${r.id}/trades.csv`),
+  })));
+  const code=await fetchText(`${BASE}/${g.runs[0].id}/strategy.py`);
+
+  detail.innerHTML='';
+
+  const tabs=document.createElement('div');tabs.className='day-tabs';
+  runData.forEach((r,ri)=>{
+    const lbl=String(r.dataset).includes('submission')?'Submission':`Day ${r.day}`;
+    const t=document.createElement('button');t.className='day-tab'+(ri===0?' active':'');
+    t.textContent=`${lbl}  ${fp(r.pnl)}`;
+    t.onclick=e=>{e.stopPropagation();tabs.querySelectorAll('.day-tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');
+      detail.querySelectorAll('.day-panel').forEach(x=>x.classList.remove('active'));document.getElementById(`p-${gi}-${ri}`).classList.add('active');};
+    tabs.appendChild(t);
+  });
+  detail.appendChild(tabs);
+
+  runData.forEach((r,ri)=>{
+    const p=document.createElement('div');p.className='day-panel'+(ri===0?' active':'');p.id=`p-${gi}-${ri}`;
+
+    const prods=Object.entries(r.pnl_by_product||{}).map(([k,v])=>`<div><span class="stat-label">${k}</span><div class="stat-value ${pc(v)}">${fp(v)}</div></div>`).join('');
+    p.innerHTML=`<div class="stats"><div><span class="stat-label">PnL</span><div class="stat-value ${pc(r.pnl)}">${fp(r.pnl)}</div></div><div><span class="stat-label">Trades</span><div class="stat-value">${r.trades||'?'}</div></div><div><span class="stat-label">Ticks</span><div class="stat-value">${(r.ticks||0).toLocaleString()}</div></div>${prods}</div>`;
+
+    if(r.pnlCsv.length>0){
+      const cd=document.createElement('div');cd.className='charts';
+      const box=mkChart('Cumulative PnL',true);cd.appendChild(box);p.appendChild(cd);
+      const products=Object.keys(r.pnlCsv[0]).filter(k=>k!=='timestamp'&&k!=='total');
+      const sam=ds(r.pnlCsv,400);
+      const colors=['#2563eb','#059669','#d97706','#7c3aed','#dc2626','#0891b2'];
+      setTimeout(()=>{allCharts[gi].push(new Chart(box.querySelector('canvas'),{type:'line',
+        data:{datasets:[{label:'Total',data:sam.map(x=>({x:+x.timestamp,y:+x.total})),borderColor:'#111827',borderWidth:2,pointRadius:0,tension:.1},
+          ...products.map((q,i)=>({label:q,data:sam.map(x=>({x:+x.timestamp,y:+(x[q]||0)})),borderColor:colors[i%colors.length],borderWidth:1.5,pointRadius:0,tension:.1}))]},
+        options:co()}))},50);
+    }
+
+    if(r.tradesCsv&&r.tradesCsv.length>0){
+      const tb=document.createElement('div');tb.className='trades-box';
+      tb.innerHTML=`<h3>Trades (${r.tradesCsv.length})</h3><table><thead><tr><th>Tick</th><th>Symbol</th><th>Side</th><th>Price</th><th>Qty</th></tr></thead><tbody>${r.tradesCsv.map(t=>{const b=t.buyer==='SUBMISSION';return`<tr><td>${t.timestamp}</td><td>${t.symbol}</td><td class="${b?'buy':'sell'}">${b?'BUY':'SELL'}</td><td>${t.price}</td><td>${t.quantity}</td></tr>`}).join('')}</tbody></table>`;
+      p.appendChild(tb);
+    }
+    detail.appendChild(p);
+  });
+
+  if(code){
+    const box=document.createElement('div');box.className='code-box';
+    const esc=code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const cid=`cp-${gi}`;
+    box.innerHTML=`<h3><span>${g.strategy}.py</span><button class="copy-btn" id="${cid}">Copy</button></h3><pre>${esc}</pre>`;
+    detail.appendChild(box);
+    document.getElementById(cid).addEventListener('click',e=>{e.stopPropagation();navigator.clipboard.writeText(code);e.target.textContent='Copied!';setTimeout(()=>e.target.textContent='Copy',1500)});
+  }
+}
+
+function renderLb(){
+  const best={};
+  for(const g of filtered){
+    if(g.sub_pnl==null)continue;
+    const k=`${g.author}|${g.strategy}`;
+    if(!best[k]||g.sub_pnl>best[k].sub_pnl)best[k]=g;
+  }
+  let rows=Object.values(best);
+  const key=lbSort.key,dir=lbSort.desc?-1:1;
+  rows.sort((a,b)=>{
+    let av=key==='pnl'?(a.sub_pnl||0):key==='trades'?(a.total_trades||0):String(a[key]||'');
+    let bv=key==='pnl'?(b.sub_pnl||0):key==='trades'?(b.total_trades||0):String(b[key]||'');
+    return typeof av==='number'?(av<bv?dir:av>bv?-dir:0):(av<bv?dir:av>bv?-dir:0);
+  });
+
+  const lbd=document.getElementById('lb');
+  const arrow=k=>k===lbSort.key?(lbSort.desc?'\u25BC':'\u25B2'):'';
+  lbd.innerHTML=`<table><thead><tr>
+    <th>#</th>
+    <th onclick="lbSortBy('author')">Author <span class="arr">${arrow('author')}</span></th>
+    <th onclick="lbSortBy('strategy')">Strategy <span class="arr">${arrow('strategy')}</span></th>
+    <th onclick="lbSortBy('pnl')">Sub PnL <span class="arr">${arrow('pnl')}</span></th>
+    <th onclick="lbSortBy('trades')">Trades <span class="arr">${arrow('trades')}</span></th>
+    <th>Commit</th>
+  </tr></thead><tbody>${rows.map((r,i)=>{
+    const rank=i+1;
+    const rc=rank===1?'g':rank===2?'s':rank===3?'b':'';
+    return`<tr><td class="rank ${rc}">${rank}</td><td class="author">${r.author}</td><td class="strat">${r.strategy}</td><td class="pnl ${pc(r.sub_pnl)}">${fp(r.sub_pnl)}</td><td class="meta">${r.total_trades}</td><td class="meta">${r.commit||''}</td></tr>`;
+  }).join('')}</tbody></table>`;
+}
+function lbSortBy(k){if(lbSort.key===k)lbSort.desc=!lbSort.desc;else{lbSort.key=k;lbSort.desc=k==='pnl'||k==='trades'}renderLb()}
+
+function mkChart(t,w){const b=document.createElement('div');b.className='chart-box'+(w?' wide':'');b.innerHTML=`<h3>${t}</h3><canvas></canvas>`;return b}
+function co(){return{responsive:true,plugins:{legend:{labels:{color:'#6b7280',font:{size:10,family:'Inter'}}}},scales:{x:{type:'linear',grid:{color:'#e5e7eb'},ticks:{color:'#9ca3af',maxTicksLimit:8,font:{size:10}}},y:{grid:{color:'#e5e7eb'},ticks:{color:'#9ca3af',font:{size:10}}}},interaction:{intersect:false,mode:'index'}}}
+function ds(d,m){if(d.length<=m)return d;const s=Math.floor(d.length/m);return d.filter((_,i)=>i%s===0||i===d.length-1)}
+async function fetchText(u){try{const r=await fetch(u);return r.ok?await r.text():null}catch{return null}}
+async function fetchCsv(u){try{const r=await fetch(u);if(!r.ok)return[];const t=await r.text();const l=t.trim().split('\n');if(l.length<2)return[];const h=l[0].split(';');return l.slice(1).map(x=>{const v=x.split(';');const o={};h.forEach((k,i)=>o[k]=v[i]||'');return o})}catch{return[]}}
+
+init();
+</script>
+</body>
+</html>

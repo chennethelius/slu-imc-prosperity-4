@@ -1,0 +1,20 @@
+{
+  "dataset_id": "submission",
+  "dataset_path": "datasets/tutorial/submission.json",
+  "day": -1,
+  "final_pnl_by_product": {
+    "EMERALDS": 1050.0,
+    "TOMATOES": 1459.0
+  },
+  "final_pnl_total": 2509.0,
+  "generated_at": "2026-04-15T06:04:43+00:00",
+  "matching": {
+    "price_slippage_bps": 0.0,
+    "queue_penetration": 1.0,
+    "trade_match_mode": "all"
+  },
+  "own_trade_count": 97,
+  "run_id": "backtest-1776233081583-tutorial-submission-day-1",
+  "tick_count": 2000,
+  "trader_path": "/home/runner/work/slu-imc-prosperity-4/slu-imc-prosperity-4/strategies/tutorial/43088.py"
+}
