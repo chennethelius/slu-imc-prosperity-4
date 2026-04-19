@@ -51,7 +51,6 @@ class Trader:
     # Pepper buy-and-hold params (from v3/v5 winner).
     PEP_DRIFT = 0.099977
     PEP_ENTRY_TAKE = 5
-    PEP_ENTRY_TIMEOUT = 200
     PEP_BID_FLOOR = -6
     PEP_BID_CEIL = 5
 
@@ -223,8 +222,7 @@ class Trader:
 
         orders = []
         bv = 0
-        selective = tick < self.PEP_ENTRY_TIMEOUT
-        threshold = fair + self.PEP_ENTRY_TAKE if selective else float("inf")
+        threshold = fair + self.PEP_ENTRY_TAKE
 
         for a in sorted(depth.sell_orders):
             if bv >= need or a > threshold:
@@ -238,7 +236,7 @@ class Trader:
         if ba - bb > self.PEP_MAX_SPREAD:
             return orders
 
-        if selective and bv < need:
+        if bv < need:
             competing = max(depth.buy_orders)
             offset = max(self.PEP_BID_FLOOR, min(self.PEP_BID_CEIL, competing + 1 - fair_int))
             orders.append(Order(symbol, fair_int + offset, need - bv))
