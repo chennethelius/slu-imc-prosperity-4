@@ -3,36 +3,27 @@ import json
 
 
 class Trader:
-    """v16 (lean): Glosten-Milgrom own-trade adverse-selection for osmium.
+    """v16 (lean + aggressive-fill pepper).
 
-    When our SELL fills, an aggressive buyer hit our ask — revealing
-    bullish information. Symmetric for own BUYs. We shift micro by
-    +/-1 tick on sign before feeding the Kalman, so a single fill
-    produces a ~0.14-tick fair nudge (K_SS * 1.0) that the |innov|
-    damping can discount in noisy regimes.
+    Osmium: Glosten-Milgrom own-trade adverse-selection + adaptive-K
+    Kalman micro. When our SELL fills, an aggressive buyer hit our ask
+    — bullish info. Symmetric for own BUYs. Shift micro by +/-1 tick
+    on sign before the Kalman, so a single fill produces a ~0.14-tick
+    fair nudge that the |innov| damping discounts in noisy regimes.
 
-    MC stats (paired same-seed per-session delta vs Test_88/v14):
-      access:   mean=+145.6 (std 383, t=+8.51, 66.2% wins)
-      noaccess: mean=+181.9 (std 358, t=+11.37, 72.6% wins)
+    Pepper: buy-and-hold, fill to limit as fast as possible. Pepper
+    has a +0.099977/tick ARIMA drift — every tick earlier we reach
+    the 80-unit cap is +8 SS of captured drift, so we take every ask
+    unconditionally and quote the tightest non-crossing passive bid
+    (best_ask - 1) to absorb any residual need instantly.
 
-    Paired t strips out market-shock variance (same seed, same FV path,
-    same market-trade timing — only strategy actions differ), so the
-    small absolute delta is decisively significant (p < 1e-15).
-
-    Dead-ends ruled out (pairwise vs v16, 500 paired sessions):
-      - Market-trade aggressor flow: additive t=+0.00 (byte-identical)
+    Dead-ends ruled out (pairwise vs prior v16, 500 paired sessions):
       - Book-pressure derivative:    t=+0.79
       - OFI (Cont/Kukanov):          t=-0.06
-      - Magnitude-scaled adv ±3:     t=+0.09
-      - Adverse EMA (persistence):   t=-13.85 (catastrophic)
+      - Adverse EMA persistence:     t=-13.85
       - Confidence-damped adv:       t=-1.44
-      - One-sided vs two-sided flow: t=-0.16
-      - Avellaneda-Stoikov MAKE_EDGE: -19 SEM (widening murders fills)
-
-    Round 2 strategy:
-      * Osmium — mean-reverting MM around fair=10001, adaptive-K Kalman
-                 microprice + Glosten-Milgrom own-trade shift.
-      * Pepper — buy-and-hold capturing +0.099977/tick ARIMA drift.
+      - Avellaneda-Stoikov widen:    -19 SEM
+      - Bayesian fair shrinkage:     t=-29 (catastrophic)
     """
 
     LIMITS = {"ASH_COATED_OSMIUM": 80, "INTARIAN_PEPPER_ROOT": 80}
@@ -44,10 +35,6 @@ class Trader:
     OSM_VOLUME_LIMIT = 30
     OSM_MAKE_EDGE = 1
     OSM_SKEW_UNIT = 12
-
-    PEP_DRIFT = 0.099977
-    PEP_ENTRY_TAKE = 5
-    PEP_BID_FLOOR = -6
 
     def bid(self) -> int:
         return 0
@@ -68,7 +55,7 @@ class Trader:
                 )
             elif symbol == "INTARIAN_PEPPER_ROOT":
                 result[symbol] = self._pepper(
-                    symbol, depth, state.position.get(symbol, 0), state.timestamp, td
+                    symbol, depth, state.position.get(symbol, 0)
                 )
             else:
                 result[symbol] = []
@@ -155,26 +142,16 @@ class Trader:
                 orders.append(Order("ASH_COATED_OSMIUM", baaf - 1, -sell_q))
         return orders
 
-    def _pepper(self, symbol, depth, pos, timestamp, td):
+    def _pepper(self, symbol, depth, pos):
         if not depth.buy_orders or not depth.sell_orders:
             return []
         need = self.LIMITS["INTARIAN_PEPPER_ROOT"] - pos
         if need <= 0:
             return []
 
-        tick = timestamp // 100
-        mid = (max(depth.buy_orders) + min(depth.sell_orders)) / 2.0
-        pep_sum = td.get("_pep_sum", 0.0) + mid - self.PEP_DRIFT * tick
-        pep_cnt = td.get("_pep_cnt", 0) + 1
-        td["_pep_sum"] = pep_sum
-        td["_pep_cnt"] = pep_cnt
-        fair = pep_sum / pep_cnt + self.PEP_DRIFT * tick
-        fair_int = int(round(fair))
-
-        threshold = fair + self.PEP_ENTRY_TAKE
         orders = []
         for a in sorted(depth.sell_orders):
-            if need <= 0 or a > threshold:
+            if need <= 0:
                 break
             vol = min(-depth.sell_orders[a], need)
             if vol > 0:
@@ -182,9 +159,5 @@ class Trader:
                 need -= vol
 
         if need > 0:
-            offset = max(
-                self.PEP_BID_FLOOR,
-                min(self.PEP_ENTRY_TAKE, max(depth.buy_orders) + 1 - fair_int),
-            )
-            orders.append(Order(symbol, fair_int + offset, need))
+            orders.append(Order(symbol, min(depth.sell_orders) - 1, need))
         return orders
