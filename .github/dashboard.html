@@ -56,10 +56,11 @@
   .chip.active{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:var(--shadow-sm)}
   .sep{width:1px;height:18px;background:var(--border);margin:0 6px}
 
-  .tab-group{margin-left:auto;display:flex;background:var(--bg-raised);padding:3px;border-radius:8px;gap:2px}
-  .tab-btn{background:transparent;border:none;padding:5px 14px;font-size:12px;font-weight:500;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all .15s;border-radius:6px}
-  .tab-btn:hover{color:var(--text-primary)}
-  .tab-btn.active{background:var(--bg-surface);color:var(--accent);box-shadow:var(--shadow-sm)}
+  .round-tabs{display:flex;gap:4px;flex:1}
+  .round-tab{background:transparent;border:none;padding:8px 18px;font-size:13px;font-weight:500;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all .15s;border-radius:7px;position:relative;letter-spacing:-.1px}
+  .round-tab:hover{color:var(--text-primary);background:var(--bg-hover)}
+  .round-tab.active{color:var(--accent);background:var(--accent-soft);font-weight:600}
+  .round-tab.active::after{content:'';position:absolute;left:18px;right:18px;bottom:-11px;height:2px;background:var(--accent);border-radius:2px}
 
   .content{padding:18px 24px 40px;max-width:1400px;margin:0 auto}
 
@@ -71,6 +72,10 @@
   .commit-header:hover{background:var(--bg-hover)}
   .commit-arrow{color:var(--text-muted);font-size:10px;transition:transform .2s;width:14px;flex-shrink:0}
   .commit-card.expanded .commit-arrow{transform:rotate(90deg);color:var(--accent)}
+  .rank-badge{min-width:36px;height:28px;padding:0 10px;display:inline-flex;align-items:center;justify-content:center;background:var(--bg-raised);color:var(--text-muted);border:1px solid var(--border-subtle);border-radius:7px;font-family:var(--mono);font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;flex-shrink:0}
+  .rank-badge.g{background:rgba(180,83,9,.1);color:#b45309;border-color:rgba(180,83,9,.2)}
+  .rank-badge.s{background:rgba(100,116,139,.1);color:#475569;border-color:rgba(100,116,139,.2)}
+  .rank-badge.b{background:rgba(146,64,14,.08);color:#92400e;border-color:rgba(146,64,14,.2)}
   .commit-info{flex:1;min-width:0}
   .commit-title{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
   .commit-author{color:var(--text-primary);font-weight:600;font-size:13px;letter-spacing:-.1px}
@@ -119,30 +124,7 @@
   .copy-btn{background:var(--bg-surface);border:1px solid var(--border);border-radius:6px;color:var(--text-secondary);font-size:10px;padding:3px 10px;cursor:pointer;font-family:inherit;transition:all .15s;font-weight:500}
   .copy-btn:hover{color:var(--text-primary);border-color:var(--border-strong);background:var(--bg-hover)}
 
-  /* ── Leaderboard ── */
-  .lb{display:none}
-  .lb.active{display:block}
-  .lb-wrap{background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:var(--shadow-sm)}
-  .lb table{width:100%;border-collapse:collapse;font-size:13px}
-  .lb thead{background:var(--bg-raised)}
-  .lb th{text-align:left;padding:12px 16px;color:var(--text-muted);font-weight:600;font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;cursor:pointer;transition:color .15s;user-select:none;border-bottom:1px solid var(--border)}
-  .lb th:hover{color:var(--text-primary)}
-  .lb th .arr{margin-left:4px;font-size:9px;color:var(--accent)}
-  .lb td{padding:12px 16px;border-bottom:1px solid var(--border-subtle)}
-  .lb tr:last-child td{border-bottom:none}
-  .lb tbody tr{transition:background .12s}
-  .lb tbody tr:hover{background:var(--bg-hover)}
-  .lb .rank{color:var(--text-muted);width:44px;font-family:var(--mono);font-weight:600;font-variant-numeric:tabular-nums}
-  .lb .rank.g{color:#b45309;font-weight:700}
-  .lb .rank.s{color:#64748b;font-weight:700}
-  .lb .rank.b{color:#92400e;font-weight:700}
-  .lb .author{color:var(--text-primary);font-weight:600}
-  .lb .strat{color:var(--accent);font-family:var(--mono);font-size:12px;font-weight:600}
-  .lb .pnl{font-family:var(--mono);font-weight:700;font-size:14px;font-variant-numeric:tabular-nums;letter-spacing:-.2px}
-  .lb .meta{color:var(--text-muted);font-size:11px;font-family:var(--mono);font-variant-numeric:tabular-nums}
-
   .feed{display:block}
-  .feed.hidden{display:none}
 
   .pos{color:var(--green)}
   .neg{color:var(--red)}
@@ -195,25 +177,26 @@
 </div>
 
 <div class="toolbar" id="toolbar">
-  <div class="tab-group">
-    <button class="tab-btn active" id="btn-feed" onclick="setView('feed')">Feed</button>
-    <button class="tab-btn" id="btn-lb" onclick="setView('lb')">Leaderboard</button>
+  <div class="round-tabs">
+    <button class="round-tab" data-round="Tutorial">Tutorial</button>
+    <button class="round-tab" data-round="Round 1">Round 1</button>
+    <button class="round-tab" data-round="Round 2">Round 2</button>
+    <button class="round-tab" data-round="Round 3">Round 3</button>
+    <button class="round-tab" data-round="Round 4">Round 4</button>
+    <button class="round-tab" data-round="Round 5">Round 5</button>
   </div>
 </div>
 
 <div class="content">
   <div class="no-results" id="no-results">No matching submissions.</div>
   <div class="feed" id="feed"></div>
-  <div class="lb" id="lb"></div>
 </div>
 
 <script>
 const BASE='./runs';
 let RUNS=[],groups=[],filtered=[];
 const allCharts={};
-let activeFilters={author:null,strategy:null,round:null};
-let currentView='feed';
-let lbSort={key:'pnl',desc:true};
+let activeFilters={round:null};
 
 const pc=v=>v>=0?'pos':'neg';
 const fp=v=>(v>=0?'+':'')+v.toLocaleString(undefined,{minimumFractionDigits:1,maximumFractionDigits:1});
@@ -250,34 +233,25 @@ function rebuildGroups(){
   }
 }
 
-function rebuildPills(){
-  const tb=document.getElementById('toolbar');
-  const tg=tb.querySelector('.tab-group');
-  tb.querySelectorAll('.chip,.sep').forEach(el=>el.remove());
-  const authors=[...new Set(groups.map(g=>g.author))];
-  const strategies=[...new Set(groups.map(g=>g.strategy))];
-  const rounds=[...new Set(groups.flatMap(g=>g.rounds))].sort((a,b)=>roundRank(a)-roundRank(b));
-  const addPills=(vals,key)=>{
-    const sep=document.createElement('span');sep.className='sep';
-    tb.insertBefore(sep,tg);
-    vals.forEach(v=>{
-      const p=document.createElement('span');p.className='chip';p.textContent=v;
-      if(activeFilters[key]===v)p.classList.add('active');
-      p.onclick=()=>{
-        if(activeFilters[key]===v){activeFilters[key]=null;p.classList.remove('active')}
-        else{tb.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));activeFilters[key]=v;p.classList.add('active')}
-        applyFilters();
-      };
-      tb.insertBefore(p,tg);
-    });
-  };
-  if(rounds.length>1)addPills(rounds,'round');
-  if(authors.length>1)addPills(authors,'author');
-  if(strategies.length>1)addPills(strategies,'strategy');
-  // Drop stale active filters if they no longer exist in the new data
-  if(activeFilters.author&&!authors.includes(activeFilters.author))activeFilters.author=null;
-  if(activeFilters.strategy&&!strategies.includes(activeFilters.strategy))activeFilters.strategy=null;
-  if(activeFilters.round&&!rounds.includes(activeFilters.round))activeFilters.round=null;
+function wireRoundTabs(){
+  document.querySelectorAll('.round-tab').forEach(t=>{
+    t.onclick=()=>{
+      document.querySelectorAll('.round-tab').forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+      activeFilters.round=t.dataset.round;
+      applyFilters();
+    };
+  });
+}
+
+function ensureDefaultRound(){
+  if(document.querySelector('.round-tab.active'))return;
+  const rounds=[...new Set(groups.flatMap(g=>g.rounds))];
+  // Pick the most recent round that actually has data; fall back to Round 1.
+  const ranked=rounds.sort((a,b)=>roundRank(b)-roundRank(a));
+  const pick=ranked.find(r=>r && r !== 'Submission') || 'Round 1';
+  const tab=document.querySelector(`.round-tab[data-round="${pick}"]`);
+  if(tab){tab.classList.add('active');activeFilters.round=pick}
 }
 
 async function loadManifest(){
@@ -289,7 +263,7 @@ async function loadManifest(){
   lastEtag=etag;
   RUNS=data;
   rebuildGroups();
-  rebuildPills();
+  ensureDefaultRound();
   applyFilters();
   return true;
 }
@@ -321,6 +295,7 @@ async function pollOnce(){
 }
 
 async function init(){
+  wireRoundTabs();
   try{await loadManifest()}
   catch{document.getElementById('feed').innerHTML='<div class="empty">No submissions yet. Push a strategy to get started.</div>';return}
   document.getElementById('search').addEventListener('input',applyFilters);
@@ -330,25 +305,14 @@ async function init(){
   schedulePoll();
 }
 
-function setView(v){
-  currentView=v;
-  document.getElementById('btn-feed').classList.toggle('active',v==='feed');
-  document.getElementById('btn-lb').classList.toggle('active',v==='lb');
-  document.getElementById('feed').classList.toggle('hidden',v!=='feed');
-  document.getElementById('lb').classList.toggle('active',v==='lb');
-}
-
 function applyFilters(){
   const q=document.getElementById('search').value.toLowerCase().trim();
   filtered=groups.filter(g=>{
-    if(activeFilters.author&&g.author!==activeFilters.author)return false;
-    if(activeFilters.strategy&&g.strategy!==activeFilters.strategy)return false;
     if(activeFilters.round&&!g.rounds.includes(activeFilters.round))return false;
     if(q&&!(g.author.toLowerCase().includes(q)||g.strategy.toLowerCase().includes(q)||(g.commit||'').toLowerCase().includes(q)))return false;
     return true;
   });
   renderFeed();
-  renderLb();
   document.getElementById('run-count').textContent=`${filtered.length} submissions`;
   document.getElementById('no-results').style.display=filtered.length===0?'block':'none';
 }
@@ -359,14 +323,18 @@ function renderFeed(){
   const fd=document.getElementById('feed');
   fd.innerHTML='';
 
+  // Sort by Avg PnL / day descending so the feed is also the leaderboard.
   const sorted=[...filtered].sort((a,b)=>{
-    const ta=new Date(a.timestamp||0).getTime(),tb_=new Date(b.timestamp||0).getTime();
-    return tb_-ta;
+    const pa=a.sub_pnl!=null?a.sub_pnl:a.avg_pnl;
+    const pb=b.sub_pnl!=null?b.sub_pnl:b.avg_pnl;
+    return (pb||0)-(pa||0);
   });
 
   sorted.forEach((g,gi)=>{
     const subPnl=g.sub_pnl!=null?g.sub_pnl:g.avg_pnl;
     const time=g.timestamp?new Date(g.timestamp).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'';
+    const rank=gi+1;
+    const rc=rank===1?' g':rank===2?' s':rank===3?' b':'';
 
     const card=document.createElement('div');
     card.className='commit-card';card.id=`card-${gi}`;
@@ -379,6 +347,7 @@ function renderFeed(){
     card.innerHTML=`
       <div class="commit-header" onclick="toggleCard(${gi})">
         <span class="commit-arrow">&#9654;</span>
+        <div class="rank-badge${rc}">${rank}</div>
         <div class="commit-info">
           <div class="commit-title">
             <span class="commit-author">${g.author}</span>
@@ -469,39 +438,6 @@ async function toggleCard(gi){
   }
 }
 
-function renderLb(){
-  const best={};
-  for(const g of filtered){
-    const score=g.sub_pnl!=null?g.sub_pnl:g.avg_pnl;
-    if(score==null)continue;
-    g._score=score;
-    const k=`${g.author}|${g.strategy}`;
-    if(!best[k]||score>best[k]._score)best[k]=g;
-  }
-  let rows=Object.values(best);
-  const key=lbSort.key,dir=lbSort.desc?-1:1;
-  rows.sort((a,b)=>{
-    let av=key==='pnl'?(a._score||0):key==='trades'?(a.total_trades||0):String(a[key]||'');
-    let bv=key==='pnl'?(b._score||0):key==='trades'?(b.total_trades||0):String(b[key]||'');
-    return typeof av==='number'?(av<bv?dir:av>bv?-dir:0):(av<bv?dir:av>bv?-dir:0);
-  });
-
-  const lbd=document.getElementById('lb');
-  const arrow=k=>k===lbSort.key?(lbSort.desc?'\u25BC':'\u25B2'):'';
-  lbd.innerHTML=`<div class="lb-wrap"><table><thead><tr>
-    <th>#</th>
-    <th onclick="lbSortBy('author')">Author <span class="arr">${arrow('author')}</span></th>
-    <th onclick="lbSortBy('strategy')">Strategy <span class="arr">${arrow('strategy')}</span></th>
-    <th onclick="lbSortBy('pnl')">Avg PnL / day <span class="arr">${arrow('pnl')}</span></th>
-    <th onclick="lbSortBy('trades')">Trades <span class="arr">${arrow('trades')}</span></th>
-    <th>Commit</th>
-  </tr></thead><tbody>${rows.map((r,i)=>{
-    const rank=i+1;
-    const rc=rank===1?'g':rank===2?'s':rank===3?'b':'';
-    return`<tr><td class="rank ${rc}">${rank}</td><td class="author">${r.author}</td><td class="strat">${r.strategy}</td><td class="pnl ${pc(r._score)}">${fp(r._score)}</td><td class="meta">${r.total_trades.toLocaleString()}</td><td class="meta">${r.commit||''}</td></tr>`;
-  }).join('')}</tbody></table></div>`;
-}
-function lbSortBy(k){if(lbSort.key===k)lbSort.desc=!lbSort.desc;else{lbSort.key=k;lbSort.desc=k==='pnl'||k==='trades'}renderLb()}
 
 function mkChart(t,w){const b=document.createElement('div');b.className='chart-box'+(w?' wide':'');b.innerHTML=`<h3>${t}</h3><canvas></canvas>`;return b}
 function co(){return{responsive:true,plugins:{legend:{labels:{color:'#6b7280',font:{size:10,family:'Inter'}}}},scales:{x:{type:'linear',grid:{color:'#e5e7eb'},ticks:{color:'#9ca3af',maxTicksLimit:8,font:{size:10}}},y:{grid:{color:'#e5e7eb'},ticks:{color:'#9ca3af',font:{size:10}}}},interaction:{intersect:false,mode:'index'}}}
