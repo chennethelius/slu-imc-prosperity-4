@@ -32,10 +32,36 @@ jobs:
           submodules: recursive
           fetch-depth: 2
 
+      - name: Detect changed strategies
+        id: changes
+        run: |
+          # Strategies: run only if .py under strategies/** changed.
+          # Backtester submodule or collection script changed: re-run ALL
+          # strategies since behavior may have shifted.
+          # Manual workflow_dispatch: run ALL strategies.
+          STRAT_DIFF=$(git diff --name-only HEAD~1 HEAD -- 'strategies/**/*.py' 2>/dev/null || true)
+          BEHAVIOR_DIFF=$(git diff --name-only HEAD~1 HEAD -- 'backtester' 'datasets_extra/' '.github/collect_results.py' 2>/dev/null || true)
+
+          if [ -n "$STRAT_DIFF" ]; then
+            CHANGED="$STRAT_DIFF"
+            echo "Strategy files changed; running them"
+          elif [ -n "$BEHAVIOR_DIFF" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            CHANGED=$(find strategies -name '*.py' -not -path '*/lib/*' 2>/dev/null || true)
+            echo "Backtester / data / script changed (or manual dispatch); running ALL strategies"
+          else
+            CHANGED=""
+            echo "No strategy or backtester-behavior changes detected; skipping backtests"
+          fi
+          echo "files<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGED" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Setup Rust
+        if: steps.changes.outputs.files != ''
         uses: dtolnay/rust-toolchain@stable
 
       - name: Cache Rust build
+        if: steps.changes.outputs.files != ''
         uses: actions/cache@v4
         with:
           path: |
@@ -46,31 +72,24 @@ jobs:
           restore-keys: rust-${{ runner.os }}-
 
       - name: Setup Python
+        if: steps.changes.outputs.files != ''
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
       - name: Build backtester
+        if: steps.changes.outputs.files != ''
         working-directory: backtester
         run: cargo build --release
 
-      - name: Detect changed strategies
-        id: changes
-        run: |
-          CHANGED=$(git diff --name-only HEAD~1 HEAD -- 'strategies/**/*.py' 2>/dev/null || true)
-          if [ -z "$CHANGED" ]; then
-            CHANGED=$(find strategies -name '*.py' -not -path '*/lib/*' 2>/dev/null || true)
-          fi
-          echo "files<<EOF" >> $GITHUB_OUTPUT
-          echo "$CHANGED" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
       - name: Fetch existing manifest from gh-pages
+        if: steps.changes.outputs.files != ''
         run: |
           git fetch origin gh-pages 2>/dev/null || true
           git show origin/gh-pages:results.json > existing-manifest.json 2>/dev/null || echo "[]" > existing-manifest.json
 
       - name: Run backtests
+        if: steps.changes.outputs.files != ''
         env:
           STRATEGIES: ${{ steps.changes.outputs.files }}
           AUTHOR: ${{ github.actor }}
