@@ -95,11 +95,14 @@ jobs:
             done
           fi
 
-          # Merge manifests (dedup by author+strategy+dataset+day, keep newest)
+          # Merge manifests (dedup by author+strategy+dataset+day, keep newest).
+          # Also prune entries whose strategy file no longer exists in the repo,
+          # so deleted/renamed strategies stop cluttering the dashboard.
           python3 -c "
-          import json, os
+          import json, os, pathlib, shutil
           deploy = '$DEPLOY_DIR'
           results = '$RESULTS_DIR'
+          repo = '${{ github.workspace }}'
           manifest_path = os.path.join(deploy, 'results.json')
           existing = []
           if os.path.exists(manifest_path):
@@ -110,7 +113,7 @@ jobs:
               with open(new_path) as f:
                   new = json.load(f)
               existing = new + existing
-          # Deduplicate: keep first (newest) per (author, strategy, dataset, day)
+          # Dedup: keep first (newest) per (author, strategy, dataset, day)
           seen = set()
           deduped = []
           for r in existing:
@@ -118,9 +121,18 @@ jobs:
               if key not in seen:
                   seen.add(key)
                   deduped.append(r)
+          # Prune entries for strategies that no longer exist in the repo
+          live = {p.stem for p in pathlib.Path(repo, 'strategies').rglob('*.py')
+                  if p.stem != 'template' and '__pycache__' not in p.parts}
+          pruned = [r for r in deduped if r.get('strategy','') in live]
+          orphaned = [r for r in deduped if r.get('strategy','') not in live]
+          for r in orphaned:
+              run_dir = os.path.join(deploy, 'runs', r.get('id',''))
+              if r.get('id') and os.path.isdir(run_dir):
+                  shutil.rmtree(run_dir, ignore_errors=True)
           with open(manifest_path, 'w') as f:
-              json.dump(deduped, f, indent=2)
-          print(f'Manifest: {len(deduped)} submissions ({len(existing) - len(deduped)} duplicates removed)')
+              json.dump(pruned, f, indent=2)
+          print(f'Manifest: {len(pruned)} kept, {len(existing) - len(deduped)} dupes, {len(orphaned)} orphaned strategies pruned')
           "
 
           # Copy dashboard
