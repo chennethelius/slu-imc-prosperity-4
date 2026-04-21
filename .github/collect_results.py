@@ -3,24 +3,10 @@
 
 import json
 import os
-import re
 import shutil
 import subprocess
 import sys
 from pathlib import Path
-
-
-DAY_RE = re.compile(r"day_(-?\d+)\.csv$")
-
-
-def dataset_days(dataset_dir: Path) -> list[int]:
-    """Enumerate day numbers available in a dataset folder by scanning filenames."""
-    days: set[int] = set()
-    for f in dataset_dir.iterdir():
-        m = DAY_RE.search(f.name)
-        if m:
-            days.add(int(m.group(1)))
-    return sorted(days)
 
 
 def main():
@@ -91,88 +77,81 @@ def main():
             continue
 
         for ds in target_datasets:
-            # Iterate days explicitly. Without --day the backtester strips the
-            # minus sign from directory names (e.g. day=-1 and day=+1 both map
-            # to `...-day-1`), which silently drops one day of results.
-            days = dataset_days(ds_root / ds)
-            if not days:
-                print(f"No day files found for {ds}, skipping")
+            print(f"=== {strat_name} vs {ds} ===")
+
+            # Clean previous runs
+            runs_dir = backtester_dir / "runs"
+            if runs_dir.exists():
+                for old in runs_dir.glob("backtest-*"):
+                    shutil.rmtree(old, ignore_errors=True)
+
+            # Run backtester across the full submission window. Backtester
+            # v0.4.0 replaces queue-penetration with a price-time priority
+            # matcher that crosses against the visible book first and only
+            # matches residuals against resting submission orders — this is
+            # the closest faithful replay of the IMC submission environment.
+            try:
+                result = subprocess.run(
+                    [
+                        str(backtester_bin),
+                        "--trader", str(strategy_path),
+                        "--dataset", ds,
+                        "--persist",
+                        "--artifact-mode", "full",
+                    ],
+                    cwd=str(backtester_dir),
+                    capture_output=True, text=True, timeout=180,
+                )
+                print(result.stdout[-500:] if len(result.stdout) > 500 else result.stdout)
+                if result.stderr:
+                    print(result.stderr[-300:])
+            except Exception as e:
+                print(f"Error running backtester: {e}")
                 continue
 
-            for day in days:
-                print(f"=== {strat_name} vs {ds} day={day} ===")
+            # Collect results from each run the backtester created
+            if not runs_dir.exists():
+                continue
+            for brun in sorted(runs_dir.glob("backtest-*"), reverse=True):
+                metrics_file = brun / "metrics.json"
+                if not metrics_file.exists():
+                    continue
+                # Skip bundle dirs (no submission.log)
+                if not (brun / "submission.log").exists():
+                    continue
 
-                # Clean previous runs
-                runs_dir = backtester_dir / "runs"
-                if runs_dir.exists():
-                    for old in runs_dir.glob("backtest-*"):
-                        shutil.rmtree(old, ignore_errors=True)
-
-                # Run backtester for this day only
                 try:
-                    result = subprocess.run(
-                        [
-                            str(backtester_bin),
-                            "--trader", str(strategy_path),
-                            "--dataset", ds,
-                            f"--day={day}",
-                            "--queue-penetration", "0.0",
-                            "--persist",
-                            "--artifact-mode", "full",
-                        ],
-                        cwd=str(backtester_dir),
-                        capture_output=True, text=True, timeout=120,
-                    )
-                    print(result.stdout[-500:] if len(result.stdout) > 500 else result.stdout)
-                    if result.stderr:
-                        print(result.stderr[-300:])
-                except Exception as e:
-                    print(f"Error running backtester: {e}")
+                    metrics = json.loads(metrics_file.read_text())
+                except (json.JSONDecodeError, OSError):
                     continue
 
-                # Collect results from each run the backtester created
-                if not runs_dir.exists():
-                    continue
-                for brun in sorted(runs_dir.glob("backtest-*"), reverse=True):
-                    metrics_file = brun / "metrics.json"
-                    if not metrics_file.exists():
-                        continue
-                    # Skip bundle dirs (no submission.log)
-                    if not (brun / "submission.log").exists():
-                        continue
+                sub_id = f"{author}_{strat_name}_{ds}_{brun.name}"
+                sub_dir = results_dir / sub_id
+                sub_dir.mkdir(exist_ok=True)
 
-                    try:
-                        metrics = json.loads(metrics_file.read_text())
-                    except (json.JSONDecodeError, OSError):
-                        continue
+                # Copy artifacts (skip large activity.csv)
+                for fname in ["metrics.json", "pnl_by_product.csv", "trades.csv"]:
+                    src = brun / fname
+                    if src.exists():
+                        shutil.copy2(src, sub_dir / fname)
 
-                    sub_id = f"{author}_{strat_name}_{ds}_{brun.name}"
-                    sub_dir = results_dir / sub_id
-                    sub_dir.mkdir(exist_ok=True)
+                # Save strategy source code with the result
+                shutil.copy2(strategy_path, sub_dir / "strategy.py")
 
-                    # Copy artifacts (skip large activity.csv)
-                    for fname in ["metrics.json", "pnl_by_product.csv", "trades.csv"]:
-                        src = brun / fname
-                        if src.exists():
-                            shutil.copy2(src, sub_dir / fname)
-
-                    # Save strategy source code with the result
-                    shutil.copy2(strategy_path, sub_dir / "strategy.py")
-
-                    manifest.append({
-                        "id": sub_id,
-                        "author": author,
-                        "strategy": strat_name,
-                        "dataset": Path(metrics.get("dataset_path", "?")).name,
-                        "day": metrics.get("day", "?"),
-                        "pnl": metrics.get("final_pnl_total", 0),
-                        "pnl_by_product": metrics.get("final_pnl_by_product", {}),
-                        "trades": metrics.get("own_trade_count", 0),
-                        "ticks": metrics.get("tick_count", 0),
-                        "timestamp": timestamp,
-                        "commit": commit,
-                    })
-                    print(f"  Collected: {sub_id} PnL={metrics.get('final_pnl_total', 0)}")
+                manifest.append({
+                    "id": sub_id,
+                    "author": author,
+                    "strategy": strat_name,
+                    "dataset": Path(metrics.get("dataset_path", "?")).name,
+                    "day": metrics.get("day", "?"),
+                    "pnl": metrics.get("final_pnl_total", 0),
+                    "pnl_by_product": metrics.get("final_pnl_by_product", {}),
+                    "trades": metrics.get("own_trade_count", 0),
+                    "ticks": metrics.get("tick_count", 0),
+                    "timestamp": timestamp,
+                    "commit": commit,
+                })
+                print(f"  Collected: {sub_id} PnL={metrics.get('final_pnl_total', 0)}")
 
     # Write manifest
     manifest_path = results_dir / "new_results.json"
