@@ -286,6 +286,7 @@ async function init(){
     const sub=g.runs.find(r=>String(r.dataset).includes('submission'));
     g.sub_pnl=sub?sub.pnl:null;
     g.total_pnl=g.runs.reduce((s,r)=>s+(r.pnl||0),0);
+    g.avg_pnl=g.runs.length?g.total_pnl/g.runs.length:0;
     g.total_trades=g.runs.reduce((s,r)=>s+(r.trades||0),0);
     g.rounds=[...new Set(g.runs.map(r=>normRound(r.dataset)).filter(Boolean))];
   }
@@ -351,7 +352,7 @@ function renderFeed(){
   });
 
   sorted.forEach((g,gi)=>{
-    const subPnl=g.sub_pnl!=null?g.sub_pnl:g.total_pnl;
+    const subPnl=g.sub_pnl!=null?g.sub_pnl:g.avg_pnl;
     const time=g.timestamp?new Date(g.timestamp).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'';
 
     const card=document.createElement('div');
@@ -375,7 +376,7 @@ function renderFeed(){
           <div class="commit-runs">${chips}</div>
         </div>
         <div class="commit-total">
-          <div class="sub-label">Sub PnL</div>
+          <div class="sub-label">Avg PnL / day</div>
           <div class="sub-pnl ${pc(subPnl)}">${fp(subPnl)}</div>
         </div>
       </div>
@@ -458,15 +459,17 @@ async function toggleCard(gi){
 function renderLb(){
   const best={};
   for(const g of filtered){
-    if(g.sub_pnl==null)continue;
+    const score=g.sub_pnl!=null?g.sub_pnl:g.avg_pnl;
+    if(score==null)continue;
+    g._score=score;
     const k=`${g.author}|${g.strategy}`;
-    if(!best[k]||g.sub_pnl>best[k].sub_pnl)best[k]=g;
+    if(!best[k]||score>best[k]._score)best[k]=g;
   }
   let rows=Object.values(best);
   const key=lbSort.key,dir=lbSort.desc?-1:1;
   rows.sort((a,b)=>{
-    let av=key==='pnl'?(a.sub_pnl||0):key==='trades'?(a.total_trades||0):String(a[key]||'');
-    let bv=key==='pnl'?(b.sub_pnl||0):key==='trades'?(b.total_trades||0):String(b[key]||'');
+    let av=key==='pnl'?(a._score||0):key==='trades'?(a.total_trades||0):String(a[key]||'');
+    let bv=key==='pnl'?(b._score||0):key==='trades'?(b.total_trades||0):String(b[key]||'');
     return typeof av==='number'?(av<bv?dir:av>bv?-dir:0):(av<bv?dir:av>bv?-dir:0);
   });
 
@@ -476,13 +479,13 @@ function renderLb(){
     <th>#</th>
     <th onclick="lbSortBy('author')">Author <span class="arr">${arrow('author')}</span></th>
     <th onclick="lbSortBy('strategy')">Strategy <span class="arr">${arrow('strategy')}</span></th>
-    <th onclick="lbSortBy('pnl')">Sub PnL <span class="arr">${arrow('pnl')}</span></th>
+    <th onclick="lbSortBy('pnl')">Avg PnL / day <span class="arr">${arrow('pnl')}</span></th>
     <th onclick="lbSortBy('trades')">Trades <span class="arr">${arrow('trades')}</span></th>
     <th>Commit</th>
   </tr></thead><tbody>${rows.map((r,i)=>{
     const rank=i+1;
     const rc=rank===1?'g':rank===2?'s':rank===3?'b':'';
-    return`<tr><td class="rank ${rc}">${rank}</td><td class="author">${r.author}</td><td class="strat">${r.strategy}</td><td class="pnl ${pc(r.sub_pnl)}">${fp(r.sub_pnl)}</td><td class="meta">${r.total_trades}</td><td class="meta">${r.commit||''}</td></tr>`;
+    return`<tr><td class="rank ${rc}">${rank}</td><td class="author">${r.author}</td><td class="strat">${r.strategy}</td><td class="pnl ${pc(r._score)}">${fp(r._score)}</td><td class="meta">${r.total_trades}</td><td class="meta">${r.commit||''}</td></tr>`;
   }).join('')}</tbody></table>`;
 }
 function lbSortBy(k){if(lbSort.key===k)lbSort.desc=!lbSort.desc;else{lbSort.key=k;lbSort.desc=k==='pnl'||k==='trades'}renderLb()}
