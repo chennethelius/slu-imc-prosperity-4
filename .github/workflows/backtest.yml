@@ -157,6 +157,10 @@ jobs:
           cp .github/dashboard.html "$DEPLOY_DIR/index.html"
           cp .github/auction.html "$DEPLOY_DIR/auction.html" 2>/dev/null || true
 
+          # Skip Jekyll — serve files as-is. Cuts pages-build-deployment
+          # from minutes to seconds on a multi-thousand-file tree.
+          touch "$DEPLOY_DIR/.nojekyll"
+
           # Push to gh-pages
           cd "$DEPLOY_DIR"
           git init
