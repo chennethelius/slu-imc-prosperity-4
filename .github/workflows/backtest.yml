@@ -17,6 +17,11 @@ permissions:
   contents: write
   pages: write
 
+# Only keep the latest run per branch; supersede in-flight runs on rapid pushes.
+concurrency:
+  group: backtest-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   backtest:
     runs-on: ubuntu-latest
