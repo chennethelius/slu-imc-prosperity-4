@@ -25,6 +25,7 @@ class Trader:
     PEP_CALIB_TICKS = 10
     PEP_ENTRY_TAKE = 7
     PEP_ENTRY_TIMEOUT = 200
+    PEP_DRIFT_TOL = 1.5
 
     def bid(self):
         return 15
@@ -114,14 +115,26 @@ class Trader:
         tick = timestamp // 100
 
         samples = td.get("_pep_samples", [])
-        if tick < self.PEP_CALIB_TICKS:
+        if tick < self.PEP_ENTRY_TIMEOUT:
             mid = (max(d.buy_orders) + min(d.sell_orders)) / 2.0
             samples.append(mid - self.PEP_DRIFT * tick)
             td["_pep_samples"] = samples
-        intercept = sum(samples) / len(samples) if samples else 0
+        calib = samples[: self.PEP_CALIB_TICKS]
+        intercept = sum(calib) / len(calib) if calib else 0
         fair = intercept + self.PEP_DRIFT * tick
 
-        cap = fair + self.PEP_ENTRY_TAKE if tick < self.PEP_ENTRY_TIMEOUT else float("inf")
+        drift_ok = True
+        if len(samples) >= 40:
+            half = len(samples) // 2
+            early = sum(samples[:half]) / half
+            late = sum(samples[half:]) / (len(samples) - half)
+            drift_ok = abs(late - early) < self.PEP_DRIFT_TOL
+        if not drift_ok:
+            cap = -float("inf")
+        elif tick < self.PEP_ENTRY_TIMEOUT:
+            cap = fair + self.PEP_ENTRY_TAKE
+        else:
+            cap = float("inf")
         orders = []
         for price in sorted(d.sell_orders):
             if remaining <= 0 or price > cap:
