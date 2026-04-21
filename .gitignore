@@ -47,9 +47,4 @@ discord-bot/cron.log
 discord-bot/venv/
 !discord-bot/storage/.gitkeep
 
-# Datasets (large, downloaded separately)
-datasets/**/*.csv
-datasets/**/*.json
-!datasets/README.md
-!datasets/**/README.md
 strategies/round1/ref.md
