@@ -9,9 +9,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg-base:#fbfaf8; --bg-surface:#fff; --bg-raised:#f5f3ef; --bg-hover:#f5f3ef;
-    --border:#ece8e1; --border-subtle:#f2efe9; --border-strong:#d8d3c9;
-    --text-primary:#1c1917; --text-secondary:#57534e; --text-muted:#a8a29e;
+    --bg-base:#eef1f8; --bg-surface:#fff; --bg-raised:#e4e8f1; --bg-hover:#e4e8f1;
+    --border:#d9dde8; --border-subtle:#e4e8f1; --border-strong:#bfc4d1;
+    --text-primary:#0f172a; --text-secondary:#475569; --text-muted:#8b93a7;
     --accent:#6366f1; --accent-dim:#4f46e5; --accent-soft:rgba(99,102,241,.1);
     --accent-warm:#a78bfa;
     --green:#10b981; --green-soft:rgba(16,185,129,.1);
@@ -37,7 +37,7 @@
   body{font-family:'Inter',system-ui,sans-serif;background:var(--bg-base);color:var(--text-primary);font-size:13px;line-height:1.5;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;font-feature-settings:'cv02','cv03','cv04','cv11'}
 
   /* ── Topbar ── */
-  .topbar{background:var(--bg-surface);border-bottom:1px solid var(--border);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20}
+  .topbar{background:var(--bg-surface);border-bottom:1px solid var(--border);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20;box-shadow:0 1px 0 rgba(99,102,241,.04),0 4px 16px -8px rgba(15,23,42,.08)}
   .topbar-left{display:flex;align-items:center;gap:24px}
   .logo{display:flex;align-items:center;gap:10px;text-decoration:none}
   .logo-img{width:26px;height:26px;object-fit:contain;flex-shrink:0;border-radius:4px}
@@ -55,7 +55,8 @@
   .badge{color:var(--text-secondary);font-size:11px;font-weight:600;font-variant-numeric:tabular-nums;transition:color .2s}
 
   /* ── Toolbar ── */
-  .toolbar{display:flex;align-items:center;gap:6px;padding:10px 24px;border-bottom:1px solid var(--border);background:var(--bg-surface);flex-wrap:wrap}
+  .toolbar{display:flex;align-items:center;gap:6px;padding:10px 24px;background:var(--bg-surface);flex-wrap:wrap;position:relative}
+  .toolbar::after{content:'';position:absolute;left:24px;right:24px;bottom:0;height:1px;background:linear-gradient(90deg,transparent,var(--border) 10%,var(--border) 90%,transparent)}
   .chip{background:transparent;border:1px solid var(--border);border-radius:999px;padding:4px 12px;font-size:11px;font-weight:500;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
   .chip:hover{border-color:var(--border-strong);color:var(--text-primary);background:var(--bg-hover)}
   .chip.active{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:var(--shadow-sm)}
@@ -82,9 +83,12 @@
   .content{padding:18px 24px 40px;max-width:1400px;margin:0 auto}
 
   /* ── Commit Cards ── */
-  .commit-card{background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:10px;overflow:hidden;transition:all .18s;box-shadow:var(--shadow-sm)}
+  .commit-card{position:relative;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:10px;overflow:hidden;transition:all .18s;box-shadow:var(--shadow-sm)}
+  .commit-card::before{content:'';position:absolute;left:0;top:14px;bottom:14px;width:3px;border-radius:0 2px 2px 0;background:var(--card-accent,var(--border-strong));opacity:.8;transition:opacity .18s,width .18s,top .18s,bottom .18s}
+  .commit-card:hover::before{opacity:1;width:4px;top:8px;bottom:8px}
+  .commit-card.expanded::before{opacity:1;width:4px;top:0;bottom:0;border-radius:0}
   .commit-card:hover{border-color:var(--border-strong);box-shadow:var(--shadow-md);transform:translateY(-1px)}
-  .commit-card.expanded{box-shadow:var(--shadow-lg);border-color:var(--accent-soft);transform:none}
+  .commit-card.expanded{box-shadow:var(--shadow-lg);border-color:var(--card-accent,var(--accent-soft));transform:none}
   .commit-header{display:flex;align-items:center;padding:14px 18px;cursor:pointer;gap:16px;transition:background .15s}
   .commit-header:hover{background:var(--bg-hover)}
   .commit-arrow{color:var(--text-muted);font-size:10px;transition:transform .2s;width:14px;flex-shrink:0}
@@ -98,7 +102,7 @@
   .commit-author{color:var(--text-primary);font-weight:600;font-size:13px;letter-spacing:-.1px}
   .commit-strat{color:var(--accent);font-size:12px;font-weight:600;font-family:var(--mono);padding:2px 8px;background:var(--accent-soft);border-radius:5px}
   .commit-hash{color:var(--text-muted);font-size:11px;font-family:var(--mono);letter-spacing:.2px}
-  .commit-time{color:var(--text-muted);font-size:11px;white-space:nowrap;margin-left:auto}
+  .commit-time{color:var(--text-muted);font-size:10.5px;white-space:nowrap;margin-top:3px;font-variant-numeric:tabular-nums}
   .commit-runs{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
   .run-chip{background:var(--bg-raised);border:1px solid var(--border-subtle);border-radius:6px;padding:3px 10px;font-size:10.5px;display:inline-flex;gap:8px;align-items:center;font-weight:500}
   .run-chip .label{color:var(--text-muted);font-weight:600;letter-spacing:.2px}
@@ -384,15 +388,19 @@ function renderFeed(){
     return scoreOf(b)-scoreOf(a); // 'pnl'
   });
 
+  const roundColorVar={Tutorial:'--r-tut','Round 1':'--r-1','Round 2':'--r-2','Round 3':'--r-3','Round 4':'--r-4','Round 5':'--r-5'};
   sorted.forEach((g,gi)=>{
     const subPnl=g.sub_pnl!=null?g.sub_pnl:g.avg_pnl;
     const time=g.timestamp?new Date(g.timestamp).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'';
     const rank=pnlRank.get(g)||(gi+1);
     const rc=rank===1?' g':rank===2?' s':rank===3?' b':'';
+    const roundKey=g.rounds.find(r=>roundColorVar[r]);
+    const accentVar=roundKey?`var(${roundColorVar[roundKey]})`:'var(--accent)';
 
     const card=document.createElement('div');
     card.className='commit-card';card.id=`card-${gi}`;
     card.style.setProperty('--i',Math.min(gi,20));
+    card.style.setProperty('--card-accent',accentVar);
 
     const chips=g.runs.map(r=>{
       const lbl=String(r.dataset).includes('submission')?'SUB':`D${r.day}`;
@@ -407,13 +415,13 @@ function renderFeed(){
           <div class="commit-title">
             <span class="commit-author">${g.author}</span>
             <span class="commit-strat">${g.strategy}</span>
-            <span class="commit-time">${time}</span>
           </div>
           <div class="commit-runs">${chips}</div>
         </div>
         <div class="commit-total">
           <div class="sub-label">Avg PnL / day</div>
           <div class="sub-pnl ${pc(subPnl)}">${fp(subPnl)}</div>
+          <div class="commit-time">${time}</div>
         </div>
       </div>
       <div class="commit-detail" id="detail-${gi}"></div>

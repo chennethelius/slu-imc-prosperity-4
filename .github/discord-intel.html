@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Discord Bot — SLU Prosperity</title>
+<title>Discord Bot — Prosperity</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -31,9 +31,8 @@
   .topbar {
     background:var(--bg-surface); border-bottom:1px solid var(--border);
     padding:0 24px; height:52px; display:flex; align-items:center; justify-content:space-between;
-    position:sticky; top:0; z-index:20; overflow:hidden;
+    position:sticky; top:0; z-index:20;
   }
-  .topbar::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 600px 120px at 20% 100%,rgba(99,102,241,.08),transparent 70%),radial-gradient(ellipse 500px 100px at 80% 100%,rgba(167,139,250,.06),transparent 70%);pointer-events:none;z-index:-1}
   .topbar-left { display:flex; align-items:center; gap:24px; }
   .logo { display:flex; align-items:center; gap:10px; text-decoration:none; }
   .logo-img { width:26px; height:26px; object-fit:contain; flex-shrink:0; border-radius:4px; }
@@ -290,7 +289,7 @@
   <div class="topbar-left">
     <a class="logo" href="#">
       <img src="./billiken-logo.jpg" alt="SLU" class="logo-img">
-      <h1>SLU <span>Prosperity</span></h1>
+      <h1><span>Prosperity</span></h1>
       <span class="logo-mark" id="statusDot"></span>
     </a>
     <nav class="nav">
@@ -310,30 +309,12 @@
 
 <div class="stats-row">
   <div class="stat-cell"><span class="label">Messages</span><span class="value" id="statMessages">--</span></div>
-  <div class="stat-cell"><span class="label">Products</span><span class="value blue" id="statProducts">--</span></div>
-  <div class="stat-cell"><span class="label">Code Blocks</span><span class="value purple" id="statCode">--</span></div>
-  <div class="stat-cell"><span class="label">Parameters</span><span class="value green" id="statParams">--</span></div>
+  <div class="stat-cell"><span class="label">Products</span><span class="value" id="statProducts">--</span></div>
   <div class="stat-cell"><span class="label">Contributors</span><span class="value" id="statContribs">--</span></div>
   <div class="stat-cell"><span class="label">Last Updated</span><span class="value small" id="statUpdated">--</span></div>
 </div>
 
 <div class="toolbar">
-  <button class="chip active" data-filter="all">All</button>
-  <div class="sep"></div>
-  <span id="productFilters"></span>
-  <div class="sep"></div>
-  <span id="strategyFilters"></span>
-  <div class="sep"></div>
-  <div class="range-group">
-    <span class="label">Min Score</span>
-    <input type="range" id="scoreSlider" min="0" max="100" value="0" />
-    <span class="val" id="scoreVal">0</span>
-  </div>
-  <div class="range-group">
-    <span class="label">Min PnL (xirecs)</span>
-    <input type="range" id="pnlSlider" min="0" max="50000" value="0" step="500" />
-    <span class="val" id="pnlVal">0</span>
-  </div>
   <div class="tab-group">
     <button class="tab-btn active" data-view="digest">Digest</button>
     <button class="tab-btn" data-view="leaderboard">Leaderboard</button>
@@ -341,6 +322,19 @@
     <button class="tab-btn" data-view="messages">Messages</button>
     <button class="tab-btn" data-view="contributors">Contributors</button>
   </div>
+</div>
+
+<!-- Hidden controls preserved for JS compatibility; not rendered -->
+<div style="display:none">
+  <button class="chip active" data-filter="all">All</button>
+  <span id="productFilters"></span>
+  <span id="strategyFilters"></span>
+  <input type="range" id="scoreSlider" min="0" max="100" value="0" />
+  <span id="scoreVal">0</span>
+  <input type="range" id="pnlSlider" min="0" max="50000" value="0" />
+  <span id="pnlVal">0</span>
+  <span id="statCode">--</span>
+  <span id="statParams">--</span>
 </div>
 
 <div class="content" id="mainContent">
