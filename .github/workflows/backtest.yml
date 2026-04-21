@@ -126,8 +126,9 @@ jobs:
           fi
 
           # Merge manifests (dedup by author+strategy+dataset+day, keep newest)
+          # and prune orphan run dirs whose id is no longer referenced.
           python3 -c "
-          import json, os
+          import json, os, shutil
           deploy = '$DEPLOY_DIR'
           results = '$RESULTS_DIR'
           manifest_path = os.path.join(deploy, 'results.json')
@@ -150,7 +151,17 @@ jobs:
                   deduped.append(r)
           with open(manifest_path, 'w') as f:
               json.dump(deduped, f, indent=2)
-          print(f'Manifest: {len(deduped)} submissions ({len(existing) - len(deduped)} duplicates removed)')
+          # Prune orphan run directories
+          live_ids = {r.get('id','') for r in deduped if r.get('id')}
+          runs_root = os.path.join(deploy, 'runs')
+          pruned = 0
+          if os.path.isdir(runs_root):
+              for name in os.listdir(runs_root):
+                  p = os.path.join(runs_root, name)
+                  if os.path.isdir(p) and name not in live_ids:
+                      shutil.rmtree(p, ignore_errors=True)
+                      pruned += 1
+          print(f'Manifest: {len(deduped)} submissions ({len(existing) - len(deduped)} duplicates removed, {pruned} orphan run dirs pruned)')
           "
 
           # Copy dashboard
