@@ -271,8 +271,10 @@ function normRound(ds){
 }
 const roundRank=r=>r==='Tutorial'?0:r==='Submission'?99:parseInt((r||'').replace(/\D/g,''))||50;
 
-let lastManifestHash='';
-const POLL_MS=30000;
+let lastEtag='';
+let pollTimer=null;
+let pollDelay=30000;
+const POLL_MIN=30000,POLL_MAX=300000;
 
 function rebuildGroups(){
   const gm={};
@@ -323,13 +325,13 @@ function rebuildPills(){
 }
 
 async function loadManifest(){
-  const r=await fetch('./results.json?t='+Date.now());
+  const r=await fetch('./results.json',{cache:'no-cache'});
   if(!r.ok)throw new Error('fetch failed');
-  const text=await r.text();
-  const hash=text.length+'|'+text.slice(-200);
-  if(hash===lastManifestHash)return false;
-  lastManifestHash=hash;
-  RUNS=JSON.parse(text);
+  const etag=r.headers.get('ETag')||r.headers.get('Last-Modified')||'';
+  if(etag&&etag===lastEtag)return false;
+  const data=await r.json();
+  lastEtag=etag;
+  RUNS=data;
   rebuildGroups();
   rebuildPills();
   applyFilters();
@@ -344,14 +346,32 @@ function flashUpdated(){
   setTimeout(()=>{el.style.color=orig},1200);
 }
 
+function schedulePoll(){
+  clearTimeout(pollTimer);
+  pollTimer=setTimeout(pollOnce,pollDelay);
+}
+
+async function pollOnce(){
+  if(document.hidden){schedulePoll();return}
+  try{
+    if(await loadManifest()){
+      flashUpdated();
+      pollDelay=POLL_MIN;
+    }else{
+      pollDelay=Math.min(pollDelay*1.5,POLL_MAX);
+    }
+  }catch{}
+  schedulePoll();
+}
+
 async function init(){
   try{await loadManifest()}
   catch{document.getElementById('feed').innerHTML='<div class="empty">No submissions yet. Push a strategy to get started.</div>';return}
   document.getElementById('search').addEventListener('input',applyFilters);
-  setInterval(async()=>{
-    if(document.hidden)return;
-    try{if(await loadManifest())flashUpdated()}catch{}
-  },POLL_MS);
+  document.addEventListener('visibilitychange',()=>{
+    if(!document.hidden){pollDelay=POLL_MIN;clearTimeout(pollTimer);pollOnce()}
+  });
+  schedulePoll();
 }
 
 function setView(v){
