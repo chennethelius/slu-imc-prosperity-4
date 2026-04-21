@@ -65,6 +65,11 @@ jobs:
           echo "$CHANGED" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
+      - name: Fetch existing manifest from gh-pages
+        run: |
+          git fetch origin gh-pages 2>/dev/null || true
+          git show origin/gh-pages:results.json > existing-manifest.json 2>/dev/null || echo "[]" > existing-manifest.json
+
       - name: Run backtests
         env:
           STRATEGIES: ${{ steps.changes.outputs.files }}
@@ -72,6 +77,7 @@ jobs:
           COMMIT: ${{ github.sha }}
           TIMESTAMP: ${{ github.event.head_commit.timestamp }}
           REPO_ROOT: ${{ github.workspace }}
+          EXISTING_MANIFEST: ${{ github.workspace }}/existing-manifest.json
         run: python3 .github/collect_results.py
 
       - name: Deploy to gh-pages

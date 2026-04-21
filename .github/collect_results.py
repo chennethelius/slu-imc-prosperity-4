@@ -125,15 +125,37 @@ def main():
         print("No strategies to run")
         sys.exit(0)
 
+    # First-author-wins ownership: if another author already has entries for a
+    # strategy on the live dashboard, skip it so we don't overwrite or duplicate
+    # their work. Only the original owner can keep refreshing that strategy.
+    strategy_owners: dict[str, str] = {}
+    existing_manifest_path = os.environ.get("EXISTING_MANIFEST")
+    if existing_manifest_path and os.path.exists(existing_manifest_path):
+        try:
+            existing = json.loads(Path(existing_manifest_path).read_text())
+        except (json.JSONDecodeError, OSError):
+            existing = []
+        for r in existing:
+            s, a = r.get("strategy"), r.get("author")
+            if s and a and s not in strategy_owners:
+                strategy_owners[s] = a
+        print(f"Loaded {len(strategy_owners)} strategy owners from existing manifest")
+
     # Build the full work list of (strategy, dataset) pairs
     pairs = []
+    skipped_owned = []
     for strategy_rel in strategies:
         strategy_path = repo_root / strategy_rel
         if not strategy_path.exists():
             print(f"Skipping missing: {strategy_rel}")
             continue
-        if strategy_path.stem == "template":
+        strat_name = strategy_path.stem
+        if strat_name == "template":
             print(f"Skipping template: {strategy_rel}")
+            continue
+        owner = strategy_owners.get(strat_name)
+        if owner and owner != author:
+            skipped_owned.append((strat_name, owner))
             continue
         target_datasets = resolve_target_datasets(strategy_path, datasets)
         if not target_datasets:
@@ -141,6 +163,11 @@ def main():
             continue
         for ds in target_datasets:
             pairs.append((strategy_path, ds))
+
+    if skipped_owned:
+        print(f"\nSkipped {len(skipped_owned)} strategies owned by other authors:")
+        for s, o in skipped_owned:
+            print(f"  {s} (owner: {o})")
 
     # Parallelize. The backtester is CPU-bound; one worker per vCPU works well.
     workers = max(1, min(len(pairs), os.cpu_count() or 2))
