@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Traders — SLU Prosperity</title>
+<title>Traders — Prosperity</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -24,13 +24,20 @@
     --shadow-lg:0 8px 24px rgba(28,25,23,.06),0 2px 6px rgba(28,25,23,.04);
     --mono:'JetBrains Mono',ui-monospace,monospace;
     --radius-sm:7px; --radius:10px; --radius-lg:14px;
+    /* Per-round accents (active tab styling only; chrome stays indigo) */
+    --r-tut:#78716c; --r-tut-soft:rgba(120,113,108,.12);
+    --r-1:#0d9488;   --r-1-soft:rgba(13,148,136,.12);
+    --r-2:#6366f1;   --r-2-soft:rgba(99,102,241,.12);
+    --r-3:#be185d;   --r-3-soft:rgba(190,24,93,.12);
+    --r-4:#d97706;   --r-4-soft:rgba(217,119,6,.12);
+    --r-5:#7c3aed;   --r-5-soft:rgba(124,58,237,.12);
   }
 
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:'Inter',system-ui,sans-serif;background:var(--bg-base);color:var(--text-primary);font-size:13px;line-height:1.5;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;font-feature-settings:'cv02','cv03','cv04','cv11'}
 
   /* ── Topbar ── */
-  .topbar{background:var(--bg-surface);border-bottom:1px solid var(--border);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20;backdrop-filter:saturate(1.2)}
+  .topbar{background:var(--bg-surface);border-bottom:1px solid var(--border);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20}
   .topbar-left{display:flex;align-items:center;gap:24px}
   .logo{display:flex;align-items:center;gap:10px;text-decoration:none}
   .logo-img{width:26px;height:26px;object-fit:contain;flex-shrink:0;border-radius:4px}
@@ -45,12 +52,6 @@
   .status{display:flex;align-items:center;gap:6px;color:var(--text-muted);font-size:11px;font-weight:500}
   .status-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px var(--green-soft);animation:pulse 2.4s ease-in-out infinite}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-  .search-wrap{position:relative}
-  .search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none}
-  .search{background:var(--bg-base);border:1px solid var(--border);border-radius:8px;padding:7px 12px 7px 32px;color:var(--text-primary);font-family:inherit;font-size:12px;width:220px;outline:none;transition:all .15s}
-  .search:hover{border-color:var(--border-strong)}
-  .search:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
-  .search::placeholder{color:var(--text-muted)}
   .badge{color:var(--text-secondary);font-size:11px;font-weight:600;font-variant-numeric:tabular-nums;transition:color .2s}
 
   /* ── Toolbar ── */
@@ -61,10 +62,16 @@
   .sep{width:1px;height:18px;background:var(--border);margin:0 6px}
 
   .round-tabs{display:flex;gap:4px;flex:1}
-  .round-tab{background:transparent;border:none;padding:8px 18px;font-size:13px;font-weight:500;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all .15s;border-radius:7px;position:relative;letter-spacing:-.1px}
+  .round-tab{background:transparent;border:none;padding:8px 18px;font-size:13px;font-weight:500;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all .15s;border-radius:7px;position:relative;letter-spacing:-.1px;--rc:var(--accent);--rc-soft:var(--accent-soft)}
+  .round-tab[data-round="Tutorial"]{--rc:var(--r-tut);--rc-soft:var(--r-tut-soft)}
+  .round-tab[data-round="Round 1"]{--rc:var(--r-1);--rc-soft:var(--r-1-soft)}
+  .round-tab[data-round="Round 2"]{--rc:var(--r-2);--rc-soft:var(--r-2-soft)}
+  .round-tab[data-round="Round 3"]{--rc:var(--r-3);--rc-soft:var(--r-3-soft)}
+  .round-tab[data-round="Round 4"]{--rc:var(--r-4);--rc-soft:var(--r-4-soft)}
+  .round-tab[data-round="Round 5"]{--rc:var(--r-5);--rc-soft:var(--r-5-soft)}
   .round-tab:hover{color:var(--text-primary);background:var(--bg-hover)}
-  .round-tab.active{color:var(--accent);background:var(--accent-soft);font-weight:600}
-  .round-tab.active::after{content:'';position:absolute;left:18px;right:18px;bottom:-11px;height:2px;background:var(--accent);border-radius:2px}
+  .round-tab.active{color:var(--rc);background:var(--rc-soft);font-weight:600}
+  .round-tab.active::after{content:'';position:absolute;left:18px;right:18px;bottom:-11px;height:2px;background:var(--rc);border-radius:2px}
 
   .sort-label{color:var(--text-muted);font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin-right:2px}
   .sort-group{display:flex;background:var(--bg-raised);padding:3px;border-radius:8px;gap:2px}
@@ -82,11 +89,10 @@
   .commit-header:hover{background:var(--bg-hover)}
   .commit-arrow{color:var(--text-muted);font-size:10px;transition:transform .2s;width:14px;flex-shrink:0}
   .commit-card.expanded .commit-arrow{transform:rotate(90deg);color:var(--accent)}
-  .rank-badge{min-width:32px;height:32px;padding:0 10px;display:inline-flex;align-items:center;justify-content:center;background:var(--bg-raised);color:var(--text-muted);border:1px solid var(--border-subtle);border-radius:999px;font-family:var(--mono);font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;flex-shrink:0;transition:transform .15s}
-  .commit-card:hover .rank-badge{transform:scale(1.04)}
-  .rank-badge.g{background:var(--gold-soft);color:var(--gold);border-color:rgba(245,158,11,.3);box-shadow:0 0 0 3px rgba(245,158,11,.08)}
-  .rank-badge.s{background:var(--silver-soft);color:#64748b;border-color:rgba(148,163,184,.35);box-shadow:0 0 0 3px rgba(148,163,184,.06)}
-  .rank-badge.b{background:var(--bronze-soft);color:var(--bronze);border-color:rgba(180,83,9,.28);box-shadow:0 0 0 3px rgba(180,83,9,.06)}
+  .rank-badge{min-width:32px;height:32px;padding:0 10px;display:inline-flex;align-items:center;justify-content:center;background:var(--bg-raised);color:var(--text-muted);border:1px solid var(--border-subtle);border-radius:999px;font-family:var(--mono);font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;flex-shrink:0}
+  .rank-badge.g{background:var(--gold-soft);color:var(--gold);border-color:rgba(245,158,11,.28)}
+  .rank-badge.s{background:var(--silver-soft);color:#64748b;border-color:rgba(148,163,184,.3)}
+  .rank-badge.b{background:var(--bronze-soft);color:var(--bronze);border-color:rgba(180,83,9,.25)}
   .commit-info{flex:1;min-width:0}
   .commit-title{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
   .commit-author{color:var(--text-primary);font-weight:600;font-size:13px;letter-spacing:-.1px}
@@ -97,8 +103,7 @@
   .run-chip{background:var(--bg-raised);border:1px solid var(--border-subtle);border-radius:6px;padding:3px 10px;font-size:10.5px;display:inline-flex;gap:8px;align-items:center;font-weight:500}
   .run-chip .label{color:var(--text-muted);font-weight:600;letter-spacing:.2px}
   .run-chip .val{font-family:var(--mono);font-weight:600;font-variant-numeric:tabular-nums}
-  .commit-total{text-align:right;min-width:120px;padding-left:12px;border-left:1px solid var(--border-subtle)}
-  .commit-total .sub-label{font-size:9.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;font-weight:600;margin-bottom:2px}
+  .commit-total{text-align:right;min-width:110px;padding-left:12px}
   .commit-total .sub-pnl{font-family:var(--mono);font-size:20px;font-weight:700;letter-spacing:-.4px;font-variant-numeric:tabular-nums;line-height:1.1}
 
   .commit-detail{display:none;border-top:1px solid var(--border-subtle);background:var(--bg-base)}
@@ -151,46 +156,29 @@
   ::-webkit-scrollbar-thumb:hover{background:var(--border-strong)}
 
   /* ── Dynamic effects ── */
-  @keyframes fadeInUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-  @keyframes shimmer{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
-  @keyframes goldGlow{0%,100%{box-shadow:0 0 0 3px rgba(245,158,11,.08)}50%{box-shadow:0 0 0 6px rgba(245,158,11,.16)}}
+  @keyframes fadeInUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
   @keyframes countFlash{0%{background:var(--accent-soft)}100%{background:transparent}}
-
-  .commit-card{animation:fadeInUp .35s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0)*28ms)}
-  .rank-badge.g{animation:goldGlow 2.4s ease-in-out infinite}
-  .commit-card.expanded{animation:none}
-  .commit-card.just-updated{animation:countFlash 1.4s ease-out}
-
-  /* Topbar aurora wash */
-  .topbar{position:sticky;top:0;z-index:20;overflow:hidden}
-  .topbar::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 600px 120px at 20% 100%,rgba(99,102,241,.08),transparent 70%),radial-gradient(ellipse 500px 100px at 80% 100%,rgba(167,139,250,.06),transparent 70%);pointer-events:none;z-index:-1}
-
-  /* Shimmering gradient on top-1 PnL */
-  .commit-card:nth-child(1):not(.expanded) .sub-pnl.pos{background:linear-gradient(90deg,var(--green) 0%,#34d399 50%,var(--green) 100%);background-size:200% auto;background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 3.2s linear infinite}
-
-  /* Focus ring softness */
-  button:focus-visible,.search:focus-visible,.round-tab:focus-visible,.sort-btn:focus-visible{outline:2px solid var(--accent-soft);outline-offset:2px}
-
-  /* Underline sweep under the active round tab */
-  .round-tab.active::after{transform-origin:left;animation:tabSweep .35s cubic-bezier(.2,.8,.2,1)}
   @keyframes tabSweep{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 
-  /* Status dot subtle hover pop */
-  .status:hover .status-dot{transform:scale(1.3);transition:transform .2s}
+  .commit-card{animation:fadeInUp .3s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0)*22ms)}
+  .commit-card.expanded{animation:none}
+  .commit-card.just-updated{animation:countFlash 1.2s ease-out}
 
-  /* Live flash: counter briefly scales when new data arrives */
-  .badge.flash{animation:badgeFlash .8s ease-out}
-  @keyframes badgeFlash{0%{transform:scale(1);color:var(--accent)}50%{transform:scale(1.08);color:var(--accent)}100%{transform:scale(1);color:var(--text-secondary)}}
+  button:focus-visible,.round-tab:focus-visible,.sort-btn:focus-visible{outline:2px solid var(--accent-soft);outline-offset:2px}
+
+  .round-tab.active::after{transform-origin:left;animation:tabSweep .3s cubic-bezier(.2,.8,.2,1)}
+
+  .badge.flash{animation:badgeFlash .7s ease-out}
+  @keyframes badgeFlash{0%{color:var(--accent)}100%{color:var(--text-secondary)}}
 
   @media(prefers-reduced-motion:reduce){
-    .commit-card,.rank-badge.g,.badge.flash,.round-tab.active::after,.sub-pnl{animation:none!important}
+    .commit-card,.badge.flash,.round-tab.active::after{animation:none!important}
     .commit-card:hover{transform:none}
   }
 
   @media(max-width:900px){
     .topbar{padding:0 16px;height:48px}
     .toolbar,.content{padding-left:16px;padding-right:16px}
-    .search{width:140px}
     .charts{grid-template-columns:1fr}
     .commit-header{flex-wrap:wrap}
     .commit-total{min-width:auto;border-left:none;padding-left:0;margin-top:4px}
@@ -204,7 +192,7 @@
   <div class="topbar-left">
     <a class="logo" href="#">
       <img src="./billiken-logo.jpg" alt="SLU" class="logo-img">
-      <h1>SLU <span>Prosperity</span></h1>
+      <h1><span>Prosperity</span></h1>
     </a>
     <nav class="nav">
       <a class="nav-link active" href="./index.html">Traders</a>
@@ -213,14 +201,7 @@
     </nav>
   </div>
   <div class="topbar-right">
-    <div class="status" title="Auto-updating">
-      <span class="status-dot"></span>
-      <span>Live</span>
-    </div>
-    <div class="search-wrap">
-      <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-      <input class="search" id="search" type="text" placeholder="Filter strategies..." />
-    </div>
+    <div class="status" title="Auto-updating"><span class="status-dot"></span></div>
     <span class="badge" id="run-count"></span>
   </div>
 </div>
@@ -234,7 +215,6 @@
     <button class="round-tab" data-round="Round 4">Round 4</button>
     <button class="round-tab" data-round="Round 5">Round 5</button>
   </div>
-  <span class="sort-label">Sort</span>
   <div class="sort-group">
     <button class="sort-btn active" data-sort="pnl">PnL</button>
     <button class="sort-btn" data-sort="latest">Latest</button>
@@ -367,7 +347,6 @@ async function init(){
   wireSortButtons();
   try{await loadManifest()}
   catch{document.getElementById('feed').innerHTML='<div class="empty">No submissions yet — push a strategy to see it here!</div>';return}
-  document.getElementById('search').addEventListener('input',applyFilters);
   document.addEventListener('visibilitychange',()=>{
     if(!document.hidden){pollDelay=POLL_MIN;clearTimeout(pollTimer);pollOnce()}
   });
@@ -375,12 +354,7 @@ async function init(){
 }
 
 function applyFilters(){
-  const q=document.getElementById('search').value.toLowerCase().trim();
-  filtered=groups.filter(g=>{
-    if(activeFilters.round&&!g.rounds.includes(activeFilters.round))return false;
-    if(q&&!(g.author.toLowerCase().includes(q)||g.strategy.toLowerCase().includes(q)||(g.commit||'').toLowerCase().includes(q)))return false;
-    return true;
-  });
+  filtered=groups.filter(g=>!activeFilters.round||g.rounds.includes(activeFilters.round));
   renderFeed();
   document.getElementById('run-count').textContent=`${filtered.length} submissions`;
   document.getElementById('no-results').style.display=filtered.length===0?'block':'none';
@@ -432,13 +406,11 @@ function renderFeed(){
           <div class="commit-title">
             <span class="commit-author">${g.author}</span>
             <span class="commit-strat">${g.strategy}</span>
-            <span class="commit-hash">${g.commit||''}</span>
             <span class="commit-time">${time}</span>
           </div>
           <div class="commit-runs">${chips}</div>
         </div>
         <div class="commit-total">
-          <div class="sub-label">Avg PnL / day</div>
           <div class="sub-pnl ${pc(subPnl)}">${fp(subPnl)}</div>
         </div>
       </div>
