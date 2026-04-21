@@ -3,63 +3,60 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Discord Intel - Prosperity</title>
+<title>Intel — SLU Prosperity</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg-base: #f8f9fb;
-    --bg-surface: #ffffff;
-    --bg-raised: #f0f2f5;
-    --bg-hover: #f0f2f5;
-    --border: #e2e5ea;
-    --border-subtle: #ebedf0;
-    --text-primary: #111827;
-    --text-secondary: #4b5563;
-    --text-muted: #9ca3af;
-    --accent: #003DA5;
-    --accent-dim: #002d7a;
-    --green: #059669;
-    --green-dim: rgba(5,150,105,.08);
-    --red: #dc2626;
-    --red-dim: rgba(220,38,38,.06);
-    --amber: #d97706;
-    --amber-dim: rgba(217,119,6,.06);
-    --purple: #7c3aed;
-    --purple-dim: rgba(124,58,237,.06);
-    --cyan: #0891b2;
+    --bg-base:#fbfaf8; --bg-surface:#fff; --bg-raised:#f5f3ef; --bg-hover:#f5f3ef;
+    --border:#ece8e1; --border-subtle:#f2efe9; --border-strong:#d8d3c9;
+    --text-primary:#1c1917; --text-secondary:#57534e; --text-muted:#a8a29e;
+    --accent:#6366f1; --accent-dim:#4f46e5; --accent-soft:rgba(99,102,241,.1);
+    --accent-warm:#a78bfa;
+    --green:#10b981; --green-dim:rgba(16,185,129,.1);
+    --red:#ef4444; --red-dim:rgba(239,68,68,.1);
+    --amber:#f59e0b; --amber-dim:rgba(245,158,11,.12);
+    --purple:#a78bfa; --purple-dim:rgba(167,139,250,.1);
+    --cyan:#06b6d4;
+    --shadow-sm:0 1px 2px rgba(28,25,23,.04);
+    --shadow-md:0 2px 6px rgba(28,25,23,.05),0 1px 2px rgba(28,25,23,.04);
+    --shadow-lg:0 8px 24px rgba(28,25,23,.06),0 2px 6px rgba(28,25,23,.04);
   }
 
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family:'Inter',system-ui,sans-serif; background:var(--bg-base); color:var(--text-primary); font-size:13px; line-height:1.5; -webkit-font-smoothing:antialiased; }
+  body { font-family:'Inter',system-ui,sans-serif; background:var(--bg-base); color:var(--text-primary); font-size:13px; line-height:1.5; -webkit-font-smoothing:antialiased; font-feature-settings:'cv02','cv03','cv04','cv11'; }
 
   /* ── Topbar ── */
   .topbar {
     background:var(--bg-surface); border-bottom:1px solid var(--border);
-    padding:0 24px; height:48px; display:flex; align-items:center; justify-content:space-between;
-    position:sticky; top:0; z-index:20;
+    padding:0 24px; height:52px; display:flex; align-items:center; justify-content:space-between;
+    position:sticky; top:0; z-index:20; overflow:hidden;
   }
-  .topbar-left { display:flex; align-items:center; gap:16px; }
+  .topbar::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 600px 120px at 20% 100%,rgba(99,102,241,.08),transparent 70%),radial-gradient(ellipse 500px 100px at 80% 100%,rgba(167,139,250,.06),transparent 70%);pointer-events:none;z-index:-1}
+  .topbar-left { display:flex; align-items:center; gap:24px; }
   .logo { display:flex; align-items:center; gap:10px; text-decoration:none; }
-  .logo-img { width:28px; height:28px; object-fit:contain; flex-shrink:0; }
-  .logo-mark { width:8px; height:8px; border-radius:50%; background:var(--text-muted); flex-shrink:0; }
-  .logo-mark.live { background:var(--green); }
-  .logo h1 { color:var(--accent); font-size:14px; font-weight:700; letter-spacing:-.2px; }
+  .logo-img { width:26px; height:26px; object-fit:contain; flex-shrink:0; border-radius:4px; }
+  .logo-mark { width:6px; height:6px; border-radius:50%; background:var(--text-muted); flex-shrink:0; box-shadow:0 0 0 3px rgba(168,162,158,.15); }
+  .logo-mark.live { background:var(--green); box-shadow:0 0 0 3px var(--green-dim); animation:pulse 2.4s ease-in-out infinite; }
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  .logo h1 { color:var(--text-primary); font-size:14px; font-weight:700; letter-spacing:-.2px; }
+  .logo h1 span { color:var(--accent); }
   .nav { display:flex; gap:2px; }
   .nav-link { color:var(--text-muted); font-size:12px; font-weight:500; text-decoration:none; padding:6px 12px; border-radius:6px; transition:all .15s; }
   .nav-link:hover { color:var(--text-secondary); background:var(--bg-hover); }
-  .nav-link.active { color:var(--accent); background:rgba(0,61,165,.06); font-weight:600; }
+  .nav-link.active { color:var(--accent); background:var(--accent-soft); font-weight:600; }
 
   .topbar-right { display:flex; align-items:center; gap:12px; }
   .search-wrap { position:relative; }
   .search-icon { position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--text-muted); pointer-events:none; }
   .search {
     background:var(--bg-base); border:1px solid var(--border); border-radius:8px;
-    padding:6px 12px 6px 32px; color:var(--text-primary); font-family:inherit; font-size:12px;
-    width:240px; outline:none; transition:border-color .2s;
+    padding:7px 12px 7px 32px; color:var(--text-primary); font-family:inherit; font-size:12px;
+    width:240px; outline:none; transition:all .15s;
   }
-  .search:focus { border-color:var(--accent); }
+  .search:hover { border-color:var(--border-strong); }
+  .search:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
   .search::placeholder { color:var(--text-muted); }
   .badge { color:var(--text-muted); font-size:11px; font-weight:500; }
 
@@ -226,7 +223,7 @@
 
   /* ── AI Summary Panel ── */
   .ai-panel {
-    background:linear-gradient(135deg, rgba(0,61,165,.03), rgba(0,61,165,.01));
+    background:linear-gradient(135deg, var(--accent-soft), rgba(99,102,241,.02));
     border:1px solid var(--border); border-radius:10px; padding:18px;
     margin-bottom:16px;
   }
@@ -293,13 +290,13 @@
   <div class="topbar-left">
     <a class="logo" href="#">
       <img src="./billiken-logo.jpg" alt="SLU" class="logo-img">
-      <h1>Prosperity</h1>
+      <h1>SLU <span>Prosperity</span></h1>
       <span class="logo-mark" id="statusDot"></span>
     </a>
     <nav class="nav">
-      <a class="nav-link" href="./index.html">Terminal</a>
-      <a class="nav-link active" href="./discord-intel.html">Discord Intel</a>
-      <a class="nav-link" href="./auction.html">Manual Auction</a>
+      <a class="nav-link" href="./index.html">Leaderboard</a>
+      <a class="nav-link active" href="./discord-intel.html">Intel</a>
+      <a class="nav-link" href="./auction.html">Auctions</a>
     </nav>
   </div>
   <div class="topbar-right">
@@ -527,7 +524,7 @@ function renderLeaderboard(el) {
           data: counts,
           backgroundColor: counts.map((_, i) => {
             const pct = i / counts.length;
-            return pct > 0.85 ? 'rgba(0,61,165,0.8)' : pct > 0.7 ? 'rgba(0,61,165,0.5)' : 'rgba(0,61,165,0.25)';
+            return pct > 0.85 ? 'rgba(99,102,241,0.8)' : pct > 0.7 ? 'rgba(99,102,241,0.5)' : 'rgba(99,102,241,0.25)';
           }),
           borderRadius: 4,
         }]

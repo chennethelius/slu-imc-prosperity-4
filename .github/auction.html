@@ -3,44 +3,37 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Manual Auction - Prosperity</title>
+<title>Auctions — SLU Prosperity</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg-base: #f8f9fb;
-    --bg-surface: #ffffff;
-    --bg-raised: #f0f2f5;
-    --bg-hover: #f0f2f5;
-    --bg-book: #1a1d26;
-    --bg-book-tile: #242832;
-    --border: #e2e5ea;
-    --border-subtle: #ebedf0;
-    --text-primary: #111827;
-    --text-secondary: #4b5563;
-    --text-muted: #9ca3af;
-    --accent: #003DA5;
-    --green: #10b981;
-    --green-dim: rgba(16,185,129,.12);
-    --green-bar: rgba(16,185,129,.35);
-    --red: #ef4444;
-    --red-dim: rgba(239,68,68,.12);
-    --red-bar: rgba(239,68,68,.35);
-    --amber: #d97706;
-    --purple: #7c3aed;
+    --bg-base:#fbfaf8; --bg-surface:#fff; --bg-raised:#f5f3ef; --bg-hover:#f5f3ef;
+    --bg-book:#1c1917; --bg-book-tile:#292524;
+    --border:#ece8e1; --border-subtle:#f2efe9; --border-strong:#d8d3c9;
+    --text-primary:#1c1917; --text-secondary:#57534e; --text-muted:#a8a29e;
+    --accent:#6366f1; --accent-dim:#4f46e5; --accent-soft:rgba(99,102,241,.1);
+    --accent-warm:#a78bfa;
+    --green:#10b981; --green-dim:rgba(16,185,129,.12); --green-bar:rgba(16,185,129,.35);
+    --red:#ef4444; --red-dim:rgba(239,68,68,.12); --red-bar:rgba(239,68,68,.35);
+    --amber:#f59e0b; --purple:#a78bfa;
+    --shadow-sm:0 1px 2px rgba(28,25,23,.04);
+    --shadow-md:0 2px 6px rgba(28,25,23,.05),0 1px 2px rgba(28,25,23,.04);
   }
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family:'Inter',system-ui,sans-serif; background:var(--bg-base); color:var(--text-primary); font-size:13px; line-height:1.5; -webkit-font-smoothing:antialiased; }
+  body { font-family:'Inter',system-ui,sans-serif; background:var(--bg-base); color:var(--text-primary); font-size:13px; line-height:1.5; -webkit-font-smoothing:antialiased; font-feature-settings:'cv02','cv03','cv04','cv11'; }
 
-  .topbar { background:var(--bg-surface); border-bottom:1px solid var(--border); padding:0 24px; height:48px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:20; }
-  .topbar-left { display:flex; align-items:center; gap:20px; }
+  .topbar { background:var(--bg-surface); border-bottom:1px solid var(--border); padding:0 24px; height:52px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:20; overflow:hidden; }
+  .topbar::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 600px 120px at 20% 100%,rgba(99,102,241,.08),transparent 70%),radial-gradient(ellipse 500px 100px at 80% 100%,rgba(167,139,250,.06),transparent 70%);pointer-events:none;z-index:-1}
+  .topbar-left { display:flex; align-items:center; gap:24px; }
   .logo { display:flex; align-items:center; gap:10px; text-decoration:none; }
-  .logo-img { width:28px; height:28px; object-fit:contain; flex-shrink:0; }
-  .logo h1 { color:var(--accent); font-size:14px; font-weight:700; letter-spacing:-.2px; }
+  .logo-img { width:26px; height:26px; object-fit:contain; flex-shrink:0; border-radius:4px; }
+  .logo h1 { color:var(--text-primary); font-size:14px; font-weight:700; letter-spacing:-.2px; }
+  .logo h1 span { color:var(--accent); }
   .nav { display:flex; gap:2px; }
   .nav-link { color:var(--text-muted); font-size:12px; font-weight:500; text-decoration:none; padding:6px 12px; border-radius:6px; transition:all .15s; }
   .nav-link:hover { color:var(--text-secondary); background:var(--bg-hover); }
-  .nav-link.active { color:var(--accent); background:rgba(0,61,165,.06); font-weight:600; }
+  .nav-link.active { color:var(--accent); background:var(--accent-soft); font-weight:600; }
   .badge { color:var(--text-muted); font-size:11px; font-weight:500; }
 
   .content { padding:20px 24px; max-width:1600px; margin:0 auto; }
@@ -85,7 +78,7 @@
   .vb-ask-px   .vb-bar { left:0; background:linear-gradient(90deg, var(--red-dim), transparent); }
   .vb-ask-vol  .vb-bar { right:0; background:linear-gradient(270deg, var(--red-bar), transparent); }
   .vb-cell span { position:relative; z-index:1; }
-  .vb-you { outline:2px solid var(--accent); outline-offset:-2px; box-shadow:0 0 0 1px rgba(0,61,165,.3); }
+  .vb-you { outline:2px solid var(--accent); outline-offset:-2px; box-shadow:0 0 0 1px rgba(99,102,241,.3); }
   .vb-you::after {
     content:'YOU'; position:absolute; top:2px; left:50%; transform:translateX(-50%); z-index:2;
     font-size:8px; font-weight:700; color:#60a5fa; letter-spacing:.5px;
@@ -116,7 +109,7 @@
   .btn { background:var(--bg-raised); border:1px solid var(--border); border-radius:6px; padding:7px 14px; font-size:12px; font-weight:500; color:var(--text-secondary); cursor:pointer; font-family:inherit; transition:all .15s; }
   .btn:hover { border-color:var(--text-muted); color:var(--text-primary); }
   .btn.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
-  .btn.primary:hover { background:#002d7a; }
+  .btn.primary:hover { background:var(--accent-dim); }
   .btn.accent { background:var(--purple); border-color:var(--purple); color:#fff; }
   .btn.accent:hover { filter:brightness(0.9); }
   .btn.ghost { background:transparent; }
@@ -158,7 +151,7 @@
   table.alloc { width:100%; border-collapse:collapse; font-family:'JetBrains Mono',monospace; font-size:11px; }
   table.alloc th { text-align:left; padding:5px 8px; color:var(--text-muted); font-weight:600; font-size:9px; text-transform:uppercase; border-bottom:1px solid var(--border); }
   table.alloc td { padding:4px 8px; border-bottom:1px solid var(--border-subtle); }
-  table.alloc tr.you { background:rgba(0,61,165,.08); font-weight:700; }
+  table.alloc tr.you { background:rgba(99,102,241,.08); font-weight:700; }
   table.alloc td.side-buy { color:var(--green); font-weight:600; }
   table.alloc td.side-sell { color:var(--red); font-weight:600; }
   .fill-bar-cell { min-width:90px; }
@@ -189,12 +182,12 @@
   <div class="topbar-left">
     <a class="logo" href="./index.html">
       <img src="./billiken-logo.jpg" alt="SLU" class="logo-img">
-      <h1>Prosperity</h1>
+      <h1>SLU <span>Prosperity</span></h1>
     </a>
     <nav class="nav">
-      <a class="nav-link" href="./index.html">Terminal</a>
-      <a class="nav-link" href="./discord-intel.html">Discord Intel</a>
-      <a class="nav-link active" href="./auction.html">Manual Auction</a>
+      <a class="nav-link" href="./index.html">Leaderboard</a>
+      <a class="nav-link" href="./discord-intel.html">Intel</a>
+      <a class="nav-link active" href="./auction.html">Auctions</a>
     </nav>
   </div>
   <div class="topbar-right">
@@ -701,9 +694,9 @@ function renderCurve(curve, pStar){
   if (pStar!=null){
     const pt=curve.find(c=>c.P===pStar);
     if (pt){
-      star=`<line x1="${sx(pStar)}" y1="${pad}" x2="${sx(pStar)}" y2="${H-pad}" stroke="#003DA5" stroke-width="1" stroke-dasharray="3 3"/>
-            <circle cx="${sx(pStar)}" cy="${sy(pt.t)}" r="4" fill="#003DA5"/>
-            <text x="${sx(pStar)+6}" y="${sy(pt.t)-6}" font-size="10" fill="#003DA5" font-family="JetBrains Mono">P*=${pStar}, traded=${pt.t.toLocaleString()}</text>`;
+      star=`<line x1="${sx(pStar)}" y1="${pad}" x2="${sx(pStar)}" y2="${H-pad}" stroke="#6366f1" stroke-width="1" stroke-dasharray="3 3"/>
+            <circle cx="${sx(pStar)}" cy="${sy(pt.t)}" r="4" fill="#6366f1"/>
+            <text x="${sx(pStar)+6}" y="${sy(pt.t)-6}" font-size="10" fill="#6366f1" font-family="JetBrains Mono">P*=${pStar}, traded=${pt.t.toLocaleString()}</text>`;
     }
   }
   const legend=`<g font-family="Inter" font-size="10">
