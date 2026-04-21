@@ -75,7 +75,7 @@ def mc_test(strategy_name: str):
         # Only perturb PEP_ and OSM_ prefixed numeric params.
         # Exclude observed market constants (fair price, drift rate) — perturbing
         # them destroys the model because they aren't hyperparameters.
-        EXCLUDE = {"OSM_FAIR_STATIC", "PEP_DRIFT"}
+        EXCLUDE = {"OSM_FAIR_STATIC", "OSM_FAIR", "PEP_DRIFT", "PEP_FAIR_STATIC"}
         tunable = {k: v for k, v in base_params.items()
                    if (k.startswith("PEP_") or k.startswith("OSM_")) and v > 0 and v < 20000
                    and k not in EXCLUDE}
