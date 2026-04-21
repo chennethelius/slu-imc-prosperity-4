@@ -103,7 +103,8 @@
   .run-chip{background:var(--bg-raised);border:1px solid var(--border-subtle);border-radius:6px;padding:3px 10px;font-size:10.5px;display:inline-flex;gap:8px;align-items:center;font-weight:500}
   .run-chip .label{color:var(--text-muted);font-weight:600;letter-spacing:.2px}
   .run-chip .val{font-family:var(--mono);font-weight:600;font-variant-numeric:tabular-nums}
-  .commit-total{text-align:right;min-width:110px;padding-left:12px}
+  .commit-total{text-align:right;min-width:120px;padding-left:12px}
+  .commit-total .sub-label{font-size:9.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;font-weight:600;margin-bottom:2px}
   .commit-total .sub-pnl{font-family:var(--mono);font-size:20px;font-weight:700;letter-spacing:-.4px;font-variant-numeric:tabular-nums;line-height:1.1}
 
   .commit-detail{display:none;border-top:1px solid var(--border-subtle);background:var(--bg-base)}
@@ -411,6 +412,7 @@ function renderFeed(){
           <div class="commit-runs">${chips}</div>
         </div>
         <div class="commit-total">
+          <div class="sub-label">Avg PnL / day</div>
           <div class="sub-pnl ${pc(subPnl)}">${fp(subPnl)}</div>
         </div>
       </div>
