@@ -165,6 +165,7 @@ jobs:
 
           # Copy dashboard
           cp .github/dashboard.html "$DEPLOY_DIR/index.html"
+          cp .github/discord-intel.html "$DEPLOY_DIR/discord-intel.html"
 
           # Skip Jekyll — serve files as-is. Cuts pages-build-deployment
           # from minutes to seconds on a multi-thousand-file tree.
