@@ -14,7 +14,7 @@ class Trader:
     """
 
     LIMIT = 80
-    OSM_FAIR = 10000
+    OSM_FAIR_STATIC = 10000
     OSM_TAKE_WIDTH = 2
     OSM_CLEAR_WIDTH = 2
     OSM_MAKE_EDGE = 3
@@ -47,7 +47,7 @@ class Trader:
     def _osmium(self, d, pos):
         if not d.buy_orders or not d.sell_orders:
             return []
-        fair = self.OSM_FAIR
+        fair = self.OSM_FAIR_STATIC
         lim = self.LIMIT
         orders = []
         bought = sold = 0
