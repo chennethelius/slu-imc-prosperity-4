@@ -271,10 +271,10 @@ function normRound(ds){
 }
 const roundRank=r=>r==='Tutorial'?0:r==='Submission'?99:parseInt((r||'').replace(/\D/g,''))||50;
 
-async function init(){
-  try{const r=await fetch('./results.json');if(!r.ok)throw 0;RUNS=await r.json()}
-  catch{document.getElementById('feed').innerHTML='<div class="empty">No submissions yet. Push a strategy to get started.</div>';return}
+let lastManifestHash='';
+const POLL_MS=30000;
 
+function rebuildGroups(){
   const gm={};
   for(const r of RUNS){
     const k=`${r.author}|${r.strategy}|${r.commit}`;
@@ -290,17 +290,21 @@ async function init(){
     g.total_trades=g.runs.reduce((s,r)=>s+(r.trades||0),0);
     g.rounds=[...new Set(g.runs.map(r=>normRound(r.dataset)).filter(Boolean))];
   }
+}
 
+function rebuildPills(){
+  const tb=document.getElementById('toolbar');
+  const tg=tb.querySelector('.tab-group');
+  tb.querySelectorAll('.chip,.sep').forEach(el=>el.remove());
   const authors=[...new Set(groups.map(g=>g.author))];
   const strategies=[...new Set(groups.map(g=>g.strategy))];
   const rounds=[...new Set(groups.flatMap(g=>g.rounds))].sort((a,b)=>roundRank(a)-roundRank(b));
-  const tb=document.getElementById('toolbar');
-  const tg=tb.querySelector('.tab-group');
   const addPills=(vals,key)=>{
     const sep=document.createElement('span');sep.className='sep';
     tb.insertBefore(sep,tg);
     vals.forEach(v=>{
       const p=document.createElement('span');p.className='chip';p.textContent=v;
+      if(activeFilters[key]===v)p.classList.add('active');
       p.onclick=()=>{
         if(activeFilters[key]===v){activeFilters[key]=null;p.classList.remove('active')}
         else{tb.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));activeFilters[key]=v;p.classList.add('active')}
@@ -312,9 +316,42 @@ async function init(){
   if(rounds.length>1)addPills(rounds,'round');
   if(authors.length>1)addPills(authors,'author');
   if(strategies.length>1)addPills(strategies,'strategy');
+  // Drop stale active filters if they no longer exist in the new data
+  if(activeFilters.author&&!authors.includes(activeFilters.author))activeFilters.author=null;
+  if(activeFilters.strategy&&!strategies.includes(activeFilters.strategy))activeFilters.strategy=null;
+  if(activeFilters.round&&!rounds.includes(activeFilters.round))activeFilters.round=null;
+}
 
-  document.getElementById('search').addEventListener('input',applyFilters);
+async function loadManifest(){
+  const r=await fetch('./results.json?t='+Date.now());
+  if(!r.ok)throw new Error('fetch failed');
+  const text=await r.text();
+  const hash=text.length+'|'+text.slice(-200);
+  if(hash===lastManifestHash)return false;
+  lastManifestHash=hash;
+  RUNS=JSON.parse(text);
+  rebuildGroups();
+  rebuildPills();
   applyFilters();
+  return true;
+}
+
+function flashUpdated(){
+  const el=document.getElementById('run-count');
+  if(!el)return;
+  const orig=el.style.color;
+  el.style.color='var(--accent)';
+  setTimeout(()=>{el.style.color=orig},1200);
+}
+
+async function init(){
+  try{await loadManifest()}
+  catch{document.getElementById('feed').innerHTML='<div class="empty">No submissions yet. Push a strategy to get started.</div>';return}
+  document.getElementById('search').addEventListener('input',applyFilters);
+  setInterval(async()=>{
+    if(document.hidden)return;
+    try{if(await loadManifest())flashUpdated()}catch{}
+  },POLL_MS);
 }
 
 function setView(v){
