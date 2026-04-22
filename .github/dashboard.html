@@ -37,7 +37,8 @@
   body{font-family:'Inter',system-ui,sans-serif;background:var(--bg-base);color:var(--text-primary);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;font-feature-settings:'cv02','cv03','cv04','cv11'}
 
   /* ── Topbar (dark, app-header style) ── */
-  .topbar{background:linear-gradient(90deg,#0f172a 0%,#1e293b 100%);border-bottom:1px solid #0f172a;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20;box-shadow:0 2px 8px -2px rgba(15,23,42,.25)}
+  .topbar{background:linear-gradient(90deg,#0f172a 0%,#1e293b 100%);border-bottom:none;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20}
+  .topbar::after{content:'';position:absolute;left:0;right:0;top:100%;height:24px;background:linear-gradient(180deg,rgba(15,23,42,.35) 0%,rgba(30,41,59,.12) 45%,rgba(30,41,59,0) 100%);pointer-events:none;z-index:19}
   .topbar-left{display:flex;align-items:center;gap:28px}
   .logo{display:flex;align-items:center;gap:10px;text-decoration:none}
   .logo-img{width:28px;height:28px;object-fit:contain;flex-shrink:0;border-radius:5px;background:#fff;padding:2px}
@@ -102,8 +103,8 @@
   .commit-hash{color:var(--text-muted);font-size:11px;font-family:var(--mono);letter-spacing:.2px}
   .commit-time{color:var(--text-muted);font-size:10.5px;white-space:nowrap;margin-top:3px;font-variant-numeric:tabular-nums}
   .commit-runs{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
-  .run-chip{background:var(--bg-raised);border:1px solid var(--border-subtle);border-radius:6px;padding:4px 11px;font-size:11.5px;display:inline-flex;gap:8px;align-items:center;font-weight:500}
-  .run-chip .label{color:var(--text-secondary);font-weight:600;letter-spacing:.2px}
+  .run-chip{background:#fff;border:1px solid var(--border-subtle);border-radius:6px;padding:4px 11px;font-size:11.5px;display:inline-flex;gap:8px;align-items:center;font-weight:500;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+  .run-chip .label{background:rgba(99,102,241,.12);color:#4f46e5;border:1px solid rgba(99,102,241,.22);padding:1px 7px;border-radius:999px;font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.3px}
   .run-chip .val{font-family:var(--mono);font-weight:700;font-variant-numeric:tabular-nums}
   .commit-total{text-align:right;min-width:130px;padding-left:12px}
   .commit-total .sub-label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;font-weight:600;margin-bottom:3px}
