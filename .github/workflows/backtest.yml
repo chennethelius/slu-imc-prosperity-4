@@ -9,6 +9,8 @@ on:
       - '.github/dashboard.html'
       - '.github/discord-intel.html'
       - '.github/run.html'
+      - '.github/shared.css'
+      - '.github/shared.js'
       - '.github/collect_results.py'
       - '.github/workflows/backtest.yml'
   workflow_dispatch:
@@ -168,6 +170,8 @@ jobs:
           cp .github/dashboard.html "$DEPLOY_DIR/index.html"
           cp .github/discord-intel.html "$DEPLOY_DIR/discord-intel.html"
           cp .github/run.html "$DEPLOY_DIR/run.html"
+          cp .github/shared.css "$DEPLOY_DIR/shared.css"
+          cp .github/shared.js "$DEPLOY_DIR/shared.js"
 
           # Skip Jekyll — serve files as-is. Cuts pages-build-deployment
           # from minutes to seconds on a multi-thousand-file tree.

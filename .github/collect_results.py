@@ -66,7 +66,7 @@ def run_pair(strategy_path: Path, ds: str, backtester_bin: Path, backtester_dir:
             sub_dir = results_dir / sub_id
             sub_dir.mkdir(exist_ok=True)
 
-            for fname in ["metrics.json", "pnl_by_product.csv", "trades.csv"]:
+            for fname in ["metrics.json", "pnl_by_product.csv", "trades.csv", "activity.csv"]:
                 src = brun / fname
                 if src.exists():
                     shutil.copy2(src, sub_dir / fname)

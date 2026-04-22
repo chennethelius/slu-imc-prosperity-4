@@ -7,10 +7,9 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./shared.css">
 <style>
   :root {
-    --bg-base:#eef0fb; --bg-surface:#fdfdff; --bg-raised:#e6e9f5; --bg-hover:#e6e9f5;
-    --border:#d5d9ea; --border-subtle:#e3e6f2; --border-strong:#b8bed3;
     /* Tinted surfaces — each section gets its own hue so the page isn't a wall of white */
     --surf-card:#fafbff;       --surf-card-border:#dfe3f2;
     --surf-detail:#eceef9;     /* expanded drawer — slightly deeper indigo */
@@ -19,19 +18,11 @@
     --surf-trades:#fbf5ec;     --surf-trades-border:#f0e4cf;  /* amber */
     --surf-code:#f1f4f9;       --surf-code-border:#dde3ee;    /* slate */
     --surf-code-pre:#1e293b;   --surf-code-pre-text:#cbd5e1;  /* dark code block */
-    --text-primary:#0f172a; --text-secondary:#334155; --text-muted:#64748b;
-    --accent:#6366f1; --accent-dim:#4f46e5; --accent-soft:rgba(99,102,241,.1);
-    --accent-warm:#a78bfa;
-    --green:#10b981; --green-soft:rgba(16,185,129,.1);
-    --red:#ef4444; --red-soft:rgba(239,68,68,.1);
+    --green-soft:rgba(16,185,129,.1);
+    --red-soft:rgba(239,68,68,.1);
     --gold:#f59e0b; --gold-soft:rgba(245,158,11,.14);
     --silver:#94a3b8; --silver-soft:rgba(148,163,184,.18);
     --bronze:#b45309; --bronze-soft:rgba(180,83,9,.12);
-    --shadow-sm:0 1px 2px rgba(28,25,23,.04);
-    --shadow-md:0 2px 6px rgba(28,25,23,.05),0 1px 2px rgba(28,25,23,.04);
-    --shadow-lg:0 8px 24px rgba(28,25,23,.06),0 2px 6px rgba(28,25,23,.04);
-    --mono:'JetBrains Mono',ui-monospace,monospace;
-    --radius-sm:7px; --radius:10px; --radius-lg:14px;
     /* Per-round accents (active tab styling only; chrome stays indigo) */
     --r-tut:#78716c; --r-tut-soft:rgba(120,113,108,.12);
     --r-1:#0d9488;   --r-1-soft:rgba(13,148,136,.12);
@@ -41,30 +32,10 @@
     --r-5:#7c3aed;   --r-5-soft:rgba(124,58,237,.12);
   }
 
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg-base);background-image:radial-gradient(ellipse 900px 500px at 15% -10%,rgba(99,102,241,.09),transparent 60%),radial-gradient(ellipse 700px 400px at 95% 5%,rgba(167,139,250,.07),transparent 60%);background-attachment:fixed;color:var(--text-primary);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;font-feature-settings:'cv02','cv03','cv04','cv11'}
-
-  /* ── Topbar (dark, app-header style) ── */
-  .topbar{background:linear-gradient(90deg,#0f172a 0%,#1e293b 100%);border-bottom:none;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20}
-  .topbar::after{content:'';position:absolute;left:0;right:0;top:100%;height:24px;background:linear-gradient(180deg,rgba(15,23,42,.35) 0%,rgba(30,41,59,.12) 45%,rgba(30,41,59,0) 100%);pointer-events:none;z-index:19}
-  .topbar-left{display:flex;align-items:center;gap:28px}
-  .logo{display:flex;align-items:center;gap:10px;text-decoration:none}
-  .logo-img{width:28px;height:28px;object-fit:contain;flex-shrink:0;border-radius:5px;background:#fff;padding:2px}
-  .logo h1{color:#fff;font-size:15px;font-weight:700;letter-spacing:-.2px}
-  .logo h1 span{background:linear-gradient(90deg,#818cf8,#c4b5fd);-webkit-background-clip:text;background-clip:text;color:transparent}
-  .nav{display:flex;gap:4px}
-  .nav-link{color:#cbd5e1;font-size:13px;font-weight:500;text-decoration:none;padding:7px 14px;border-radius:7px;transition:all .15s}
-  .nav-link:hover{color:#fff;background:rgba(255,255,255,.06)}
-  .nav-link.active{color:#fff;background:linear-gradient(135deg,#6366f1,#8b5cf6);font-weight:600;box-shadow:0 2px 6px -1px rgba(99,102,241,.5)}
-
-  .topbar-right{display:flex;align-items:center;gap:14px}
-  .status{display:flex;align-items:center;gap:6px;color:#94a3b8;font-size:11px;font-weight:500}
-  .status-dot{width:7px;height:7px;border-radius:50%;background:#34d399;box-shadow:0 0 0 3px rgba(52,211,153,.18),0 0 10px rgba(52,211,153,.6);animation:pulse 2.4s ease-in-out infinite}
-  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
   .badge{color:#cbd5e1;font-size:11px;font-weight:600;font-variant-numeric:tabular-nums;transition:color .2s}
 
   /* ── Toolbar ── */
-  .toolbar{display:flex;align-items:center;gap:6px;padding:10px 24px;background:linear-gradient(180deg,#fafbff 0%,var(--bg-surface) 100%);flex-wrap:wrap;position:relative}
+  .toolbar{display:flex;align-items:center;gap:6px;padding:10px 24px;background:linear-gradient(90deg,#e8ecfa 0%,#ece6f7 100%);flex-wrap:wrap;position:relative}
   .toolbar::after{content:'';position:absolute;left:24px;right:24px;bottom:0;height:1px;background:linear-gradient(90deg,transparent,var(--border) 10%,var(--border) 90%,transparent)}
   .chip{background:transparent;border:1px solid var(--border);border-radius:999px;padding:4px 12px;font-size:11px;font-weight:500;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
   .chip:hover{border-color:var(--border-strong);color:var(--text-primary);background:var(--bg-hover)}
@@ -147,19 +118,9 @@
   .copy-btn:hover{color:var(--text-primary);border-color:var(--border-strong);background:var(--bg-hover)}
 
   .feed{display:block}
-
-  .pos{color:var(--green)}
-  .neg{color:var(--red)}
-  .buy{color:var(--green);font-weight:600}
-  .sell{color:var(--red);font-weight:600}
   .empty{color:var(--text-muted);text-align:center;padding:80px 20px;font-size:14px}
   .empty::before{content:'';display:block;width:40px;height:40px;margin:0 auto 16px;border-radius:999px;background:var(--accent-soft);background-image:radial-gradient(circle at center,var(--accent) 2px,transparent 3px)}
   .no-results{color:var(--text-muted);text-align:center;padding:60px 20px;display:none;font-size:14px}
-
-  ::-webkit-scrollbar{width:10px;height:10px}
-  ::-webkit-scrollbar-track{background:transparent}
-  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px;border:2px solid var(--bg-base)}
-  ::-webkit-scrollbar-thumb:hover{background:var(--border-strong)}
 
   /* ── Dynamic effects ── */
   @keyframes fadeInUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
@@ -232,6 +193,7 @@
   <div class="feed" id="feed"></div>
 </div>
 
+<script src="./shared.js"></script>
 <script>
 const BASE='./runs';
 let RUNS=[],groups=[],filtered=[];
@@ -239,8 +201,6 @@ const allCharts={};
 let activeFilters={round:null};
 let sortMode='pnl';
 
-const pc=v=>v>=0?'pos':'neg';
-const fp=v=>(v>=0?'+':'')+v.toLocaleString(undefined,{minimumFractionDigits:1,maximumFractionDigits:1});
 function normRound(ds){
   const s=String(ds||'').toLowerCase();
   if(s.includes('tutorial'))return'Tutorial';

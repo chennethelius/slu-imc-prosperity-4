@@ -7,40 +7,17 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./shared.css">
 <style>
   :root {
-    --bg-base:#eef0fb; --bg-surface:#fdfdff; --bg-raised:#e6e9f5; --bg-hover:#e6e9f5;
-    --border:#d5d9ea; --border-subtle:#e3e6f2; --border-strong:#b8bed3;
-    --surf-card:#fafbff;       --surf-card-border:#dfe3f2;
-    --surf-detail:#eceef9;
-    --surf-stats:#f3f0fb;      --surf-stats-border:#e4dff3;
-    --surf-chart:#eef5fb;      --surf-chart-border:#d9e6f2;
-    --surf-trades:#fbf5ec;     --surf-trades-border:#f0e4cf;
-    --surf-code:#f1f4f9;       --surf-code-border:#dde3ee;
+    --surf-card:#ffffff;       --surf-card-border:#e5e7eb;
+    --surf-detail:#ffffff;
+    --surf-stats:#ffffff;      --surf-stats-border:#e5e7eb;
+    --surf-chart:#ffffff;      --surf-chart-border:#e5e7eb;
+    --surf-trades:#ffffff;     --surf-trades-border:#e5e7eb;
+    --surf-code:#ffffff;       --surf-code-border:#e5e7eb;
     --surf-code-pre:#1e293b;   --surf-code-pre-text:#cbd5e1;
-    --text-primary:#0f172a; --text-secondary:#334155; --text-muted:#64748b;
-    --accent:#6366f1; --accent-dim:#4f46e5; --accent-soft:rgba(99,102,241,.1);
-    --accent-warm:#a78bfa;
-    --green:#10b981; --red:#ef4444;
-    --shadow-sm:0 1px 2px rgba(28,25,23,.04);
-    --shadow-md:0 2px 6px rgba(28,25,23,.05),0 1px 2px rgba(28,25,23,.04);
-    --mono:'JetBrains Mono',ui-monospace,monospace;
-    --radius:10px; --radius-lg:14px;
   }
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg-base);background-image:radial-gradient(ellipse 900px 500px at 15% -10%,rgba(99,102,241,.09),transparent 60%),radial-gradient(ellipse 700px 400px at 95% 5%,rgba(167,139,250,.07),transparent 60%);background-attachment:fixed;color:var(--text-primary);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
-
-  .topbar{background:linear-gradient(90deg,#0f172a 0%,#1e293b 100%);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20}
-  .topbar::after{content:'';position:absolute;left:0;right:0;top:100%;height:24px;background:linear-gradient(180deg,rgba(15,23,42,.35) 0%,rgba(30,41,59,.12) 45%,rgba(30,41,59,0) 100%);pointer-events:none;z-index:19}
-  .topbar-left{display:flex;align-items:center;gap:28px}
-  .logo{display:flex;align-items:center;gap:10px;text-decoration:none}
-  .logo-img{width:28px;height:28px;object-fit:contain;flex-shrink:0;border-radius:5px;background:#fff;padding:2px}
-  .logo h1{color:#fff;font-size:15px;font-weight:700;letter-spacing:-.2px}
-  .logo h1 span{background:linear-gradient(90deg,#818cf8,#c4b5fd);-webkit-background-clip:text;background-clip:text;color:transparent}
-  .nav{display:flex;gap:4px}
-  .nav-link{color:#cbd5e1;font-size:13px;font-weight:500;text-decoration:none;padding:7px 14px;border-radius:7px;transition:all .15s}
-  .nav-link:hover{color:#fff;background:rgba(255,255,255,.06)}
-  .nav-link.active{color:#fff;background:linear-gradient(135deg,#6366f1,#8b5cf6);font-weight:600;box-shadow:0 2px 6px -1px rgba(99,102,241,.5)}
 
   .content{padding:18px 24px 40px;max-width:1400px;margin:0 auto}
 
@@ -70,12 +47,42 @@
   .chart-box.wide{grid-column:1/-1}
   .chart-box h3{color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px;font-weight:600}
 
-  .trades-box{background:var(--surf-trades);border:1px solid var(--surf-trades-border);border-radius:8px;padding:14px;max-height:320px;overflow-y:auto;margin-bottom:16px}
-  .trades-box h3{color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px;font-weight:600}
-  .trades-box table{width:100%;border-collapse:collapse;font-size:11px}
-  .trades-box th{text-align:left;padding:6px 10px;color:var(--text-muted);border-bottom:1px solid var(--border);font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.4px;position:sticky;top:-14px;background:var(--surf-trades)}
-  .trades-box td{padding:5px 10px;border-bottom:1px solid var(--border-subtle);font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:11px}
-  .trades-box tr:last-child td{border-bottom:none}
+  .trades-box{background:var(--surf-trades);border:1px solid var(--surf-trades-border);border-radius:8px;padding:14px;margin-bottom:16px}
+  .trades-box>h3{color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px;font-weight:600;display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .trades-filter{display:flex;gap:4px;flex-wrap:wrap}
+  .trades-filter button{background:var(--bg-surface);border:1px solid var(--border);color:var(--text-secondary);font-size:10px;font-family:inherit;padding:3px 9px;border-radius:999px;cursor:pointer;font-weight:500;letter-spacing:.2px;text-transform:none}
+  .trades-filter button.active{background:var(--accent);border-color:var(--accent);color:#fff}
+  .trades-list{max-height:520px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding-right:4px}
+  .tick-card{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:8px;padding:10px 12px;display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center}
+  .tick-meta{display:flex;flex-direction:column;gap:4px;min-width:180px;font-size:11px}
+  .tick-tag{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);color:var(--text-muted);font-weight:500;font-size:10.5px;letter-spacing:.2px}
+  .tick-tag b{color:var(--text-secondary);font-weight:600}
+  .tick-sym{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--text-primary);letter-spacing:-.2px}
+  .tick-fills{display:flex;flex-direction:column;gap:3px}
+  .fill-pill{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;font-variant-numeric:tabular-nums}
+  .fill-pill .side{font-weight:700;font-size:9.5px;padding:1px 6px;border-radius:3px;letter-spacing:.5px}
+  .fill-pill .side.buy{background:rgba(16,185,129,.14);color:#047857}
+  .fill-pill .side.sell{background:rgba(239,68,68,.14);color:#b91c1c}
+  .book{display:grid;grid-template-columns:1fr auto 1fr;gap:0;font-family:var(--mono);font-size:10.5px;font-variant-numeric:tabular-nums;border-radius:6px;overflow:hidden;border:1px solid var(--border-subtle)}
+  .book-col{display:flex;flex-direction:column}
+  .book-col.asks{background:linear-gradient(180deg,rgba(239,68,68,.08),rgba(239,68,68,.02))}
+  .book-col.bids{background:linear-gradient(0deg,rgba(16,185,129,.08),rgba(16,185,129,.02))}
+  .book-row{display:grid;grid-template-columns:1fr 1fr;padding:3px 8px;border-bottom:1px solid var(--border-subtle);gap:6px}
+  .book-row:last-child{border-bottom:none}
+  .book-col.asks .book-row{color:#b91c1c}
+  .book-col.bids .book-row{color:#047857}
+  .book-row.empty{color:var(--text-muted);opacity:.4}
+  .book-row.hit{background:var(--accent-soft);color:var(--accent-dim);font-weight:700;box-shadow:inset 2px 0 0 var(--accent)}
+  .book-mid{display:flex;flex-direction:column;justify-content:center;align-items:center;background:var(--bg-raised);padding:0 10px;font-weight:600;color:var(--text-secondary);border-left:1px solid var(--border-subtle);border-right:1px solid var(--border-subtle)}
+  .book-mid .mid-label{font-size:8.5px;color:var(--text-muted);font-weight:500;letter-spacing:.4px;text-transform:uppercase}
+  .book-mid .mid-value{font-size:11px}
+  .book-vol{color:var(--text-muted);font-weight:400;text-align:right}
+  .book-price{text-align:left}
+  .no-book{color:var(--text-muted);font-size:10.5px;font-style:italic;padding:6px 10px;background:var(--bg-raised);border-radius:4px;border:1px dashed var(--border)}
+  @media(max-width:720px){
+    .tick-card{grid-template-columns:1fr;gap:8px}
+    .tick-meta{min-width:0}
+  }
 
   .code-box{background:var(--surf-code);border:1px solid var(--surf-code-border);border-radius:8px;overflow:hidden}
   .code-box h3{color:var(--text-muted);font-size:11px;margin:0;padding:10px 14px;border-bottom:1px solid var(--surf-code-border);display:flex;justify-content:space-between;align-items:center;font-weight:600;font-family:var(--mono)}
@@ -83,16 +90,7 @@
   .copy-btn{background:var(--bg-surface);border:1px solid var(--border);border-radius:6px;color:var(--text-secondary);font-size:10px;padding:3px 10px;cursor:pointer;font-family:inherit;transition:all .15s;font-weight:500}
   .copy-btn:hover{color:var(--text-primary);border-color:var(--border-strong);background:var(--bg-hover)}
 
-  .pos{color:var(--green)}
-  .neg{color:var(--red)}
-  .buy{color:var(--green);font-weight:600}
-  .sell{color:var(--red);font-weight:600}
   .loading{color:var(--text-muted);padding:60px 20px;text-align:center}
-
-  ::-webkit-scrollbar{width:10px;height:10px}
-  ::-webkit-scrollbar-track{background:transparent}
-  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px;border:2px solid var(--bg-base)}
-  ::-webkit-scrollbar-thumb:hover{background:var(--border-strong)}
 
   @media(max-width:900px){
     .topbar{padding:0 16px;height:48px}
@@ -120,16 +118,69 @@
   <div class="loading">Loading…</div>
 </div>
 
+<script src="./shared.js"></script>
 <script>
 const BASE='./runs';
-const pc=v=>v>=0?'pos':'neg';
-const fp=v=>(v>=0?'+':'')+v.toLocaleString(undefined,{minimumFractionDigits:1,maximumFractionDigits:1});
 
-async function fetchText(u){try{const r=await fetch(u);return r.ok?await r.text():null}catch{return null}}
-async function fetchCsv(u){try{const r=await fetch(u);if(!r.ok)return[];const t=await r.text();const l=t.trim().split('\n');if(l.length<2)return[];const h=l[0].split(';');return l.slice(1).map(x=>{const v=x.split(';');const o={};h.forEach((k,i)=>o[k]=v[i]||'');return o})}catch{return[]}}
 function mkChart(t,w){const b=document.createElement('div');b.className='chart-box'+(w?' wide':'');b.innerHTML=`<h3>${t}</h3><canvas></canvas>`;return b}
 function co(){return{responsive:true,plugins:{legend:{labels:{color:'#6b7280',font:{size:10,family:'Inter'}}}},scales:{x:{type:'linear',grid:{color:'#e5e7eb'},ticks:{color:'#9ca3af',maxTicksLimit:8,font:{size:10}}},y:{grid:{color:'#e5e7eb'},ticks:{color:'#9ca3af',font:{size:10}}}},interaction:{intersect:false,mode:'index'}}}
 function ds(d,m){if(d.length<=m)return d;const s=Math.floor(d.length/m);return d.filter((_,i)=>i%s===0||i===d.length-1)}
+
+function buildBookIndex(rows){
+  const idx={};
+  for(const r of rows){
+    const k=`${r.timestamp}|${r.product}`;
+    const bids=[],asks=[];
+    for(let i=1;i<=3;i++){
+      const bp=r[`bid_price_${i}`],bv=r[`bid_volume_${i}`];
+      if(bp)bids.push({p:+bp,v:+bv});
+      const ap=r[`ask_price_${i}`],av=r[`ask_volume_${i}`];
+      if(ap)asks.push({p:+ap,v:+av});
+    }
+    bids.sort((a,b)=>b.p-a.p);
+    asks.sort((a,b)=>a.p-b.p);
+    idx[k]={bids,asks,mid:r.mid_price?+r.mid_price:null};
+  }
+  return idx;
+}
+
+function groupTradesByTick(trades){
+  const m=new Map();
+  for(const t of trades){
+    const k=`${t.timestamp}|${t.symbol}`;
+    if(!m.has(k))m.set(k,{timestamp:+t.timestamp,symbol:t.symbol,fills:[]});
+    const isBuy=t.buyer==='SUBMISSION';
+    m.get(k).fills.push({side:isBuy?'BUY':'SELL',price:+t.price,qty:+t.quantity});
+  }
+  return [...m.values()].sort((a,b)=>a.timestamp-b.timestamp);
+}
+
+function renderTickCard(g,bookIdx){
+  const card=document.createElement('div');card.className='tick-card';
+  const book=bookIdx[`${g.timestamp}|${g.symbol}`];
+  const fillPrices=new Set(g.fills.map(f=>f.price));
+
+  const fillsHtml=g.fills.map(f=>`<span class="fill-pill"><span class="side ${f.side.toLowerCase()}">${f.side}</span>${f.qty} @ ${f.price.toLocaleString()}</span>`).join('');
+  const meta=document.createElement('div');meta.className='tick-meta';
+  meta.innerHTML=`<span class="tick-tag">tick <b>${g.timestamp.toLocaleString()}</b></span><span class="tick-sym">${g.symbol}</span><div class="tick-fills">${fillsHtml}</div>`;
+  card.appendChild(meta);
+
+  if(!book||(!book.bids.length&&!book.asks.length)){
+    const nb=document.createElement('div');nb.className='no-book';nb.textContent='order book unavailable';card.appendChild(nb);return card;
+  }
+
+  const mkRow=(lvl,hit)=>lvl?`<div class="book-row${hit?' hit':''}"><span class="book-price">${lvl.p.toLocaleString()}</span><span class="book-vol">×${lvl.v}</span></div>`:`<div class="book-row empty"><span class="book-price">—</span><span class="book-vol"></span></div>`;
+  const asksDesc=[book.asks[2],book.asks[1],book.asks[0]];
+  const bidsDesc=[book.bids[0],book.bids[1],book.bids[2]];
+  const bookEl=document.createElement('div');bookEl.className='book';
+  bookEl.innerHTML=`
+    <div class="book-col asks">${asksDesc.map(l=>mkRow(l,l&&fillPrices.has(l.p))).join('')}</div>
+    <div class="book-mid"><span class="mid-label">mid</span><span class="mid-value">${book.mid!=null?book.mid.toLocaleString():'—'}</span></div>
+    <div class="book-col bids">${bidsDesc.map(l=>mkRow(l,l&&fillPrices.has(l.p))).join('')}</div>
+  `;
+  card.appendChild(bookEl);
+  return card;
+}
 
 async function init(){
   const root=document.getElementById('root');
@@ -175,6 +226,7 @@ async function init(){
     ...r,
     pnlCsv:await fetchCsv(`${BASE}/${r.id}/pnl_by_product.csv`),
     tradesCsv:await fetchCsv(`${BASE}/${r.id}/trades.csv`),
+    actCsv:await fetchCsv(`${BASE}/${r.id}/activity.csv`),
   })));
 
   const charts=[];
@@ -206,8 +258,30 @@ async function init(){
 
     if(r.tradesCsv&&r.tradesCsv.length>0){
       const tb=document.createElement('div');tb.className='trades-box';
-      tb.innerHTML=`<h3>Trades (${r.tradesCsv.length})</h3><table><thead><tr><th>Tick</th><th>Symbol</th><th>Side</th><th>Price</th><th>Qty</th></tr></thead><tbody>${r.tradesCsv.map(tr=>{const b=tr.buyer==='SUBMISSION';return`<tr><td>${tr.timestamp}</td><td>${tr.symbol}</td><td class="${b?'buy':'sell'}">${b?'BUY':'SELL'}</td><td>${tr.price}</td><td>${tr.quantity}</td></tr>`}).join('')}</tbody></table>`;
+      const botTrades=r.tradesCsv.filter(t=>t.buyer==='SUBMISSION'||t.seller==='SUBMISSION');
+      const book=buildBookIndex(r.actCsv||[]);
+      const groups=groupTradesByTick(botTrades);
+      const symbols=[...new Set(botTrades.map(t=>t.symbol))].sort();
+
+      tb.innerHTML=`<h3><span>Trades (${botTrades.length})</span><span class="trades-filter" id="tf-${ri}"><button class="active" data-sym="">All</button>${symbols.map(s=>`<button data-sym="${s}">${s}</button>`).join('')}</span></h3><div class="trades-list" id="tl-${ri}"></div>`;
       p.appendChild(tb);
+
+      const listEl=tb.querySelector(`#tl-${ri}`);
+      const renderList=filter=>{
+        listEl.innerHTML='';
+        const shown=filter?groups.filter(g=>g.symbol===filter):groups;
+        shown.slice(0,500).forEach(g=>listEl.appendChild(renderTickCard(g,book)));
+        if(shown.length>500){
+          const m=document.createElement('div');m.className='no-book';m.textContent=`Showing first 500 of ${shown.length} tick-groups`;listEl.appendChild(m);
+        }
+      };
+      renderList('');
+      tb.querySelector(`#tf-${ri}`).addEventListener('click',e=>{
+        if(e.target.tagName!=='BUTTON')return;
+        tb.querySelectorAll(`#tf-${ri} button`).forEach(b=>b.classList.remove('active'));
+        e.target.classList.add('active');
+        renderList(e.target.dataset.sym);
+      });
     }
     panels.appendChild(p);
   });

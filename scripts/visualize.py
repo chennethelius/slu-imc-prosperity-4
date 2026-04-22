@@ -11,53 +11,17 @@ Renders PnL curves, price series, and spread analysis directly in the
 terminal using plotext. No browser, no window switching.
 """
 
-import csv
-import io
-import json
 import sys
 from collections import defaultdict
 from pathlib import Path
+
+from _loaders import load_run, get_pnl, get_mid, get_bid1, get_ask1
 
 try:
     import plotext as plt
 except ImportError:
     print("ERROR: pip install plotext", file=sys.stderr)
     sys.exit(1)
-
-
-def load_run(run_dir: Path) -> tuple[dict | None, list[dict]]:
-    """Load metrics.json and parse activitiesLog from submission.log."""
-    metrics = None
-    metrics_path = run_dir / "metrics.json"
-    if metrics_path.exists():
-        with open(metrics_path) as f:
-            metrics = json.load(f)
-
-    sub_path = run_dir / "submission.log"
-    if not sub_path.exists():
-        return metrics, []
-    with open(sub_path) as f:
-        data = json.load(f)
-    csv_text = data.get("activitiesLog", "")
-    if not csv_text:
-        return metrics, []
-    return metrics, list(csv.DictReader(io.StringIO(csv_text), delimiter=";"))
-
-
-def get_pnl(row: dict) -> float:
-    return float(row.get("profit_and_loss", row.get("profitLoss", 0)) or 0)
-
-
-def get_mid(row: dict) -> float:
-    return float(row.get("mid_price", row.get("midPrice", 0)) or 0)
-
-
-def get_bid1(row: dict) -> float:
-    return float(row.get("bid_price_1", 0) or 0)
-
-
-def get_ask1(row: dict) -> float:
-    return float(row.get("ask_price_1", 0) or 0)
 
 
 def chart_pnl(activity: list[dict], product_filter: str | None = None):

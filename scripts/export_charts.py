@@ -11,11 +11,11 @@ Usage:
 Outputs PNGs to runs/<run_id>/charts/
 """
 
-import csv
-import json
 import sys
 from collections import defaultdict
 from pathlib import Path
+
+from _loaders import load_activity_csv, load_trades_csv, get_pnl, get_mid, get_bid1, get_ask1
 
 try:
     import matplotlib
@@ -53,28 +53,6 @@ BID_COLOR = "#27ae60"
 ASK_COLOR = "#c0392b"
 
 
-def load_activity(run_dir: Path) -> list[dict]:
-    path = run_dir / "activity.csv"
-    if not path.exists():
-        return []
-    with open(path) as f:
-        # Try semicolon first (standard format), then comma
-        content = f.read()
-        if ";" in content.split("\n")[0]:
-            reader = csv.DictReader(content.splitlines(), delimiter=";")
-        else:
-            reader = csv.DictReader(content.splitlines())
-        return list(reader)
-
-
-def load_trades(run_dir: Path) -> list[dict]:
-    path = run_dir / "trades.csv"
-    if not path.exists():
-        return []
-    with open(path) as f:
-        return list(csv.DictReader(f))
-
-
 def plot_pnl(activity: list[dict], charts_dir: Path):
     """PnL over time, per product + total."""
     by_product = defaultdict(list)
@@ -83,7 +61,7 @@ def plot_pnl(activity: list[dict], charts_dir: Path):
     for row in activity:
         product = row.get("product", "UNKNOWN")
         ts = int(row.get("timestamp", 0))
-        pnl = float(row.get("profitLoss", 0) or 0)
+        pnl = get_pnl(row)
         by_product[product].append((ts, pnl))
         total_by_ts[ts] += pnl
 
@@ -121,18 +99,7 @@ def plot_prices(activity: list[dict], charts_dir: Path):
     for row in activity:
         product = row.get("product", "UNKNOWN")
         ts = int(row.get("timestamp", 0))
-        mid = float(row.get("midPrice", 0) or 0)
-        bid1 = float(row.get("bid_price_1", row.get("bidPrices[0]", 0)) or 0)
-        ask1 = float(row.get("ask_price_1", row.get("askPrices[0]", 0)) or 0)
-
-        # Try alternative column names
-        for col in row:
-            if "bid" in col.lower() and "1" in col and bid1 == 0:
-                bid1 = float(row[col] or 0)
-            if "ask" in col.lower() and "1" in col and ask1 == 0:
-                ask1 = float(row[col] or 0)
-
-        by_product[product].append((ts, mid, bid1, ask1))
+        by_product[product].append((ts, get_mid(row), get_bid1(row), get_ask1(row)))
 
     for i, (product, data) in enumerate(sorted(by_product.items())):
         data.sort()
@@ -171,8 +138,7 @@ def plot_trades_scatter(activity: list[dict], trades: list[dict], charts_dir: Pa
     for row in activity:
         product = row.get("product", "UNKNOWN")
         ts = int(row.get("timestamp", 0))
-        mid = float(row.get("midPrice", 0) or 0)
-        mid_by_product[product].append((ts, mid))
+        mid_by_product[product].append((ts, get_mid(row)))
 
     # Group trades
     trades_by_product = defaultdict(list)
@@ -244,8 +210,8 @@ def main():
     charts_dir = run_dir / "charts"
     charts_dir.mkdir(exist_ok=True)
 
-    activity = load_activity(run_dir)
-    trades = load_trades(run_dir)
+    activity = load_activity_csv(run_dir)
+    trades = load_trades_csv(run_dir)
 
     print(f"Exporting charts for {run_dir.name}...")
 
