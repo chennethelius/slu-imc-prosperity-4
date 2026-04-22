@@ -9,8 +9,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg-base:#eef1f8; --bg-surface:#fff; --bg-raised:#e4e8f1; --bg-hover:#e4e8f1;
-    --border:#d9dde8; --border-subtle:#e4e8f1; --border-strong:#bfc4d1;
+    --bg-base:#eef0fb; --bg-surface:#fdfdff; --bg-raised:#e6e9f5; --bg-hover:#e6e9f5;
+    --border:#d5d9ea; --border-subtle:#e3e6f2; --border-strong:#b8bed3;
     --text-primary:#0f172a; --text-secondary:#334155; --text-muted:#64748b;
     --accent:#6366f1; --accent-dim:#4f46e5; --accent-soft:rgba(99,102,241,.1);
     --accent-warm:#a78bfa;
@@ -34,7 +34,7 @@
   }
 
   *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg-base);color:var(--text-primary);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;font-feature-settings:'cv02','cv03','cv04','cv11'}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg-base);background-image:radial-gradient(ellipse 900px 500px at 15% -10%,rgba(99,102,241,.09),transparent 60%),radial-gradient(ellipse 700px 400px at 95% 5%,rgba(167,139,250,.07),transparent 60%);background-attachment:fixed;color:var(--text-primary);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;font-feature-settings:'cv02','cv03','cv04','cv11'}
 
   /* ── Topbar (dark, app-header style) ── */
   .topbar{background:linear-gradient(90deg,#0f172a 0%,#1e293b 100%);border-bottom:none;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20}
@@ -56,7 +56,7 @@
   .badge{color:#cbd5e1;font-size:11px;font-weight:600;font-variant-numeric:tabular-nums;transition:color .2s}
 
   /* ── Toolbar ── */
-  .toolbar{display:flex;align-items:center;gap:6px;padding:10px 24px;background:var(--bg-surface);flex-wrap:wrap;position:relative}
+  .toolbar{display:flex;align-items:center;gap:6px;padding:10px 24px;background:linear-gradient(180deg,#fafbff 0%,var(--bg-surface) 100%);flex-wrap:wrap;position:relative}
   .toolbar::after{content:'';position:absolute;left:24px;right:24px;bottom:0;height:1px;background:linear-gradient(90deg,transparent,var(--border) 10%,var(--border) 90%,transparent)}
   .chip{background:transparent;border:1px solid var(--border);border-radius:999px;padding:4px 12px;font-size:11px;font-weight:500;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
   .chip:hover{border-color:var(--border-strong);color:var(--text-primary);background:var(--bg-hover)}
@@ -84,8 +84,11 @@
   .content{padding:18px 24px 40px;max-width:1400px;margin:0 auto}
 
   /* ── Commit Cards ── */
-  .commit-card{background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:10px;overflow:hidden;transition:all .18s;box-shadow:var(--shadow-sm)}
+  .commit-card{background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:10px;overflow:hidden;transition:all .18s;box-shadow:var(--shadow-sm);position:relative}
+  .commit-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--accent),var(--accent-warm));opacity:0;transition:opacity .18s;border-radius:var(--radius-lg) 0 0 var(--radius-lg)}
   .commit-card:hover{border-color:var(--border-strong);box-shadow:var(--shadow-md);transform:translateY(-1px)}
+  .commit-card:hover::before{opacity:.6}
+  .commit-card.expanded::before{opacity:1}
   .commit-card.expanded{box-shadow:var(--shadow-lg);border-color:var(--accent-soft);transform:none}
   .commit-header{display:flex;align-items:center;padding:14px 18px;cursor:pointer;gap:16px;transition:background .15s}
   .commit-header:hover{background:var(--bg-hover)}
@@ -104,7 +107,8 @@
   .commit-time{color:var(--text-muted);font-size:10.5px;white-space:nowrap;margin-top:3px;font-variant-numeric:tabular-nums}
   .commit-runs{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
   .run-chip{background:#fff;border:1px solid var(--border-subtle);border-radius:6px;padding:4px 11px;font-size:11.5px;display:inline-flex;gap:8px;align-items:center;font-weight:500;box-shadow:0 1px 2px rgba(15,23,42,.04)}
-  .run-chip .label{background:rgba(99,102,241,.12);color:#4f46e5;border:1px solid rgba(99,102,241,.22);padding:1px 7px;border-radius:999px;font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.3px}
+  .run-chip .label{background:rgba(99,102,241,.07);color:#6366f1;border:1px solid rgba(99,102,241,.14);padding:1px 7px;border-radius:999px;font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:.3px}
+  .commit-card:hover .run-chip .label{background:rgba(99,102,241,.05);border-color:rgba(99,102,241,.12)}
   .run-chip .val{font-family:var(--mono);font-weight:700;font-variant-numeric:tabular-nums}
   .commit-total{text-align:right;min-width:130px;padding-left:12px}
   .commit-total .sub-label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;font-weight:600;margin-bottom:3px}

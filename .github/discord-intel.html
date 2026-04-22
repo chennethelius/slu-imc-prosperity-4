@@ -9,8 +9,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg-base:#eef1f8; --bg-surface:#fff; --bg-raised:#e4e8f1; --bg-hover:#e4e8f1;
-    --border:#d9dde8; --border-subtle:#e4e8f1; --border-strong:#bfc4d1;
+    --bg-base:#eef0fb; --bg-surface:#fdfdff; --bg-raised:#e6e9f5; --bg-hover:#e6e9f5;
+    --border:#d5d9ea; --border-subtle:#e3e6f2; --border-strong:#b8bed3;
     --text-primary:#0f172a; --text-secondary:#334155; --text-muted:#64748b;
     --accent:#6366f1; --accent-dim:#4f46e5; --accent-soft:rgba(99,102,241,.1);
     --accent-warm:#a78bfa;
@@ -25,7 +25,7 @@
   }
 
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family:'Inter',system-ui,sans-serif; background:var(--bg-base); color:var(--text-primary); font-size:14px; line-height:1.55; -webkit-font-smoothing:antialiased; font-feature-settings:'cv02','cv03','cv04','cv11'; }
+  body { font-family:'Inter',system-ui,sans-serif; background:var(--bg-base); background-image:radial-gradient(ellipse 900px 500px at 15% -10%,rgba(99,102,241,.09),transparent 60%),radial-gradient(ellipse 700px 400px at 95% 5%,rgba(167,139,250,.07),transparent 60%); background-attachment:fixed; color:var(--text-primary); font-size:14px; line-height:1.55; -webkit-font-smoothing:antialiased; font-feature-settings:'cv02','cv03','cv04','cv11'; }
 
   /* ── Topbar (dark, app-header style) ── */
   .topbar { background:linear-gradient(90deg,#0f172a 0%,#1e293b 100%); border-bottom:none; padding:0 24px; height:56px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:20; }
