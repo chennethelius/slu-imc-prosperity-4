@@ -91,40 +91,29 @@
 
   .content{padding:18px 24px 40px;max-width:1400px;margin:0 auto}
 
-  /* ── Commit Cards ── */
-  .commit-card{background:var(--surf-card);border:1px solid var(--surf-card-border);border-radius:var(--radius-lg);margin-bottom:10px;overflow:hidden;transition:all .18s;box-shadow:var(--shadow-sm);position:relative}
-  .commit-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--accent),var(--accent-warm));opacity:0;transition:opacity .18s;border-radius:var(--radius-lg) 0 0 var(--radius-lg)}
+  /* ── Commit Rows (compact) ── */
+  .commit-card{background:var(--surf-card);border:1px solid var(--surf-card-border);border-radius:var(--radius);margin-bottom:6px;overflow:hidden;transition:all .15s;box-shadow:var(--shadow-sm);position:relative}
+  .commit-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--accent),var(--accent-warm));opacity:0;transition:opacity .15s;border-radius:var(--radius) 0 0 var(--radius)}
   .commit-card:hover{border-color:var(--border-strong);box-shadow:var(--shadow-md);transform:translateY(-1px)}
   .commit-card:hover::before{opacity:.6}
-  .commit-card.expanded::before{opacity:1}
-  .commit-card.expanded{box-shadow:var(--shadow-lg);border-color:var(--accent-soft);transform:none}
-  .commit-header{display:flex;align-items:center;padding:14px 18px;cursor:pointer;gap:16px;transition:background .15s}
+  .commit-header{display:flex;align-items:center;padding:8px 14px;gap:12px;text-decoration:none;color:inherit;transition:background .15s}
   .commit-header:hover{background:var(--bg-hover)}
-  .commit-arrow{color:var(--text-muted);font-size:10px;transition:transform .2s;width:14px;flex-shrink:0}
-  .commit-card.expanded .commit-arrow{transform:rotate(90deg);color:var(--accent)}
-  .rank-badge{min-width:32px;height:32px;padding:0 10px;display:inline-flex;align-items:center;justify-content:center;background:var(--bg-raised);color:var(--text-muted);border:1px solid var(--border-subtle);border-radius:999px;font-family:var(--mono);font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;flex-shrink:0}
+  .rank-badge{min-width:26px;height:26px;padding:0 8px;display:inline-flex;align-items:center;justify-content:center;background:var(--bg-raised);color:var(--text-muted);border:1px solid var(--border-subtle);border-radius:999px;font-family:var(--mono);font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;flex-shrink:0}
   .rank-badge.g{background:var(--gold-soft);color:var(--gold);border-color:rgba(245,158,11,.28)}
   .rank-badge.s{background:var(--silver-soft);color:#64748b;border-color:rgba(148,163,184,.3)}
   .rank-badge.b{background:var(--bronze-soft);color:var(--bronze);border-color:rgba(180,83,9,.25)}
-  .commit-info{flex:1;min-width:0}
-  .commit-title{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
-  .commit-strat{color:var(--text-primary);font-size:16px;font-weight:700;font-family:var(--mono);letter-spacing:-.2px}
-  .commit-author{color:var(--text-secondary);font-weight:500;font-size:12.5px}
+  .commit-info{flex:1;min-width:0;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .commit-strat{color:var(--text-primary);font-size:13.5px;font-weight:700;font-family:var(--mono);letter-spacing:-.1px}
+  .commit-author{color:var(--text-secondary);font-weight:500;font-size:12px}
   .commit-author::before{content:'by ';color:var(--text-muted)}
-  .commit-hash{color:var(--text-muted);font-size:11px;font-family:var(--mono);letter-spacing:.2px}
-  .commit-time{color:var(--text-muted);font-size:10.5px;white-space:nowrap;margin-top:3px;font-variant-numeric:tabular-nums}
-  .commit-runs{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
-  .run-chip{background:#fff;border:1px solid var(--border-subtle);border-radius:6px;padding:4px 11px;font-size:11.5px;display:inline-flex;gap:8px;align-items:center;font-weight:500;box-shadow:0 1px 2px rgba(15,23,42,.04);transition:background .15s,border-color .15s,box-shadow .15s}
-  .commit-card:hover .run-chip{background:transparent;border-color:transparent;box-shadow:none}
-  .run-chip .label{background:rgba(99,102,241,.07);color:#6366f1;border:1px solid rgba(99,102,241,.14);padding:1px 7px;border-radius:999px;font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:.3px}
-  .commit-card:hover .run-chip .label{background:rgba(99,102,241,.05);border-color:rgba(99,102,241,.12)}
+  .commit-time{color:var(--text-muted);font-size:10.5px;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .commit-runs{display:flex;gap:4px;flex-wrap:wrap}
+  .run-chip{background:transparent;border:1px solid var(--border-subtle);border-radius:5px;padding:2px 7px;font-size:11px;display:inline-flex;gap:6px;align-items:center;font-weight:500}
+  .run-chip .label{color:var(--text-muted);font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.3px}
   .run-chip .val{font-family:var(--mono);font-weight:700;font-variant-numeric:tabular-nums}
-  .commit-total{text-align:right;min-width:130px;padding-left:12px}
-  .commit-total .sub-label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;font-weight:600;margin-bottom:3px}
-  .commit-total .sub-pnl{font-family:var(--mono);font-size:22px;font-weight:700;letter-spacing:-.4px;font-variant-numeric:tabular-nums;line-height:1.1}
-
-  .commit-detail{display:none;border-top:1px solid var(--border-subtle);background:var(--surf-detail)}
-  .commit-card.expanded .commit-detail{display:block}
+  .commit-total{text-align:right;min-width:110px;padding-left:10px}
+  .commit-total .sub-label{font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;font-weight:600;margin-bottom:1px}
+  .commit-total .sub-pnl{font-family:var(--mono);font-size:16px;font-weight:700;letter-spacing:-.3px;font-variant-numeric:tabular-nums;line-height:1.1}
 
   /* ── Day Tabs ── */
   .day-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);padding:0 18px;background:var(--surf-detail)}
@@ -414,15 +403,13 @@ function renderFeed(){
       return `<span class="run-chip"><span class="label">${lbl}</span><span class="val ${pc(r.pnl)}">${fp(r.pnl)}</span></span>`;
     }).join('');
 
+    const key=encodeURIComponent(`${g.author}|${g.strategy}|${g.commit}`);
     card.innerHTML=`
-      <div class="commit-header" onclick="toggleCard(${gi})">
-        <span class="commit-arrow">&#9654;</span>
+      <a class="commit-header" href="./run.html?g=${key}">
         <div class="rank-badge${rc}">${rank}</div>
         <div class="commit-info">
-          <div class="commit-title">
-            <span class="commit-strat">${g.strategy}</span>
-            <span class="commit-author">${g.author}</span>
-          </div>
+          <span class="commit-strat">${g.strategy}</span>
+          <span class="commit-author">${g.author}</span>
           <div class="commit-runs">${chips}</div>
         </div>
         <div class="commit-total">
@@ -430,89 +417,11 @@ function renderFeed(){
           <div class="sub-pnl ${pc(subPnl)}">${fp(subPnl)}</div>
           <div class="commit-time">${time}</div>
         </div>
-      </div>
-      <div class="commit-detail" id="detail-${gi}"></div>
+      </a>
     `;
     fd.appendChild(card);
   });
 }
-
-async function toggleCard(gi){
-  const card=document.getElementById(`card-${gi}`);
-  const detail=document.getElementById(`detail-${gi}`);
-  if(card.classList.contains('expanded')){
-    card.classList.remove('expanded');
-    (allCharts[gi]||[]).forEach(c=>c.destroy());allCharts[gi]=[];
-    detail.innerHTML='';return;
-  }
-  card.classList.add('expanded');
-  detail.innerHTML='<div style="padding:18px;color:var(--text-muted)">Loading...</div>';
-  allCharts[gi]=[];
-
-  const sorted=[...filtered].sort((a,b)=>new Date(b.timestamp||0)-new Date(a.timestamp||0));
-  const g=sorted[gi];
-
-  const runData=await Promise.all(g.runs.map(async r=>({
-    ...r,pnlCsv:await fetchCsv(`${BASE}/${r.id}/pnl_by_product.csv`),
-    tradesCsv:await fetchCsv(`${BASE}/${r.id}/trades.csv`),
-  })));
-  const code=await fetchText(`${BASE}/${g.runs[0].id}/strategy.py`);
-
-  detail.innerHTML='';
-
-  const tabs=document.createElement('div');tabs.className='day-tabs';
-  runData.forEach((r,ri)=>{
-    const lbl=String(r.dataset).includes('submission')?'Submission':`Day ${r.day}`;
-    const t=document.createElement('button');t.className='day-tab'+(ri===0?' active':'');
-    t.innerHTML=`${lbl} <span class="${pc(r.pnl)}" style="margin-left:6px;font-family:var(--mono);font-weight:600;font-size:11px">${fp(r.pnl)}</span>`;
-    t.onclick=e=>{e.stopPropagation();tabs.querySelectorAll('.day-tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');
-      detail.querySelectorAll('.day-panel').forEach(x=>x.classList.remove('active'));document.getElementById(`p-${gi}-${ri}`).classList.add('active');};
-    tabs.appendChild(t);
-  });
-  detail.appendChild(tabs);
-
-  runData.forEach((r,ri)=>{
-    const p=document.createElement('div');p.className='day-panel'+(ri===0?' active':'');p.id=`p-${gi}-${ri}`;
-
-    const prods=Object.entries(r.pnl_by_product||{}).map(([k,v])=>`<div><span class="stat-label">${k}</span><div class="stat-value ${pc(v)}">${fp(v)}</div></div>`).join('');
-    p.innerHTML=`<div class="stats"><div><span class="stat-label">PnL</span><div class="stat-value ${pc(r.pnl)}">${fp(r.pnl)}</div></div><div><span class="stat-label">Trades</span><div class="stat-value">${r.trades||'?'}</div></div><div><span class="stat-label">Ticks</span><div class="stat-value">${(r.ticks||0).toLocaleString()}</div></div>${prods}</div>`;
-
-    if(r.pnlCsv.length>0){
-      const cd=document.createElement('div');cd.className='charts';
-      const box=mkChart('Cumulative PnL',true);cd.appendChild(box);p.appendChild(cd);
-      const products=Object.keys(r.pnlCsv[0]).filter(k=>k!=='timestamp'&&k!=='total');
-      const sam=ds(r.pnlCsv,400);
-      const colors=['#2563eb','#059669','#d97706','#7c3aed','#dc2626','#0891b2'];
-      setTimeout(()=>{allCharts[gi].push(new Chart(box.querySelector('canvas'),{type:'line',
-        data:{datasets:[{label:'Total',data:sam.map(x=>({x:+x.timestamp,y:+x.total})),borderColor:'#111827',borderWidth:2,pointRadius:0,tension:.1},
-          ...products.map((q,i)=>({label:q,data:sam.map(x=>({x:+x.timestamp,y:+(x[q]||0)})),borderColor:colors[i%colors.length],borderWidth:1.5,pointRadius:0,tension:.1}))]},
-        options:co()}))},50);
-    }
-
-    if(r.tradesCsv&&r.tradesCsv.length>0){
-      const tb=document.createElement('div');tb.className='trades-box';
-      tb.innerHTML=`<h3>Trades (${r.tradesCsv.length})</h3><table><thead><tr><th>Tick</th><th>Symbol</th><th>Side</th><th>Price</th><th>Qty</th></tr></thead><tbody>${r.tradesCsv.map(t=>{const b=t.buyer==='SUBMISSION';return`<tr><td>${t.timestamp}</td><td>${t.symbol}</td><td class="${b?'buy':'sell'}">${b?'BUY':'SELL'}</td><td>${t.price}</td><td>${t.quantity}</td></tr>`}).join('')}</tbody></table>`;
-      p.appendChild(tb);
-    }
-    detail.appendChild(p);
-  });
-
-  if(code){
-    const box=document.createElement('div');box.className='code-box';
-    const esc=code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    const cid=`cp-${gi}`;
-    box.innerHTML=`<h3><span>${g.strategy}.py</span><button class="copy-btn" id="${cid}">Copy</button></h3><pre>${esc}</pre>`;
-    detail.appendChild(box);
-    document.getElementById(cid).addEventListener('click',e=>{e.stopPropagation();navigator.clipboard.writeText(code);e.target.textContent='Copied!';setTimeout(()=>e.target.textContent='Copy',1500)});
-  }
-}
-
-
-function mkChart(t,w){const b=document.createElement('div');b.className='chart-box'+(w?' wide':'');b.innerHTML=`<h3>${t}</h3><canvas></canvas>`;return b}
-function co(){return{responsive:true,plugins:{legend:{labels:{color:'#6b7280',font:{size:10,family:'Inter'}}}},scales:{x:{type:'linear',grid:{color:'#e5e7eb'},ticks:{color:'#9ca3af',maxTicksLimit:8,font:{size:10}}},y:{grid:{color:'#e5e7eb'},ticks:{color:'#9ca3af',font:{size:10}}}},interaction:{intersect:false,mode:'index'}}}
-function ds(d,m){if(d.length<=m)return d;const s=Math.floor(d.length/m);return d.filter((_,i)=>i%s===0||i===d.length-1)}
-async function fetchText(u){try{const r=await fetch(u);return r.ok?await r.text():null}catch{return null}}
-async function fetchCsv(u){try{const r=await fetch(u);if(!r.ok)return[];const t=await r.text();const l=t.trim().split('\n');if(l.length<2)return[];const h=l[0].split(';');return l.slice(1).map(x=>{const v=x.split(';');const o={};h.forEach((k,i)=>o[k]=v[i]||'');return o})}catch{return[]}}
 
 init();
 </script>
