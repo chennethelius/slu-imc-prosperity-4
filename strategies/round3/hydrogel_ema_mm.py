@@ -102,12 +102,13 @@ logger = Logger()
 
 class Trader:
     """
-    EMA mean-reversion market maker on HYDROGEL_PACK.
+    Three-phase market maker on HYDROGEL_PACK.
 
-    Tracks an EMA of the mid as fair value. Takes the book when it crosses
-    fair by TAKE_WIDTH, clears excess inventory at fair +/- CLEAR_WIDTH, and
-    posts inventory-skewed make quotes at fair +/- MAKE_EDGE (penny inside
-    the prevailing top-of-book where possible).
+    Each tick runs three explicit phases against the same EMA-tracked fair:
+      1. TAKE    — cross the visible book when it's mispriced vs fair
+      2. DERISK  — clear residual inventory back toward neutral at fair +/- CLEAR_WIDTH
+      3. MAKE    — post resting quotes at fair +/- MAKE_EDGE, skewed by inventory and
+                   suspended on the wrong side when EMA momentum exceeds MOMENTUM_THRESHOLD
     """
 
     LIMIT = 200
@@ -139,16 +140,23 @@ class Trader:
             momentum = 0.0 if prev is None else ema - prev
             td["ema"] = ema
             pos = state.position.get(HYD, 0)
-            orders[HYD] = self._mm(depth, pos, ema, momentum, bb, ba)
+
+            take, bought, sold = self._take(depth, pos, ema)
+            derisk, bought, sold = self._derisk(depth, pos, ema, bought, sold)
+            make = self._make(depth, pos, ema, momentum, bought, sold, bb, ba)
+            orders[HYD] = take + derisk + make
+
             logger.print(
-                f"pos={pos} ema={ema:.2f} mom={momentum:+.3f} bb={bb} ba={ba} orders={len(orders[HYD])}"
+                f"pos={pos} ema={ema:.2f} mom={momentum:+.3f} bb={bb} ba={ba} "
+                f"take={len(take)} derisk={len(derisk)} make={len(make)}"
             )
 
         trader_data = json.dumps(td)
         logger.flush(state, orders, 0, trader_data)
         return orders, 0, trader_data
 
-    def _mm(self, d, pos, fair, mom, bb, ba):
+    def _take(self, d, pos, fair):
+        """Phase 1: cross the book when it's mispriced vs fair value."""
         out = []
         bought = sold = 0
         skew = round(pos / self.SKEW_UNIT)
@@ -175,6 +183,11 @@ class Trader:
             out.append(Order(HYD, price, -q))
             sold += q
 
+        return out, bought, sold
+
+    def _derisk(self, d, pos, fair, bought, sold):
+        """Phase 2: clear residual inventory back toward neutral."""
+        out = []
         pos_after = pos + bought - sold
         if pos_after > 0:
             cp = round(fair) + self.CLEAR_WIDTH
@@ -190,7 +203,12 @@ class Trader:
             if q > 0:
                 out.append(Order(HYD, cp, q))
                 bought += q
+        return out, bought, sold
 
+    def _make(self, d, pos, fair, mom, bought, sold, bb, ba):
+        """Phase 3: post resting quotes at fair +/- edge, skewed by inventory."""
+        out = []
+        skew = round(pos / self.SKEW_UNIT)
         bid_edge = max(1, self.MAKE_EDGE + skew)
         ask_edge = max(1, self.MAKE_EDGE - skew)
         bid_px = round(fair) - bid_edge
