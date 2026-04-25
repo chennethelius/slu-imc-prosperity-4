@@ -36,9 +36,9 @@ else
     echo "  WARNING: Neither pnpm nor npm found. Install Node.js to use the visualizer."
 fi
 
-# --- 4. Patch visualizer for local dev ---
-echo "[4/5] Patching visualizer for local development..."
-./scripts/patch_visualizer.sh
+# --- 4. Apply local backtester patches ---
+echo "[4/5] Applying local backtester patches..."
+./scripts/patch_backtester.sh
 
 # --- 5. Create directories ---
 echo "[5/5] Creating local directories..."

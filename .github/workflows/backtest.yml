@@ -6,6 +6,8 @@ on:
       - 'strategies/**'
       - 'backtester/**'
       - 'datasets_extra/**'
+      - 'scripts/patches/**'
+      - 'scripts/patch_backtester.sh'
       - '.github/dashboard.html'
       - '.github/discord-intel.html'
       - '.github/run.html'
@@ -42,7 +44,7 @@ jobs:
           # strategies since behavior may have shifted.
           # Manual workflow_dispatch: run ALL strategies.
           STRAT_DIFF=$(git diff --name-only HEAD~1 HEAD -- 'strategies/**/*.py' 2>/dev/null || true)
-          BEHAVIOR_DIFF=$(git diff --name-only HEAD~1 HEAD -- 'backtester' 'datasets_extra/' '.github/collect_results.py' 2>/dev/null || true)
+          BEHAVIOR_DIFF=$(git diff --name-only HEAD~1 HEAD -- 'backtester' 'datasets_extra/' 'scripts/patches/' 'scripts/patch_backtester.sh' '.github/collect_results.py' 2>/dev/null || true)
 
           if [ -n "$STRAT_DIFF" ]; then
             CHANGED="$STRAT_DIFF"
@@ -78,6 +80,10 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+
+      - name: Apply backtester patches
+        if: steps.changes.outputs.files != ''
+        run: ./scripts/patch_backtester.sh
 
       - name: Build backtester
         if: steps.changes.outputs.files != ''

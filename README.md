@@ -13,6 +13,11 @@ git clone --recursive https://github.com/chennethelius/slu-imc-prosperity-4.git
 cd slu-imc-prosperity-4
 ```
 
+Apply local backtester patches (one-time, idempotent):
+```bash
+./scripts/patch_backtester.sh
+```
+
 Build the backtester (one-time):
 ```bash
 cd backtester && make build-release && cd ..
