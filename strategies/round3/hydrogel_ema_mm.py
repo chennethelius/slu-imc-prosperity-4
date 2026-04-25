@@ -114,9 +114,10 @@ class Trader:
     EMA_ALPHA = 0.10
     TAKE_WIDTH = 2
     CLEAR_WIDTH = 1
-    MAKE_EDGE = 2
+    MAKE_EDGE = 4
     SKEW_UNIT = 40
     QUOTE_SIZE = 20
+    MOMENTUM_THRESHOLD = 0.8
 
     def bid(self):
         return 15
@@ -135,16 +136,19 @@ class Trader:
             mid = (bb + ba) / 2.0
             prev = td.get("ema")
             ema = mid if prev is None else self.EMA_ALPHA * mid + (1 - self.EMA_ALPHA) * prev
+            momentum = 0.0 if prev is None else ema - prev
             td["ema"] = ema
             pos = state.position.get(HYD, 0)
-            orders[HYD] = self._mm(depth, pos, ema, bb, ba)
-            logger.print(f"pos={pos} ema={ema:.2f} bb={bb} ba={ba} orders={len(orders[HYD])}")
+            orders[HYD] = self._mm(depth, pos, ema, momentum, bb, ba)
+            logger.print(
+                f"pos={pos} ema={ema:.2f} mom={momentum:+.3f} bb={bb} ba={ba} orders={len(orders[HYD])}"
+            )
 
         trader_data = json.dumps(td)
         logger.flush(state, orders, 0, trader_data)
         return orders, 0, trader_data
 
-    def _mm(self, d, pos, fair, bb, ba):
+    def _mm(self, d, pos, fair, mom, bb, ba):
         out = []
         bought = sold = 0
         skew = round(pos / self.SKEW_UNIT)
@@ -189,13 +193,19 @@ class Trader:
 
         bid_edge = max(1, self.MAKE_EDGE + skew)
         ask_edge = max(1, self.MAKE_EDGE - skew)
-        bid_px = min(bb + 1, round(fair) - bid_edge)
-        ask_px = max(ba - 1, round(fair) + ask_edge)
+        bid_px = round(fair) - bid_edge
+        ask_px = round(fair) + ask_edge
+        if bid_px >= ba:
+            bid_px = ba - 1
+        if ask_px <= bb:
+            ask_px = bb + 1
+        post_bid = mom > -self.MOMENTUM_THRESHOLD
+        post_ask = mom < self.MOMENTUM_THRESHOLD
         if bid_px < ask_px:
             br = self.LIMIT - pos - bought
             sr = self.LIMIT + pos - sold
-            if br > 0:
+            if post_bid and br > 0:
                 out.append(Order(HYD, bid_px, min(br, self.QUOTE_SIZE)))
-            if sr > 0:
+            if post_ask and sr > 0:
                 out.append(Order(HYD, ask_px, -min(sr, self.QUOTE_SIZE)))
         return out
