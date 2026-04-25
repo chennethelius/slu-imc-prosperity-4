@@ -1,5 +1,5 @@
 diff --git a/src/runner.rs b/src/runner.rs
-index 874a48e..064c1ff 100644
+index 874a48e..8659482 100644
 --- a/src/runner.rs
 +++ b/src/runner.rs
 @@ -926,6 +926,7 @@ fn match_orders_for_symbol_raw_csv_tape(
@@ -50,7 +50,7 @@ index 874a48e..064c1ff 100644
 -                resting_bids[index].quantity -= fill;
 -                *synthetic_remaining -= fill;
 +                let max_fill = (*synthetic_remaining).min(resting_bids[index].quantity);
-+                let our_fill = queue_penetration_available(max_fill, queue_penetration);
++                let our_fill = python_round_to_i64(max_fill as f64 * queue_penetration.max(0.0));
 +                if our_fill > 0 {
 +                    let execution_price =
 +                        slippage_adjusted_price(resting_bids[index].price, true, slippage_bps);
@@ -102,7 +102,7 @@ index 874a48e..064c1ff 100644
 -                resting_asks[index].quantity -= fill;
 -                *synthetic_remaining -= fill;
 +                let max_fill = (*synthetic_remaining).min(resting_asks[index].quantity);
-+                let our_fill = queue_penetration_available(max_fill, queue_penetration);
++                let our_fill = python_round_to_i64(max_fill as f64 * queue_penetration.max(0.0));
 +                if our_fill > 0 {
 +                    let execution_price =
 +                        slippage_adjusted_price(resting_asks[index].price, false, slippage_bps);
