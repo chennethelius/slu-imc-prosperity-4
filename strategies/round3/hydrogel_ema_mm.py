@@ -2,12 +2,12 @@ import json
 
 from datamodel import Order, TradingState
 
-VEV = "VELVETFRUIT_EXTRACT"
+HYD = "HYDROGEL_PACK"
 
 
 class Trader:
     """
-    EMA mean-reversion market maker on VELVETFRUIT_EXTRACT.
+    EMA mean-reversion market maker on HYDROGEL_PACK.
 
     Tracks an EMA of the mid as fair value. Takes the book when it crosses
     fair by TAKE_WIDTH, clears excess inventory at fair +/- CLEAR_WIDTH, and
@@ -33,7 +33,7 @@ class Trader:
             td = {}
 
         orders: dict[str, list[Order]] = {}
-        depth = state.order_depths.get(VEV)
+        depth = state.order_depths.get(HYD)
         if depth and depth.buy_orders and depth.sell_orders:
             bb = max(depth.buy_orders)
             ba = min(depth.sell_orders)
@@ -41,7 +41,7 @@ class Trader:
             prev = td.get("ema")
             ema = mid if prev is None else self.EMA_ALPHA * mid + (1 - self.EMA_ALPHA) * prev
             td["ema"] = ema
-            orders[VEV] = self._mm(depth, state.position.get(VEV, 0), ema, bb, ba)
+            orders[HYD] = self._mm(depth, state.position.get(HYD, 0), ema, bb, ba)
 
         return orders, 0, json.dumps(td)
 
@@ -59,7 +59,7 @@ class Trader:
             if cap <= 0:
                 break
             q = min(-d.sell_orders[price], cap)
-            out.append(Order(VEV, price, q))
+            out.append(Order(HYD, price, q))
             bought += q
 
         for price in sorted(d.buy_orders, reverse=True):
@@ -69,7 +69,7 @@ class Trader:
             if cap <= 0:
                 break
             q = min(d.buy_orders[price], cap)
-            out.append(Order(VEV, price, -q))
+            out.append(Order(HYD, price, -q))
             sold += q
 
         pos_after = pos + bought - sold
@@ -78,14 +78,14 @@ class Trader:
             avail = sum(v for p, v in d.buy_orders.items() if p >= cp)
             q = min(self.LIMIT + pos - sold, avail, pos_after)
             if q > 0:
-                out.append(Order(VEV, cp, -q))
+                out.append(Order(HYD, cp, -q))
                 sold += q
         elif pos_after < 0:
             cp = round(fair) - self.CLEAR_WIDTH
             avail = sum(-v for p, v in d.sell_orders.items() if p <= cp)
             q = min(self.LIMIT - pos - bought, avail, -pos_after)
             if q > 0:
-                out.append(Order(VEV, cp, q))
+                out.append(Order(HYD, cp, q))
                 bought += q
 
         bid_edge = max(1, self.MAKE_EDGE + skew)
@@ -96,7 +96,7 @@ class Trader:
             br = self.LIMIT - pos - bought
             sr = self.LIMIT + pos - sold
             if br > 0:
-                out.append(Order(VEV, bid_px, min(br, self.QUOTE_SIZE)))
+                out.append(Order(HYD, bid_px, min(br, self.QUOTE_SIZE)))
             if sr > 0:
-                out.append(Order(VEV, ask_px, -min(sr, self.QUOTE_SIZE)))
+                out.append(Order(HYD, ask_px, -min(sr, self.QUOTE_SIZE)))
         return out
