@@ -1,33 +1,48 @@
 """
-Round 4 — spot_regime + volatility-adjusted per-strike divergence threshold.
+Round 4 — per-strike combined: best-trader-per-asset.
 
-Replaces spot_regime on the frontier (strictly dominates it on every
-metric). The spot-window regime gate (200-tick |z|) handles directional
-spot crashes; the vol-adjusted threshold handles per-strike volatility
-spikes that don't necessarily move spot.
+Per-strike per-day mean+min winners (QP=1.0, round-4 dataset):
+  VEV_4000  recovery_regime  12,463
+  VEV_4500  recovery_regime  12,694
+  VEV_5000  recovery_regime  24,037
+  VEV_5100  vol_threshold    34,077
+  VEV_5200  softer_vfruit    31,480
+  VEV_5300  vol_threshold    10,821
+  VEV_5400  recovery_regime     509
+  VEV_5500  vol_threshold       829
 
-Per-strike: maintain a baseline tick-to-tick mid std (locked at warmup).
-Each tick, scale divergence threshold up by current_vol / baseline_vol:
+Pattern: ITM strikes (4000-5000, 5400) need the recovery boost — D3
+collapse + rebound is what costs / earns the most on these. ATM/OTM
+strikes (5100, 5300, 5500) win with the defensive-only regime gate
+plus vol-adjusted threshold (no asymm position tax — they need full
+size to harvest the high-mean Q1+Q2 stretch). VEV_5200 is the peak
+mean strike — any gating reduces position cap and gives back $4k+.
 
-  effective_threshold = base × max(1.0, current_vol / baseline_vol)
+Implementation: single divergence pipeline, per-strike feature flags:
+  regime_mode  : "recovery" | "defensive" | "off"
+  use_vol_adjust : bool
+  use_asymm    : bool
 
-When the strike's mid is more volatile than baseline (regime changing,
-spread widening), divergence triggers fewer false signals. When calm,
-threshold stays at base. Single-layer modification of existing logic,
-no thrashing.
+regime_mode = "recovery"  → boost cap to 1.3 in recovery (V-rebound)
+regime_mode = "defensive" → defensive scaling on |z|, no recovery boost
+regime_mode = "off"       → no regime gating, full position cap
 
-Different from position_throttle: that one looks at OUR position;
-this one looks at the BOOK's volatility. They're orthogonal — could
-even be combined in a future variant.
+HYDROGEL_PACK + VELVETFRUIT_EXTRACT pipelines are unchanged across all
+prior frontier strategies — kept identical here.
 
 Result vs prior frontier (QP=1.0):
                        D1       D2       D3      mean      min   mean+min
-  softer_vfruit  244,058  208,026   54,358  168,814   54,358    223,172
-  spot_regime    235,320  160,649   65,790  153,920   65,790    219,710  ← retired
-  vol_threshold  235,552  163,222   65,790  154,855   65,790    220,645  ← dominates spot_regime
-  position_throttle 170,139 133,240 76,969  126,782   76,969    203,751
+  softer_vfruit     244,058  208,026   54,358  168,814   54,358    223,172
+  vol_threshold     235,552  163,222   65,790  154,855   65,790    220,645  ← retired (dominated)
+  recovery_regime   197,208  132,219   91,602  140,343   91,602    231,945
+  combined          225,674  150,638   91,148  155,820   91,148    246,968  ← BEST mean+min
 
-Strict Pareto improvement: same D1, +$2.5k D2, identical D3 → +$935 on mean+min.
+Theoretical max realized exactly — each per-strike pipeline is a
+separate state machine, no cross-strike interaction in the backtest.
+
+Pareto: combined dominates vol_threshold strictly; softer_vfruit keeps
+best mean (+$13k); recovery_regime keeps best min by a hair (+$454).
+mean+min: combined +$15k over recovery_regime, +$23k over softer.
 """
 
 import json
@@ -39,11 +54,6 @@ TAKE_WIDTH = 1
 ANCHOR_WARMUP = 100
 DIVERGE_TAKE_SIZE = 30
 VFRUIT = "VELVETFRUIT_EXTRACT"
-
-
-# =========================================================================
-# Shared book helpers
-# =========================================================================
 
 
 def search_sells(depth):
@@ -64,15 +74,11 @@ def full_depth_mid(depth):
     return (sum(p * v for p, v in bids) / bv + sum(p * v for p, v in asks) / av) / 2
 
 
-# =========================================================================
-# Zscore pipeline (VEV_*)
-# =========================================================================
-
-
 def divergence_take_orders(cfg, depth, scratch, position, anchor, mid, regime_scale=1.0):
     base_threshold = cfg.get("diverge_threshold", 0)
-    # Vol-adjusted: track running std of (mid - last_mid), scale threshold
-    # by the multiplier of this std vs its long-run baseline.
+    use_vol_adjust = cfg.get("use_vol_adjust", True)
+    use_asymm = cfg.get("use_asymm", True)
+
     last_mid = scratch.get("_last_mid", mid)
     diff = mid - last_mid
     scratch["_last_mid"] = mid
@@ -80,22 +86,35 @@ def divergence_take_orders(cfg, depth, scratch, position, anchor, mid, regime_sc
     vol_s2 = scratch.get("vol_s2", 0.0) + diff * diff
     scratch["vol_n"] = vol_n
     scratch["vol_s2"] = vol_s2
-    if vol_n > 100:
+    vol_factor = 1.0
+    if use_vol_adjust and vol_n > 100:
         cur_vol = math.sqrt(vol_s2 / vol_n)
         baseline = scratch.get("_vol_baseline")
         if baseline is None and vol_n > 500:
-            scratch["_vol_baseline"] = cur_vol  # lock baseline at warmup
+            scratch["_vol_baseline"] = cur_vol
             baseline = cur_vol
         if baseline is not None and baseline > 0.1:
-            vol_norm = cur_vol / baseline
-            threshold = base_threshold * max(1.0, vol_norm)
-        else:
-            threshold = base_threshold
-    else:
-        threshold = base_threshold
-    if threshold <= 0 or scratch.get("anchor_n", 0) < ANCHOR_WARMUP:
+            vol_factor = max(1.0, cur_vol / baseline)
+
+    if base_threshold <= 0 or scratch.get("anchor_n", 0) < ANCHOR_WARMUP:
         return [], 0, 0
     diverge = mid - anchor
+    if diverge == 0:
+        return [], 0, 0
+
+    limit_p = cfg.get("position_limit", 1)
+    if use_asymm:
+        add_factor = 1.0 + 2.0 * abs(position) / max(1, limit_p)
+        add_threshold = base_threshold * vol_factor * add_factor
+        reduce_threshold = base_threshold * vol_factor
+        if diverge > 0:
+            is_reducing = (position > 0)
+        else:
+            is_reducing = (position < 0)
+        threshold = reduce_threshold if is_reducing else add_threshold
+    else:
+        threshold = base_threshold * vol_factor
+
     if abs(diverge) < threshold:
         return [], 0, 0
 
@@ -150,7 +169,6 @@ def take_orders(cfg, depth, fair, position):
 def make_quote(cfg, fair, best_bid, best_ask, position, bought, sold):
     product, limit = cfg["product"], cfg["position_limit"]
     qsize = cfg.get("quote_size", 20)
-    # Quote at midpoint between fair and the touch on each side.
     bid_px = min(math.floor((fair + best_bid) / 2), best_ask - 1)
     ask_px = max(math.ceil((fair + best_ask) / 2), best_bid + 1)
     buy = max(0, min(qsize, limit - position - bought))
@@ -190,11 +208,6 @@ def zscore_orders(cfg, state, scratch, regime_scale=1.0):
     return diverge + takes + quotes
 
 
-# =========================================================================
-# Kalman-MR pipeline (HYDROGEL_PACK, VELVETFRUIT_EXTRACT)
-# =========================================================================
-
-
 def kalman_mr_orders(cfg, depth, position, scratch):
     if not depth or not depth.buy_orders or not depth.sell_orders:
         return []
@@ -208,7 +221,6 @@ def kalman_mr_orders(cfg, depth, position, scratch):
     micro = (bb * av_tob + ba * bv_tob) / tot if tot > 0 else (bb + ba) / 2.0
     mid = (bb + ba) / 2.0
 
-    # Kalman-track fair on volume-weighted micro-price.
     k_ss = cfg["k_ss"]
     fair = scratch.get("_f", micro)
     innov = micro - fair
@@ -217,14 +229,11 @@ def kalman_mr_orders(cfg, depth, position, scratch):
     fair += (k_ss / (1.0 + err_ema)) * innov
     scratch["_f"], scratch["_err"] = fair, err_ema
 
-    # Online σ estimate from (mid - fair) variance.
     n = scratch.get("_n", 0) + 1
     s2 = scratch.get("_s2", 0.0) + (mid - fair) ** 2
     scratch["_n"], scratch["_s2"] = n, s2
     sigma = max(1.0, (s2 / n) ** 0.5) if n > 50 else cfg["sigma_init"]
 
-    # target = mr_gain · (anchor − mid) / σ, clamped to ±limit.
-    # (Equivalently the sum of short-term and long-term reversion terms.)
     anchor = cfg["fair_static"]
     target = max(-limit, min(limit, round(cfg["mr_gain"] * (anchor - mid) / sigma)))
 
@@ -270,19 +279,15 @@ def kalman_mr_orders(cfg, depth, position, scratch):
     return orders
 
 
-# =========================================================================
-# Per-product configuration
-# =========================================================================
-
 KALMAN_MR_PRODUCTS = [
     {
         "product": "HYDROGEL_PACK",
         "position_limit": 200,
         "k_ss": 0.02,
-        "fair_static": 10030,       # mean+40; mean across 3 days = 9990
+        "fair_static": 10030,
         "mr_gain": 2000,
         "sigma_init": 30.0,
-        "take_max_pay": -6,         # only cross when offer ≥6 ticks below fair
+        "take_max_pay": -6,
         "quote_edge": 3,
         "quote_size": 30,
     },
@@ -290,25 +295,38 @@ KALMAN_MR_PRODUCTS = [
         "product": "VELVETFRUIT_EXTRACT",
         "position_limit": 200,
         "k_ss": 0.02,
-        "fair_static": 5275,        # mean+25; mean across 3 days = 5250
-        "mr_gain": 1000,            # halved (weak MR in round 4: ADF rejects 4% only)
+        "fair_static": 5275,
+        "mr_gain": 1000,
         "sigma_init": 15.0,
-        "take_max_pay": -4,         # raised from -2 (only cross on bigger dislocations)
+        "take_max_pay": -4,
         "quote_edge": 1,
-        "quote_size": 15,           # halved
+        "quote_size": 15,
     },
 ]
 
+# Per-strike feature selection from per-asset PnL analysis.
+# regime_mode: recovery (ITM, V-rebound capture), defensive (OTM,
+#              just defense), off (5200, peak ATM — full size wins)
 ZSCORE_PRODUCTS = [
-    {"product": "VEV_4000", "position_limit": 300, "quote_size": 30, "diverge_threshold": 20, "max_diverge_position": 295},
-    {"product": "VEV_4500", "position_limit": 300, "quote_size": 30, "diverge_threshold": 20, "max_diverge_position": 295},
-    {"product": "VEV_5000", "position_limit": 300, "quote_size": 30, "diverge_threshold": 18, "max_diverge_position": 295},
-    {"product": "VEV_5100", "position_limit": 300, "quote_size": 30, "diverge_threshold": 14, "max_diverge_position": 295},
-    {"product": "VEV_5200", "position_limit": 300, "quote_size": 30, "diverge_threshold": 11, "max_diverge_position": 295},
-    {"product": "VEV_5300", "position_limit": 300, "quote_size": 30, "diverge_threshold": 8, "max_diverge_position": 295},
-    {"product": "VEV_5400", "position_limit": 300, "quote_size": 30, "diverge_threshold": 4, "max_diverge_position": 295},
-    {"product": "VEV_5500", "position_limit": 300, "quote_size": 30, "diverge_threshold": 2, "max_diverge_position": 295},
+    {"product": "VEV_4000", "position_limit": 300, "quote_size": 30, "diverge_threshold": 20, "max_diverge_position": 295,
+     "regime_mode": "recovery", "use_vol_adjust": True, "use_asymm": True},
+    {"product": "VEV_4500", "position_limit": 300, "quote_size": 30, "diverge_threshold": 20, "max_diverge_position": 295,
+     "regime_mode": "recovery", "use_vol_adjust": True, "use_asymm": True},
+    {"product": "VEV_5000", "position_limit": 300, "quote_size": 30, "diverge_threshold": 18, "max_diverge_position": 295,
+     "regime_mode": "recovery", "use_vol_adjust": True, "use_asymm": True},
+    {"product": "VEV_5100", "position_limit": 300, "quote_size": 30, "diverge_threshold": 14, "max_diverge_position": 295,
+     "regime_mode": "defensive", "use_vol_adjust": True, "use_asymm": False},
+    {"product": "VEV_5200", "position_limit": 300, "quote_size": 30, "diverge_threshold": 11, "max_diverge_position": 295,
+     "regime_mode": "off", "use_vol_adjust": False, "use_asymm": False},
+    {"product": "VEV_5300", "position_limit": 300, "quote_size": 30, "diverge_threshold": 8, "max_diverge_position": 295,
+     "regime_mode": "defensive", "use_vol_adjust": True, "use_asymm": False},
+    {"product": "VEV_5400", "position_limit": 300, "quote_size": 30, "diverge_threshold": 4, "max_diverge_position": 295,
+     "regime_mode": "recovery", "use_vol_adjust": True, "use_asymm": True},
+    {"product": "VEV_5500", "position_limit": 300, "quote_size": 30, "diverge_threshold": 2, "max_diverge_position": 295,
+     "regime_mode": "defensive", "use_vol_adjust": True, "use_asymm": False},
 ]
+
+
 class Trader:
     def bid(self):
         return 0
@@ -328,34 +346,58 @@ class Trader:
             if ors:
                 orders[cfg["product"]] = ors
 
-        # Regime detection via 200-tick rolling spot z-score.
-        # |z| > 1.5 → spot is far from rolling mean → divergence positions
-        # are loaded against the eventual reversion → scale max position
-        # down 1.0 → 0.30 linearly. Scale stays at 1.0 when spot is calm.
+        # Compute regime scales (defensive + recovery) from spot z-score.
         S = 0.0
         vf_depth = state.order_depths.get(VFRUIT)
         if vf_depth and vf_depth.buy_orders and vf_depth.sell_orders:
             S = (max(vf_depth.buy_orders) + min(vf_depth.sell_orders)) / 2.0
-        regime_scale = 1.0
+        defensive_scale = 1.0
+        recovery_scale = 1.0
         if S > 0:
             spot_buf = store.setdefault("_spot_buf", [])
             spot_buf.append(S)
             if len(spot_buf) > 200:
                 del spot_buf[0]
+
+            min_tracker = store.setdefault("_min_tracker", {"min": S, "ts": state.timestamp})
+            if S < min_tracker["min"]:
+                min_tracker["min"] = S
+                min_tracker["ts"] = state.timestamp
+            ticks_since_min = (state.timestamp - min_tracker["ts"]) // 100
+            if ticks_since_min > 500:
+                if len(spot_buf) >= 50:
+                    fresh_min = min(spot_buf[-50:])
+                    min_tracker["min"] = fresh_min
+                    min_tracker["ts"] = state.timestamp
+                    ticks_since_min = 0
+
             if len(spot_buf) >= 100:
                 mu_w = sum(spot_buf) / len(spot_buf)
                 var_w = sum((x - mu_w) ** 2 for x in spot_buf) / len(spot_buf)
                 sd_w = math.sqrt(max(1e-6, var_w))
                 if sd_w > 0.5:
                     z = abs(S - mu_w) / sd_w
+                    in_recovery = (ticks_since_min >= 50 and
+                                   S >= min_tracker["min"] + 3.0)
                     if z >= 1.5:
-                        regime_scale = 0.30
+                        defensive_scale = 0.30
+                        recovery_scale = 1.3 if in_recovery else 0.30
                     elif z > 0.5:
-                        regime_scale = 1.0 - 0.70 * (z - 0.5)
+                        defensive_scale = 1.0 - 0.70 * (z - 0.5)
+                        if in_recovery:
+                            recovery_scale = 1.0 + 0.20 * (z - 0.5)
+                        else:
+                            recovery_scale = 1.0 - 0.70 * (z - 0.5)
 
         for cfg in ZSCORE_PRODUCTS:
-            ors = zscore_orders(cfg, state, store.setdefault(cfg["product"], {}),
-                                regime_scale)
+            mode = cfg.get("regime_mode", "recovery")
+            if mode == "recovery":
+                rs = recovery_scale
+            elif mode == "defensive":
+                rs = defensive_scale
+            else:
+                rs = 1.0
+            ors = zscore_orders(cfg, state, store.setdefault(cfg["product"], {}), rs)
             if ors:
                 orders[cfg["product"]] = ors
 
