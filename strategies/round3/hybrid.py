@@ -12,13 +12,16 @@ they have crash regimes where threshold-take wins.
 
 Kalman-MR pipeline:
   1. Kalman-track fair from the volume-weighted touch micro-price
-  2. Anchor = expanding-window mean of mid (learned online; no static prior).
-     During warmup (n < ANCHOR_WARMUP_KMR) the long-term pull is disabled
-     and target reduces to short-term MR only.
+  2. Long-term anchor = fair_static (data-derived true mean), optionally
+     blended with a slow EMA of mid (anchor_alpha) to track day-level drift.
+     HYDROGEL has stable mean across days → pure static.
+     VELVETFRUIT has +5/day mean drift → static + slow EMA.
   3. target = MR_GAIN · ((fair − mid) + (anchor − fair)) / σ
      — short-term reversion + long-term anchor pull, both scaled by σ
   4. Cross book up to fair + TAKE_MAX_PAY (0 = at-or-below fair only)
-  5. Post wide passive quotes one tick inside the nearest non-touch level
+  5. Post passive quotes one tick inside the nearest level at fair ± quote_edge.
+     HYDROGEL (wide spread 16, thin book) → quote_edge=3 stays clear of touch.
+     VELVETFRUIT (narrow spread 5, deep book) → quote_edge=1 quotes inside.
 
 Zscore pipeline:
   1. fair = full_depth_mid + aggressor_lambda · rolling aggressor flow
@@ -45,7 +48,6 @@ VOL_SCALE_MAX = 2.0
 TAKE_WIDTH = 1
 AGGRESSOR_WINDOW = 10
 ANCHOR_WARMUP = 100
-ANCHOR_WARMUP_KMR = 100
 DIVERGE_TAKE_SIZE = 30
 
 
@@ -249,17 +251,18 @@ def kalman_mr_orders(cfg, depth, position, scratch):
     scratch["_n"], scratch["_s2"] = n, s2
     sigma = max(1.0, (s2 / n) ** 0.5) if n > 50 else cfg["sigma_init"]
 
-    an_n = scratch.get("_an", 0) + 1
-    an_s = scratch.get("_as", 0.0) + mid
-    scratch["_an"], scratch["_as"] = an_n, an_s
+    fair_static = cfg["fair_static"]
+    anchor_alpha = cfg.get("anchor_alpha", 0.0)
+    if anchor_alpha > 0:
+        anchor = scratch.get("_anc", fair_static)
+        anchor += anchor_alpha * (mid - anchor)
+        scratch["_anc"] = anchor
+    else:
+        anchor = fair_static
 
     mr_gain = cfg["mr_gain"]
     target_short = mr_gain * (fair - mid) / sigma
-    if an_n >= ANCHOR_WARMUP_KMR:
-        anchor = an_s / an_n
-        target_static = mr_gain * (anchor - fair) / sigma
-    else:
-        target_static = 0.0
+    target_static = mr_gain * (anchor - fair) / sigma
     target = max(-limit, min(limit, round(target_short + target_static)))
 
     take_max_pay = cfg["take_max_pay"]
@@ -313,20 +316,24 @@ KALMAN_MR_PRODUCTS = [
         "product": "HYDROGEL_PACK",
         "position_limit": 200,
         "k_ss": 0.02,
+        "fair_static": 10030,       # mean+40 — sweep optimum (offset captures spread asymmetry)
+        "anchor_alpha": 0.0,        # day-mean rock stable → no drift adjustment
         "mr_gain": 2000,
         "sigma_init": 30.0,
         "take_max_pay": 0,
-        "quote_edge": 3,
+        "quote_edge": 3,            # wide spread (16) + thin TOB (25) → keep clear
         "quote_size": 30,
     },
     {
         "product": "VELVETFRUIT_EXTRACT",
         "position_limit": 200,
         "k_ss": 0.02,
+        "fair_static": 5270,        # mean+20 — sweep optimum (mean=5250; offset captures spread asymmetry)
+        "anchor_alpha": 0.0,        # day-mean drift small → static beats EMA decisively
         "mr_gain": 2000,
         "sigma_init": 15.0,
         "take_max_pay": 0,
-        "quote_edge": 3,
+        "quote_edge": 1,            # narrow spread (5) + deep TOB (75) → quote inside
         "quote_size": 30,
     },
 ]
