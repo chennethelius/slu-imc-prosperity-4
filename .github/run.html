@@ -47,42 +47,30 @@
   .chart-box.wide{grid-column:1/-1}
   .chart-box h3{color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px;font-weight:600}
 
-  .trades-box{background:var(--surf-trades);border:1px solid var(--surf-trades-border);border-radius:8px;padding:14px;margin-bottom:16px}
-  .trades-box>h3{color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px;font-weight:600;display:flex;justify-content:space-between;align-items:center;gap:10px}
-  .trades-filter{display:flex;gap:4px;flex-wrap:wrap}
-  .trades-filter button{background:var(--bg-surface);border:1px solid var(--border);color:var(--text-secondary);font-size:10px;font-family:inherit;padding:3px 9px;border-radius:999px;cursor:pointer;font-weight:500;letter-spacing:.2px;text-transform:none}
-  .trades-filter button.active{background:var(--accent);border-color:var(--accent);color:#fff}
-  .trades-list{max-height:520px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding-right:4px}
-  .tick-card{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:8px;padding:10px 12px;display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center}
-  .tick-meta{display:flex;flex-direction:column;gap:4px;min-width:180px;font-size:11px}
-  .tick-tag{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);color:var(--text-muted);font-weight:500;font-size:10.5px;letter-spacing:.2px}
-  .tick-tag b{color:var(--text-secondary);font-weight:600}
-  .tick-sym{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--text-primary);letter-spacing:-.2px}
-  .tick-fills{display:flex;flex-direction:column;gap:3px}
-  .fill-pill{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;font-variant-numeric:tabular-nums}
-  .fill-pill .side{font-weight:700;font-size:9.5px;padding:1px 6px;border-radius:3px;letter-spacing:.5px}
-  .fill-pill .side.buy{background:rgba(16,185,129,.14);color:#047857}
-  .fill-pill .side.sell{background:rgba(239,68,68,.14);color:#b91c1c}
-  .book{display:grid;grid-template-columns:1fr auto 1fr;gap:0;font-family:var(--mono);font-size:10.5px;font-variant-numeric:tabular-nums;border-radius:6px;overflow:hidden;border:1px solid var(--border-subtle)}
-  .book-col{display:flex;flex-direction:column}
-  .book-col.asks{background:linear-gradient(180deg,rgba(239,68,68,.08),rgba(239,68,68,.02))}
-  .book-col.bids{background:linear-gradient(0deg,rgba(16,185,129,.08),rgba(16,185,129,.02))}
-  .book-row{display:grid;grid-template-columns:1fr 1fr;padding:3px 8px;border-bottom:1px solid var(--border-subtle);gap:6px}
-  .book-row:last-child{border-bottom:none}
-  .book-col.asks .book-row{color:#b91c1c}
-  .book-col.bids .book-row{color:#047857}
-  .book-row.empty{color:var(--text-muted);opacity:.4}
-  .book-row.hit{background:var(--accent-soft);color:var(--accent-dim);font-weight:700;box-shadow:inset 2px 0 0 var(--accent)}
-  .book-mid{display:flex;flex-direction:column;justify-content:center;align-items:center;background:var(--bg-raised);padding:0 10px;font-weight:600;color:var(--text-secondary);border-left:1px solid var(--border-subtle);border-right:1px solid var(--border-subtle)}
-  .book-mid .mid-label{font-size:8.5px;color:var(--text-muted);font-weight:500;letter-spacing:.4px;text-transform:uppercase}
-  .book-mid .mid-value{font-size:11px}
-  .book-vol{color:var(--text-muted);font-weight:400;text-align:right}
-  .book-price{text-align:left}
   .no-book{color:var(--text-muted);font-size:10.5px;font-style:italic;padding:6px 10px;background:var(--bg-raised);border-radius:4px;border:1px dashed var(--border)}
-  @media(max-width:720px){
-    .tick-card{grid-template-columns:1fr;gap:8px}
-    .tick-meta{min-width:0}
-  }
+
+  /* === inventory visualizer (replaces the old trades scrollable card) === */
+  .invvis{background:var(--surf-trades);border:1px solid var(--surf-trades-border);border-radius:8px;padding:14px;margin-bottom:16px}
+  .invvis-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+  .invvis-head h3{color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.6px;font-weight:600;margin:0}
+  .invvis-ts{font-family:var(--mono);font-size:12px;color:var(--text-secondary);font-weight:600}
+  .invvis-grid{display:grid;grid-template-columns:280px 1fr;gap:14px}
+  @media(max-width:900px){.invvis-grid{grid-template-columns:1fr}}
+  .invvis-snapshot{padding:10px;background:var(--bg-surface);border-radius:6px;border:1px solid var(--border-subtle);font-family:var(--mono);font-size:11.5px;display:flex;flex-direction:column;gap:5px;max-height:340px;overflow-y:auto}
+  .invvis-row{display:grid;grid-template-columns:1fr 56px 88px;gap:8px;align-items:center;padding:5px 8px;border-radius:4px;border:1px solid var(--border-subtle);background:#fff}
+  .invvis-row.active{background:#dbeafe;border-color:#2563eb;box-shadow:inset 2px 0 0 #2563eb}
+  .invvis-row.flat{opacity:.55}
+  .invvis-sym{font-weight:600;font-size:11px;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .invvis-pos{font-variant-numeric:tabular-nums;font-weight:700;text-align:right}
+  .invvis-pos.long{color:#059669}.invvis-pos.short{color:#dc2626}.invvis-pos.flat{color:var(--text-muted)}
+  .invvis-bar{position:relative;height:8px;border-radius:3px;background:var(--bg-raised);overflow:hidden}
+  .invvis-bar::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--border-strong)}
+  .invvis-bar-fill{position:absolute;top:0;height:100%;border-radius:2px}
+  .invvis-bar-fill.long{background:#10b981;left:50%}
+  .invvis-bar-fill.short{background:#ef4444;right:50%}
+  .invvis-chart{padding:6px 10px 4px;background:var(--bg-surface);border-radius:6px;border:1px solid var(--border-subtle);min-height:300px;position:relative}
+  .invvis-chart canvas{width:100%!important;height:300px!important}
+  .invvis-empty{color:var(--text-muted);font-style:italic;padding:30px 10px;text-align:center;font-size:11.5px}
 
   .code-box{background:var(--surf-code);border:1px solid var(--surf-code-border);border-radius:8px;overflow:hidden}
   .code-box h3{color:var(--text-muted);font-size:11px;margin:0;padding:10px 14px;border-bottom:1px solid var(--surf-code-border);display:flex;justify-content:space-between;align-items:center;font-weight:600;font-family:var(--mono)}
@@ -246,12 +234,12 @@ function findBookAt(series, ts){
   return series[lo].ts<=ts ? series[lo] : null;
 }
 
-function renderObnav(parent, runId, actCsv, tradesCsv){
+function renderObnav(parent, runId, actCsv, tradesCsv, onTick){
   const symbols=[...new Set((actCsv||[]).map(r=>r.product))].sort();
-  if(!symbols.length) return;
+  if(!symbols.length) return null;
 
   const tsAll=[...new Set((actCsv||[]).map(r=>+r.timestamp))].sort((a,b)=>a-b);
-  if(!tsAll.length) return;
+  if(!tsAll.length) return null;
 
   const wrap=document.createElement('div'); wrap.className='obnav';
   const nbsp = ' ';
@@ -331,73 +319,175 @@ function renderObnav(parent, runId, actCsv, tradesCsv){
     }
   }
 
+  function broadcast(idx){
+    const ts = tsAll[idx];
+    if(onTick) onTick(ts, curSym);
+  }
+
   symSel.addEventListener('change', e=>{
     curSym = e.target.value;
     series = buildSymbolBookSeries(actCsv, curSym);
     fillIdx = buildSymbolFillIndex(tradesCsv, curSym);
-    paint(+range.value);
+    paint(+range.value); broadcast(+range.value);
   });
-  range.addEventListener('input', e=> paint(+e.target.value));
-  btnPrev.addEventListener('click', ()=>{ const v=Math.max(0,+range.value-1); range.value=v; paint(v); });
-  btnNext.addEventListener('click', ()=>{ const v=Math.min(+range.max,+range.value+1); range.value=v; paint(v); });
+  range.addEventListener('input', e=>{ paint(+e.target.value); broadcast(+e.target.value); });
+  btnPrev.addEventListener('click', ()=>{ const v=Math.max(0,+range.value-1); range.value=v; paint(v); broadcast(v); });
+  btnNext.addEventListener('click', ()=>{ const v=Math.min(+range.max,+range.value+1); range.value=v; paint(v); broadcast(v); });
 
-  paint(0);
+  paint(0); broadcast(0);
+  return { tsAll, getSymbol(){return curSym;}, getTickIndex(){return +range.value;} };
 }
 
-function buildBookIndex(rows){
-  const idx={};
-  for(const r of rows){
-    const k=`${r.timestamp}|${r.product}`;
-    const bids=[],asks=[];
-    for(let i=1;i<=3;i++){
-      const bp=r[`bid_price_${i}`],bv=r[`bid_volume_${i}`];
-      if(bp)bids.push({p:+bp,v:+bv});
-      const ap=r[`ask_price_${i}`],av=r[`ask_volume_${i}`];
-      if(ap)asks.push({p:+ap,v:+av});
-    }
-    bids.sort((a,b)=>b.p-a.p);
-    asks.sort((a,b)=>a.p-b.p);
-    idx[k]={bids,asks,mid:r.mid_price?+r.mid_price:null};
+// === Inventory time-series ================================================
+const POS_LIMITS = {
+  'HYDROGEL_PACK':200, 'VELVETFRUIT_EXTRACT':200,
+  'VEV_4000':300, 'VEV_4500':300, 'VEV_5000':300, 'VEV_5100':300,
+  'VEV_5200':300, 'VEV_5300':300, 'VEV_5400':300, 'VEV_5500':300,
+  'VEV_6000':300, 'VEV_6500':300,
+  'INTARIAN_PEPPER':80, 'ASH_COATED_OSMIUM':80,
+};
+
+function buildPositionSeries(tradesCsv){
+  // Per symbol cumulative position from SUBMISSION trades. Map(sym → [{ts,pos}]).
+  const events = (tradesCsv||[])
+    .filter(t=>t.buyer==='SUBMISSION'||t.seller==='SUBMISSION')
+    .map(t=>({ts:+t.timestamp, sym:t.symbol,
+              d:(t.buyer==='SUBMISSION' ? +t.quantity : -t.quantity)}))
+    .sort((a,b)=>a.ts-b.ts);
+  const out = new Map();
+  for(const e of events){
+    let arr = out.get(e.sym);
+    if(!arr){ arr=[{ts:e.ts-1, pos:0}]; out.set(e.sym, arr); } // anchor at zero
+    const prev = arr[arr.length-1].pos;
+    arr.push({ts:e.ts, pos:prev + e.d});
   }
-  return idx;
+  return out;
 }
 
-function groupTradesByTick(trades){
-  const m=new Map();
-  for(const t of trades){
-    const k=`${t.timestamp}|${t.symbol}`;
-    if(!m.has(k))m.set(k,{timestamp:+t.timestamp,symbol:t.symbol,fills:[]});
-    const isBuy=t.buyer==='SUBMISSION';
-    m.get(k).fills.push({side:isBuy?'BUY':'SELL',price:+t.price,qty:+t.quantity});
+function findPosAt(arr, ts){
+  if(!arr || !arr.length || ts < arr[0].ts) return 0;
+  let lo=0, hi=arr.length-1;
+  while(lo<hi){
+    const mid=(lo+hi+1)>>1;
+    if(arr[mid].ts<=ts) lo=mid; else hi=mid-1;
   }
-  return [...m.values()].sort((a,b)=>a.timestamp-b.timestamp);
+  return arr[lo].pos;
 }
 
-function renderTickCard(g,bookIdx){
-  const card=document.createElement('div');card.className='tick-card';
-  const book=bookIdx[`${g.timestamp}|${g.symbol}`];
-  const fillPrices=new Set(g.fills.map(f=>f.price));
+function renderInventory(parent, tradesCsv){
+  const series = buildPositionSeries(tradesCsv);
+  const symbols = [...series.keys()].sort();
 
-  const fillsHtml=g.fills.map(f=>`<span class="fill-pill"><span class="side ${f.side.toLowerCase()}">${f.side}</span>${f.qty} @ ${f.price.toLocaleString()}</span>`).join('');
-  const meta=document.createElement('div');meta.className='tick-meta';
-  meta.innerHTML=`<span class="tick-tag">tick <b>${g.timestamp.toLocaleString()}</b></span><span class="tick-sym">${g.symbol}</span><div class="tick-fills">${fillsHtml}</div>`;
-  card.appendChild(meta);
-
-  if(!book||(!book.bids.length&&!book.asks.length)){
-    const nb=document.createElement('div');nb.className='no-book';nb.textContent='order book unavailable';card.appendChild(nb);return card;
-  }
-
-  const mkRow=(lvl,hit)=>lvl?`<div class="book-row${hit?' hit':''}"><span class="book-price">${lvl.p.toLocaleString()}</span><span class="book-vol">×${lvl.v}</span></div>`:`<div class="book-row empty"><span class="book-price">—</span><span class="book-vol"></span></div>`;
-  const asksDesc=[book.asks[2],book.asks[1],book.asks[0]];
-  const bidsDesc=[book.bids[0],book.bids[1],book.bids[2]];
-  const bookEl=document.createElement('div');bookEl.className='book';
-  bookEl.innerHTML=`
-    <div class="book-col asks">${asksDesc.map(l=>mkRow(l,l&&fillPrices.has(l.p))).join('')}</div>
-    <div class="book-mid"><span class="mid-label">mid</span><span class="mid-value">${book.mid!=null?book.mid.toLocaleString():'—'}</span></div>
-    <div class="book-col bids">${bidsDesc.map(l=>mkRow(l,l&&fillPrices.has(l.p))).join('')}</div>
+  const wrap = document.createElement('div');
+  wrap.className = 'invvis';
+  wrap.innerHTML = `
+    <div class="invvis-head">
+      <h3>Inventory at selected tick</h3>
+      <div>tick <span class="invvis-ts">—</span></div>
+    </div>
+    <div class="invvis-grid">
+      <div class="invvis-snapshot"></div>
+      <div class="invvis-chart"><canvas></canvas></div>
+    </div>
   `;
-  card.appendChild(bookEl);
-  return card;
+  parent.appendChild(wrap);
+
+  if(!symbols.length){
+    wrap.querySelector('.invvis-grid').innerHTML = '<div class="invvis-empty">no SUBMISSION trades for this run</div>';
+    return { setTick(){}, setSymbol(){} };
+  }
+
+  const snapEl = wrap.querySelector('.invvis-snapshot');
+  const tsLbl = wrap.querySelector('.invvis-ts');
+  const canvas = wrap.querySelector('canvas');
+
+  const colors=['#2563eb','#059669','#d97706','#7c3aed','#dc2626','#0891b2','#db2777','#65a30d','#0284c7','#ea580c','#7e22ce','#0d9488','#1e293b'];
+  const datasets = symbols.map((s,i)=>{
+    const pts = series.get(s)||[];
+    return {
+      label:s,
+      data: pts.map(p=>({x:p.ts, y:p.pos})),
+      borderColor: colors[i%colors.length],
+      backgroundColor: colors[i%colors.length],
+      borderWidth:1.4, pointRadius:0, stepped:true, tension:0,
+    };
+  });
+
+  let chart;
+  setTimeout(()=>{
+    chart = new Chart(canvas, {
+      type:'line',
+      data:{datasets},
+      options:{
+        responsive:true, animation:false, maintainAspectRatio:false,
+        plugins:{
+          legend:{position:'bottom', labels:{color:'#6b7280', font:{size:9.5, family:'Inter'}, boxWidth:10, boxHeight:10, padding:6}},
+          tooltip:{intersect:false, mode:'index'},
+        },
+        scales:{
+          x:{type:'linear', grid:{color:'#e5e7eb'}, ticks:{color:'#9ca3af', maxTicksLimit:8, font:{size:10}}},
+          y:{grid:{color:'#e5e7eb'}, ticks:{color:'#9ca3af', font:{size:10}}, title:{display:true, text:'position', color:'#6b7280', font:{size:10}}},
+        },
+        interaction:{intersect:false, mode:'index'}
+      },
+      plugins:[{
+        id:'tickMarker',
+        afterDraw(c){
+          const ts = c.$markerTs;
+          if(ts == null) return;
+          const xs = c.scales.x, ys = c.scales.y;
+          const x = xs.getPixelForValue(ts);
+          if(x < xs.left || x > xs.right) return;
+          c.ctx.save();
+          c.ctx.strokeStyle = '#111827';
+          c.ctx.lineWidth = 1.5;
+          c.ctx.setLineDash([4,3]);
+          c.ctx.beginPath();
+          c.ctx.moveTo(x, ys.top);
+          c.ctx.lineTo(x, ys.bottom);
+          c.ctx.stroke();
+          c.ctx.restore();
+        }
+      }]
+    });
+    if(pendingTs != null){ chart.$markerTs = pendingTs; chart.update('none'); }
+  }, 60);
+
+  let curSym = symbols[0];
+  let pendingTs = null;
+
+  function paintSnapshot(ts){
+    snapEl.innerHTML='';
+    for(const s of symbols){
+      const pos = findPosAt(series.get(s), ts);
+      const lim = POS_LIMITS[s] || 200;
+      const pct = Math.max(-1, Math.min(1, pos/lim));
+      const fillW = (Math.abs(pct)*50).toFixed(1);
+      const cls = pos>0?'long':pos<0?'short':'flat';
+      const row = document.createElement('div');
+      row.className = 'invvis-row' + (s===curSym?' active':'') + (pos===0?' flat':'');
+      row.innerHTML = `
+        <span class="invvis-sym" title="${s}">${s}</span>
+        <span class="invvis-pos ${cls}">${pos>0?'+':''}${pos}</span>
+        <span class="invvis-bar"><span class="invvis-bar-fill ${cls}" style="width:${fillW}%"></span></span>
+      `;
+      snapEl.appendChild(row);
+    }
+  }
+
+  return {
+    setTick(ts){
+      tsLbl.textContent = ts.toLocaleString();
+      paintSnapshot(ts);
+      pendingTs = ts;
+      if(chart){ chart.$markerTs = ts; chart.update('none'); }
+    },
+    setSymbol(s){
+      if(!series.has(s)) return;
+      curSym = s;
+      paintSnapshot(pendingTs != null ? pendingTs : 0);
+    }
+  };
 }
 
 async function init(){
@@ -474,37 +564,19 @@ async function init(){
         options:co()}))},50);
     }
 
-    // === Order book tick navigator (path 2 visualizer) ===
+    // === Order book navigator + Inventory visualizer (synced to obnav slider) ===
+    let invViz = null;
     if(r.actCsv && r.actCsv.length > 0){
-      renderObnav(p, r.id, r.actCsv, r.tradesCsv);
-    }
-
-    if(r.tradesCsv&&r.tradesCsv.length>0){
-      const tb=document.createElement('div');tb.className='trades-box';
-      const botTrades=r.tradesCsv.filter(t=>t.buyer==='SUBMISSION'||t.seller==='SUBMISSION');
-      const book=buildBookIndex(r.actCsv||[]);
-      const groups=groupTradesByTick(botTrades);
-      const symbols=[...new Set(botTrades.map(t=>t.symbol))].sort();
-
-      tb.innerHTML=`<h3><span>Trades (${botTrades.length})</span><span class="trades-filter" id="tf-${ri}"><button class="active" data-sym="">All</button>${symbols.map(s=>`<button data-sym="${s}">${s}</button>`).join('')}</span></h3><div class="trades-list" id="tl-${ri}"></div>`;
-      p.appendChild(tb);
-
-      const listEl=tb.querySelector(`#tl-${ri}`);
-      const renderList=filter=>{
-        listEl.innerHTML='';
-        const shown=filter?groups.filter(g=>g.symbol===filter):groups;
-        shown.slice(0,500).forEach(g=>listEl.appendChild(renderTickCard(g,book)));
-        if(shown.length>500){
-          const m=document.createElement('div');m.className='no-book';m.textContent=`Showing first 500 of ${shown.length} tick-groups`;listEl.appendChild(m);
-        }
-      };
-      renderList('');
-      tb.querySelector(`#tf-${ri}`).addEventListener('click',e=>{
-        if(e.target.tagName!=='BUTTON')return;
-        tb.querySelectorAll(`#tf-${ri} button`).forEach(b=>b.classList.remove('active'));
-        e.target.classList.add('active');
-        renderList(e.target.dataset.sym);
+      renderObnav(p, r.id, r.actCsv, r.tradesCsv, (ts, sym)=>{
+        if(invViz){ invViz.setSymbol(sym); invViz.setTick(ts); }
       });
+    }
+    if(r.tradesCsv && r.tradesCsv.length > 0){
+      invViz = renderInventory(p, r.tradesCsv);
+      // Initial sync — paint inventory at the obnav's first tick
+      if(r.actCsv && r.actCsv.length > 0){
+        invViz.setTick(+r.actCsv[0].timestamp);
+      }
     }
     panels.appendChild(p);
   });
