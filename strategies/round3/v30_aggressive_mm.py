@@ -263,7 +263,7 @@ def kalman_mr_orders(cfg, depth, position, scratch, target_bias=0):
             orders.append(Order(product, b, -room))
             sv += room
 
-    # v30: ALWAYS-ON aggressive penny-jumping at best_bid+1 / best_ask-1.
+    # v30: ALWAYS-ON aggressive penny-jumping (re-triggered for dashboard) at best_bid+1 / best_ask-1.
     # No quote_edge gate (the gate caused us to skip MM ticks where the book
     # was inside the fair-edge band). Post both sides every tick whenever we
     # have remaining capacity on that side. Cap individual quote sizes at
