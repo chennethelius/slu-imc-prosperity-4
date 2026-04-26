@@ -1,5 +1,8 @@
 """Round 4 v29 — multi-product: HP (v27) + VFE conviction MR with VFE Marks.
 
+Backtest results (R3+R4): R4 230,592  R3 205,575  Combined 436,167.
+DD 20,233. Calmar 21.55. MC robust at 0.2% PnL std/mean.
+
 User directive: introduce other assets, leverage counterparty information.
 
 Architecture:
