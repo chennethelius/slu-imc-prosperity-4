@@ -330,7 +330,7 @@ KALMAN_MR_PRODUCTS = [
         "anchor_alpha": 0.0,        # day-mean rock stable → no drift adjustment
         "mr_gain": 2000,
         "sigma_init": 30.0,
-        "take_max_pay": 0,
+        "take_max_pay": -6,         # only cross when offer ≥6 ticks below fair (~spread/2-2)
         "quote_edge": 3,            # wide spread (16) + thin TOB (25) → keep clear
         "quote_size": 30,
     },
@@ -342,7 +342,7 @@ KALMAN_MR_PRODUCTS = [
         "anchor_alpha": 0.0,        # day-mean drift small → static beats EMA decisively
         "mr_gain": 2000,
         "sigma_init": 15.0,
-        "take_max_pay": 0,
+        "take_max_pay": -2,         # only cross when offer ≥2 ticks below fair (~spread/2-1)
         "quote_edge": 1,            # narrow spread (5) + deep TOB (75) → quote inside
         "quote_size": 30,
     },
