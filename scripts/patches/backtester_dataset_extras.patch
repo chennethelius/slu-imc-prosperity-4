@@ -1,0 +1,40 @@
+diff --git a/src/cli.rs b/src/cli.rs
+index e62caae..23799ce 100644
+--- a/src/cli.rs
++++ b/src/cli.rs
+@@ -746,15 +746,26 @@ fn resolve_dataset_input_with_root(
+             exclude_submission_when_day_filtered: false,
+         },
+         _ => {
+-            let path = PathBuf::from(requested);
+-            let canonical = path
+-                .canonicalize()
+-                .with_context(|| format!("failed to resolve dataset {}", path.display()))?;
+-            ResolvedDataset {
+-                label: short_dataset_label(&canonical),
+-                roots: vec![canonical],
+-                auto_selected: false,
+-                exclude_submission_when_day_filtered: false,
++            // First try datasets_root/<requested> for staged extras like round3_data
++            let in_root = datasets_root.join(requested);
++            if in_root.is_dir() {
++                ResolvedDataset {
++                    label: short_dataset_label(&in_root),
++                    roots: vec![in_root],
++                    auto_selected: false,
++                    exclude_submission_when_day_filtered: false,
++                }
++            } else {
++                let path = PathBuf::from(requested);
++                let canonical = path
++                    .canonicalize()
++                    .with_context(|| format!("failed to resolve dataset {}", path.display()))?;
++                ResolvedDataset {
++                    label: short_dataset_label(&canonical),
++                    roots: vec![canonical],
++                    auto_selected: false,
++                    exclude_submission_when_day_filtered: false,
++                }
+             }
+         }
+     };
