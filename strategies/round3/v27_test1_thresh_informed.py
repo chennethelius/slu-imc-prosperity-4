@@ -361,3 +361,4 @@ class Trader:
                 orders[cfg["product"]] = ors
 
         return orders, 0, json.dumps(store)
+
