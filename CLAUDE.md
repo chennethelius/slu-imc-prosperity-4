@@ -60,6 +60,16 @@ cd backtester && cargo run --release -- --trader ../strategies/round1/my_strat.p
 cd backtester && cargo run --release -- --trader ../strategies/round3/hybrid.py \
   --dataset round3 --day=2 --max-timestamp=99900 --queue-penetration 1.0 --products full
 
+# Calibrate backtester against the most recent real Prosperity sandbox log.
+# Drop the IMC sandbox log into a numbered folder at the repo root (e.g.
+# 450745/ with .json/.log/.py); the script picks the most recent one,
+# sweeps QP, and reports the best match. Re-run before each tuning round.
+python scripts/calibrate_backtester.py
+
+# Score strategy variants — IMC runs a single day in production, so always
+# rank by per-day mean AND per-day min PnL (not 3-day sum). bench script:
+python scripts/bench_kalman_variants.py
+
 # Analyze a run
 python scripts/analyze.py backtester/runs/<run_id>/
 
