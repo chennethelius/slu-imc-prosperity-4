@@ -197,25 +197,40 @@ function buildSymbolFillIndex(tradesCsv, sym){
   return m;
 }
 
-function explainFill(fill, book){
+// Per-product hardcoded fair value — overrides mid for profit calculation.
+const FAIR_BY_SYMBOL = {
+  'HYDROGEL_PACK': 10000,
+};
+
+function explainFill(fill, book, symbol){
   // Generate a short why-this-filled sentence using local book context.
-  const sideWord = fill.side==='BUY'?'bought':'sold';
-  const counter = fill.side==='BUY' ? (book?.asks?.[0]) : (book?.bids?.[0]);
-  const mid = book?.mid;
-  const vsRoll = mid!=null ? (fill.side==='BUY' ? mid - fill.price : fill.price - mid) : null;
+  // Profit is computed vs the hardcoded fair (when known) — NOT mid.
+  // Mid can sit far from fair when the spread is wide; profit-vs-fair is
+  // what actually marks our PnL.
+  const sideWord = fill.side==='BUY'?'BOUGHT':'SOLD';
+  const fair = FAIR_BY_SYMBOL[symbol];
+  const ref = fair != null ? fair : book?.mid;
+  const refLabel = fair != null ? 'fair' : 'mid';
+  const profit = ref != null ? (fill.side==='BUY' ? ref - fill.price : fill.price - ref) : null;
   const parts = [`${sideWord} ${fill.qty} @ ${fill.price.toLocaleString()}`];
-  if(vsRoll!=null){
-    if(vsRoll > 0)      parts.push(`(${vsRoll.toFixed(1)} ticks better than mid)`);
-    else if(vsRoll < 0) parts.push(`(${(-vsRoll).toFixed(1)} ticks worse than mid)`);
-    else                parts.push(`(at mid)`);
+  if(profit != null){
+    const sign = profit > 0 ? '+' : (profit < 0 ? '−' : '±');
+    const word = profit > 0 ? 'profit' : profit < 0 ? 'LOSS' : 'breakeven';
+    parts.push(`(${sign}${Math.abs(profit).toFixed(1)} per lot vs ${refLabel}=${ref.toLocaleString()} → ${word} ${fill.qty * profit >= 0 ? '+' : ''}${(fill.qty * profit).toFixed(0)})`);
   }
-  if(counter && counter.p===fill.price){
-    parts.push(`— crossed touch (lifted ask / hit bid)`);
-  } else if(counter){
-    const dist = fill.side==='BUY' ? fill.price - counter.p : counter.p - fill.price;
-    if(dist===0) parts.push(`— at the touch`);
-    else if(dist<0) parts.push(`— inside the touch by ${(-dist)}`);
-    else parts.push(`— ${dist} past the touch`);
+  // Identify whether we crossed (active take) or got passively filled.
+  const bestAsk = book?.asks?.[0];
+  const bestBid = book?.bids?.[0];
+  if(fill.side === 'BUY' && bestAsk && fill.price >= bestAsk.p){
+    parts.push(`— LIFTED ASK (we crossed to take their offer)`);
+  } else if(fill.side === 'SELL' && bestBid && fill.price <= bestBid.p){
+    parts.push(`— HIT BID (we crossed to take their bid)`);
+  } else if(fill.side === 'BUY' && bestBid && fill.price <= bestBid.p){
+    parts.push(`— PASSIVE FILL on our bid (someone hit our resting order)`);
+  } else if(fill.side === 'SELL' && bestAsk && fill.price >= bestAsk.p){
+    parts.push(`— PASSIVE FILL on our ask (someone lifted our resting order)`);
+  } else {
+    parts.push(`— inside-spread fill (passive quote inside touch matched)`);
   }
   return parts.join(' ');
 }
@@ -310,7 +325,7 @@ function renderObnav(parent, runId, actCsv, tradesCsv){
       fillsEl.innerHTML = '<div class="obnav-empty">no fills this tick</div>';
     } else {
       fillsEl.innerHTML = fillsHere.map(f=>{
-        const why = explainFill(f, book);
+        const why = explainFill(f, book, curSym);
         return `<div class="obnav-fill ${f.side.toLowerCase()}"><div class="head"><span>${f.side}</span><span class="side">${f.side}</span></div><div class="why">${why}</div></div>`;
       }).join('');
     }
