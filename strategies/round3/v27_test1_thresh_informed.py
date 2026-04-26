@@ -53,7 +53,7 @@ TAKE_WIDTH = 1
 ANCHOR_WARMUP = 100
 DIVERGE_TAKE_SIZE = 30
 
-# v11: VFE informed-flow signal (only addition vs hybrid.py).
+# v11/v27: VFE informed-flow signal (validated MC-robust, Sharpe 12) (only addition vs hybrid.py).
 INFORMED_SIZE_VFE = 11    # data: 49 prints / 3 days at this threshold predict +4.5 mid in 500t
 INFORMED_GAIN_S = 10       # target lots per signal unit; small -> doesn't dominate Kalman
 INFORMED_DECAY = 0.998    # ~500-tick half-life matches the alpha horizon
