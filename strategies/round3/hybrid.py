@@ -259,14 +259,14 @@ KALMAN_MR_PRODUCTS = [
 ]
 
 ZSCORE_PRODUCTS = [
-    {"product": "VEV_4000", "position_limit": 300, "quote_size": 30, "diverge_threshold": 25, "max_diverge_position": 295},
-    {"product": "VEV_4500", "position_limit": 300, "quote_size": 30, "diverge_threshold": 25, "max_diverge_position": 295},
-    {"product": "VEV_5000", "position_limit": 300, "quote_size": 30, "diverge_threshold": 22, "max_diverge_position": 295},
-    {"product": "VEV_5100", "position_limit": 300, "quote_size": 30, "diverge_threshold": 18, "max_diverge_position": 295},
-    {"product": "VEV_5200", "position_limit": 300, "quote_size": 30, "diverge_threshold": 14, "max_diverge_position": 295},
-    {"product": "VEV_5300", "position_limit": 300, "quote_size": 30, "diverge_threshold": 10, "max_diverge_position": 295},
-    {"product": "VEV_5400", "position_limit": 300, "quote_size": 30, "diverge_threshold": 5, "max_diverge_position": 295},
-    {"product": "VEV_5500", "position_limit": 300, "quote_size": 30, "diverge_threshold": 3, "max_diverge_position": 295},
+    {"product": "VEV_4000", "position_limit": 300, "quote_size": 30, "diverge_threshold": 18, "max_diverge_position": 295},
+    {"product": "VEV_4500", "position_limit": 300, "quote_size": 30, "diverge_threshold": 18, "max_diverge_position": 295},
+    {"product": "VEV_5000", "position_limit": 300, "quote_size": 30, "diverge_threshold": 15, "max_diverge_position": 295},
+    {"product": "VEV_5100", "position_limit": 300, "quote_size": 30, "diverge_threshold": 13, "max_diverge_position": 295},
+    {"product": "VEV_5200", "position_limit": 300, "quote_size": 30, "diverge_threshold": 10, "max_diverge_position": 295},
+    {"product": "VEV_5300", "position_limit": 300, "quote_size": 30, "diverge_threshold": 7, "max_diverge_position": 295},
+    {"product": "VEV_5400", "position_limit": 300, "quote_size": 30, "diverge_threshold": 4, "max_diverge_position": 295},
+    {"product": "VEV_5500", "position_limit": 300, "quote_size": 30, "diverge_threshold": 2, "max_diverge_position": 295},
 ]
 
 
