@@ -1,0 +1,113 @@
+diff --git a/src/cli.rs b/src/cli.rs
+index c3339dd..b793145 100644
+--- a/src/cli.rs
++++ b/src/cli.rs
+@@ -28,6 +28,8 @@ struct Args {
+     dataset: Option<String>,
+     #[arg(long)]
+     day: Option<i64>,
++    #[arg(long = "max-timestamp")]
++    max_timestamp: Option<i64>,
+     #[arg(long = "run-id")]
+     run_id: Option<String>,
+     #[arg(long = "trade-match-mode", default_value = "all")]
+@@ -89,6 +91,7 @@ pub fn run() -> Result<()> {
+             dataset_file: plan.dataset_file.clone(),
+             dataset_override: plan.dataset_override.clone(),
+             day: plan.day,
++            max_timestamp: args.max_timestamp,
+             matching: matching.clone(),
+             run_id: Some(plan.run_id),
+             output_root: output_root.clone(),
+diff --git a/src/model.rs b/src/model.rs
+index b2418dd..4d98414 100644
+--- a/src/model.rs
++++ b/src/model.rs
+@@ -121,6 +121,7 @@ pub struct RunRequest {
+     pub dataset_file: PathBuf,
+     pub dataset_override: Option<NormalizedDataset>,
+     pub day: Option<i64>,
++    pub max_timestamp: Option<i64>,
+     pub matching: MatchingConfig,
+     pub run_id: Option<String>,
+     pub output_root: PathBuf,
+diff --git a/src/runner.rs b/src/runner.rs
+index 874a48e..e2c7d20 100644
+--- a/src/runner.rs
++++ b/src/runner.rs
+@@ -156,6 +156,11 @@ pub fn run_backtest(request: &RunRequest) -> Result<RunOutput> {
+         .ticks
+         .iter()
+         .filter(|tick| request.day.is_none_or(|day| tick.day == Some(day)))
++        .filter(|tick| {
++            request
++                .max_timestamp
++                .is_none_or(|max| tick.timestamp <= max)
++        })
+         .collect();
+     ticks.sort_by_key(|tick| (tick.day, tick.timestamp));
+     if ticks.is_empty() {
+@@ -2163,6 +2168,7 @@ mod tests {
+             dataset_file: project_root().join("datasets/tutorial/prices_round_0_day_-1.csv"),
+             dataset_override: None,
+             day: Some(-1),
++            max_timestamp: None,
+             matching: MatchingConfig::default(),
+             run_id: Some("log-only-check".to_string()),
+             output_root: output_root.clone(),
+@@ -2268,6 +2274,7 @@ class Trader:
+             dataset_file: project_root().join("datasets/tutorial/prices_round_0_day_-1.csv"),
+             dataset_override: Some(dataset_override),
+             day: None,
++            max_timestamp: None,
+             matching: MatchingConfig::default(),
+             run_id: Some("carry-check".to_string()),
+             output_root: output_root.clone(),
+@@ -2378,6 +2385,7 @@ class Trader:
+             dataset_file: project_root().join("datasets/tutorial/prices_round_0_day_-1.csv"),
+             dataset_override: Some(dataset_override),
+             day: None,
++            max_timestamp: None,
+             matching: MatchingConfig::default(),
+             run_id: Some("empty-book-mark-check".to_string()),
+             output_root: output_root.clone(),
+@@ -2505,6 +2513,7 @@ class Trader:
+             dataset_file: project_root().join("datasets/tutorial/prices_round_0_day_-1.csv"),
+             dataset_override: Some(dataset_override),
+             day: None,
++            max_timestamp: None,
+             matching: MatchingConfig::default(),
+             run_id: Some("one-sided-mark-check".to_string()),
+             output_root: output_root.clone(),
+@@ -2595,6 +2604,7 @@ class Trader:
+             dataset_file: project_root().join("datasets/tutorial/prices_round_0_day_-1.csv"),
+             dataset_override: Some(dataset_override),
+             day: None,
++            max_timestamp: None,
+             matching: MatchingConfig::default(),
+             run_id: Some("first-one-sided-mark-check".to_string()),
+             output_root: output_root.clone(),
+@@ -2706,6 +2716,7 @@ class Trader:
+             dataset_file: project_root().join("datasets/tutorial/prices_round_0_day_-1.csv"),
+             dataset_override: Some(dataset_override),
+             day: None,
++            max_timestamp: None,
+             matching: MatchingConfig::default(),
+             run_id: Some("consume-market-check".to_string()),
+             output_root: output_root.clone(),
+@@ -2824,6 +2835,7 @@ class Trader:
+             dataset_file: project_root().join("datasets/tutorial/prices_round_0_day_-1.csv"),
+             dataset_override: Some(dataset_override),
+             day: None,
++            max_timestamp: None,
+             matching: MatchingConfig::default(),
+             run_id: Some("raw-csv-book-then-tape-check".to_string()),
+             output_root: output_root.clone(),
+@@ -2952,6 +2964,7 @@ class Trader:
+             dataset_file: project_root().join("datasets/tutorial/prices_round_0_day_-1.csv"),
+             dataset_override: Some(dataset_override),
+             day: None,
++            max_timestamp: None,
+             matching: MatchingConfig::default(),
+             run_id: Some("raw-csv-residual-check".to_string()),
+             output_root: output_root.clone(),
