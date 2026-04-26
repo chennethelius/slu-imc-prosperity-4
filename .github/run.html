@@ -92,6 +92,42 @@
 
   .loading{color:var(--text-muted);padding:60px 20px;text-align:center}
 
+  /* === tick-navigator (book viewer) === */
+  .obnav{background:var(--surf-trades);border:1px solid var(--surf-trades-border);border-radius:8px;padding:14px;margin-bottom:16px}
+  .obnav-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+  .obnav-head h3{color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.6px;font-weight:600;margin:0}
+  .obnav-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .obnav-controls select,.obnav-controls input[type=number]{font-family:var(--mono);font-size:11px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg-surface)}
+  .obnav-slider{flex:1;min-width:200px;display:flex;gap:10px;align-items:center;margin:8px 0 14px}
+  .obnav-slider input[type=range]{flex:1;height:18px}
+  .obnav-tick{font-family:var(--mono);font-size:13px;font-weight:700;min-width:120px}
+  .obnav-step{background:var(--bg-surface);border:1px solid var(--border);color:var(--text-secondary);font-family:var(--mono);font-size:13px;padding:4px 10px;border-radius:6px;cursor:pointer;min-width:32px}
+  .obnav-step:hover{background:var(--bg-hover);color:var(--text-primary)}
+  .obnav-grid{display:grid;grid-template-columns:1fr 1.2fr;gap:14px}
+  @media(max-width:900px){.obnav-grid{grid-template-columns:1fr}}
+  .obnav-book{display:flex;flex-direction:column;gap:2px;padding:10px;background:var(--bg-surface);border-radius:6px;border:1px solid var(--border-subtle);font-family:var(--mono);font-size:12px}
+  .obnav-row{display:grid;grid-template-columns:60px 1fr 60px;gap:8px;align-items:center;padding:3px 6px;border-radius:4px}
+  .obnav-row.ask{color:#dc2626}
+  .obnav-row.bid{color:#059669}
+  .obnav-row.mid{background:#fef3c7;color:#78350f;font-weight:700;padding:6px 8px;margin:4px 0;border-radius:5px;text-align:center;display:block}
+  .obnav-row.empty{color:var(--text-muted);opacity:.5}
+  .obnav-row.own{background:#dbeafe;border-left:3px solid #2563eb;font-weight:700;padding-left:3px}
+  .obnav-bar{height:14px;border-radius:3px;position:relative}
+  .obnav-bar.ask{background:linear-gradient(90deg,#fecaca 0%,#fee2e2 100%)}
+  .obnav-bar.bid{background:linear-gradient(90deg,#bbf7d0 0%,#dcfce7 100%)}
+  .obnav-px{font-weight:600;text-align:right}
+  .obnav-vol{text-align:left;color:var(--text-muted)}
+  .obnav-fills{padding:10px;background:var(--bg-surface);border-radius:6px;border:1px solid var(--border-subtle);min-height:160px}
+  .obnav-fill{padding:8px 10px;margin-bottom:6px;background:#fff;border:1px solid var(--border-subtle);border-left:3px solid;border-radius:5px;font-size:12px;line-height:1.5}
+  .obnav-fill.buy{border-left-color:#059669}
+  .obnav-fill.sell{border-left-color:#dc2626}
+  .obnav-fill .head{font-family:var(--mono);font-weight:700;display:flex;justify-content:space-between;margin-bottom:4px}
+  .obnav-fill .head .side{font-size:10px;letter-spacing:.5px;padding:2px 6px;border-radius:3px;color:#fff}
+  .obnav-fill.buy .head .side{background:#059669}
+  .obnav-fill.sell .head .side{background:#dc2626}
+  .obnav-fill .why{color:var(--text-muted);font-size:11px}
+  .obnav-empty{color:var(--text-muted);font-style:italic;padding:30px 10px;text-align:center;font-size:11.5px}
+
   @media(max-width:900px){
     .topbar{padding:0 16px;height:48px}
     .content{padding:14px 16px 40px}
@@ -125,6 +161,173 @@ const BASE='./runs';
 function mkChart(t,w){const b=document.createElement('div');b.className='chart-box'+(w?' wide':'');b.innerHTML=`<h3>${t}</h3><canvas></canvas>`;return b}
 function co(){return{responsive:true,animation:false,plugins:{legend:{labels:{color:'#6b7280',font:{size:10,family:'Inter'}}}},scales:{x:{type:'linear',grid:{color:'#e5e7eb'},ticks:{color:'#9ca3af',maxTicksLimit:8,font:{size:10}}},y:{grid:{color:'#e5e7eb'},ticks:{color:'#9ca3af',font:{size:10}}}},interaction:{intersect:false,mode:'index'}}}
 function ds(d,m){if(d.length<=m)return d;const s=Math.floor(d.length/m);return d.filter((_,i)=>i%s===0||i===d.length-1)}
+
+// === Order book tick navigator ============================================
+function buildSymbolBookSeries(actCsv, sym){
+  // Returns sorted [{ts, bids:[{p,v}], asks:[{p,v}], mid}]
+  const out=[];
+  for(const r of actCsv||[]){
+    if(r.product!==sym) continue;
+    const bids=[],asks=[];
+    for(let i=1;i<=3;i++){
+      const bp=r[`bid_price_${i}`],bv=r[`bid_volume_${i}`];
+      if(bp&&bp!=='')bids.push({p:+bp,v:+bv});
+      const ap=r[`ask_price_${i}`],av=r[`ask_volume_${i}`];
+      if(ap&&ap!=='')asks.push({p:+ap,v:+av});
+    }
+    bids.sort((a,b)=>b.p-a.p);
+    asks.sort((a,b)=>a.p-b.p);
+    out.push({ts:+r.timestamp, bids, asks, mid:r.mid_price?+r.mid_price:null});
+  }
+  return out.sort((a,b)=>a.ts-b.ts);
+}
+
+function buildSymbolFillIndex(tradesCsv, sym){
+  // Returns Map(timestamp -> [{side, price, qty, why}])
+  const m=new Map();
+  for(const t of tradesCsv||[]){
+    if(t.symbol!==sym) continue;
+    const isBuy = t.buyer==='SUBMISSION';
+    const isSell = t.seller==='SUBMISSION';
+    if(!isBuy && !isSell) continue;
+    const ts=+t.timestamp;
+    if(!m.has(ts)) m.set(ts,[]);
+    m.get(ts).push({side:isBuy?'BUY':'SELL', price:+t.price, qty:+t.quantity});
+  }
+  return m;
+}
+
+function explainFill(fill, book){
+  // Generate a short why-this-filled sentence using local book context.
+  const sideWord = fill.side==='BUY'?'bought':'sold';
+  const counter = fill.side==='BUY' ? (book?.asks?.[0]) : (book?.bids?.[0]);
+  const mid = book?.mid;
+  const vsRoll = mid!=null ? (fill.side==='BUY' ? mid - fill.price : fill.price - mid) : null;
+  const parts = [`${sideWord} ${fill.qty} @ ${fill.price.toLocaleString()}`];
+  if(vsRoll!=null){
+    if(vsRoll > 0)      parts.push(`(${vsRoll.toFixed(1)} ticks better than mid)`);
+    else if(vsRoll < 0) parts.push(`(${(-vsRoll).toFixed(1)} ticks worse than mid)`);
+    else                parts.push(`(at mid)`);
+  }
+  if(counter && counter.p===fill.price){
+    parts.push(`— crossed touch (lifted ask / hit bid)`);
+  } else if(counter){
+    const dist = fill.side==='BUY' ? fill.price - counter.p : counter.p - fill.price;
+    if(dist===0) parts.push(`— at the touch`);
+    else if(dist<0) parts.push(`— inside the touch by ${(-dist)}`);
+    else parts.push(`— ${dist} past the touch`);
+  }
+  return parts.join(' ');
+}
+
+function findBookAt(series, ts){
+  // Find the snapshot at or just before ts (binary search on ts).
+  if(!series.length) return null;
+  let lo=0, hi=series.length-1;
+  while(lo<hi){
+    const mid=(lo+hi+1)>>1;
+    if(series[mid].ts<=ts) lo=mid; else hi=mid-1;
+  }
+  return series[lo].ts<=ts ? series[lo] : null;
+}
+
+function renderObnav(parent, runId, actCsv, tradesCsv){
+  const symbols=[...new Set((actCsv||[]).map(r=>r.product))].sort();
+  if(!symbols.length) return;
+
+  const tsAll=[...new Set((actCsv||[]).map(r=>+r.timestamp))].sort((a,b)=>a-b);
+  if(!tsAll.length) return;
+
+  const wrap=document.createElement('div'); wrap.className='obnav';
+  const nbsp = ' ';
+  wrap.innerHTML = `
+    <div class="obnav-head">
+      <h3>Order book navigator</h3>
+      <div class="obnav-controls">
+        <label style="font-size:10px;color:var(--text-muted)">symbol</label>
+        <select class="ob-sym">${symbols.map(s=>`<option value="${s}">${s}</option>`).join('')}</select>
+      </div>
+    </div>
+    <div class="obnav-slider">
+      <button class="obnav-step ob-prev">‹</button>
+      <input type="range" class="ob-range" min="0" max="${tsAll.length-1}" value="0" step="1">
+      <button class="obnav-step ob-next">›</button>
+      <div class="obnav-tick">tick <span class="ob-ts">0</span></div>
+    </div>
+    <div class="obnav-grid">
+      <div class="obnav-book ob-book"></div>
+      <div class="obnav-fills">
+        <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">our fills at this tick</div>
+        <div class="ob-fills-body"></div>
+      </div>
+    </div>
+  `;
+  parent.appendChild(wrap);
+
+  const symSel = wrap.querySelector('.ob-sym');
+  const range  = wrap.querySelector('.ob-range');
+  const tsLbl  = wrap.querySelector('.ob-ts');
+  const bookEl = wrap.querySelector('.ob-book');
+  const fillsEl= wrap.querySelector('.ob-fills-body');
+  const btnPrev= wrap.querySelector('.ob-prev');
+  const btnNext= wrap.querySelector('.ob-next');
+
+  let curSym = symbols[0];
+  let series = buildSymbolBookSeries(actCsv, curSym);
+  let fillIdx = buildSymbolFillIndex(tradesCsv, curSym);
+
+  function paint(idx){
+    const ts = tsAll[idx];
+    tsLbl.textContent = ts.toLocaleString();
+    const book = findBookAt(series, ts);
+    if(!book){
+      bookEl.innerHTML = '<div class="obnav-empty">no book at this tick for this symbol</div>';
+      fillsEl.innerHTML = '<div class="obnav-empty">—</div>';
+      return;
+    }
+    // Volume scale for bars
+    const vols = [...book.bids.map(b=>b.v), ...book.asks.map(a=>a.v)];
+    const vmax = vols.length ? Math.max(...vols) : 1;
+    const fillsHere = (fillIdx.get(ts)||[]);
+    const ownPrices = new Set(fillsHere.map(f=>f.price));
+
+    const mkRow=(side, lvl)=>{
+      if(!lvl) return `<div class="obnav-row ${side} empty"><span class="obnav-px">—</span><span class="obnav-bar empty"></span><span class="obnav-vol">—</span></div>`;
+      const own = ownPrices.has(lvl.p) ? ' own' : '';
+      const w = (lvl.v/vmax*100).toFixed(1);
+      return `<div class="obnav-row ${side}${own}"><span class="obnav-px">${lvl.p.toLocaleString()}</span><span class="obnav-bar ${side}" style="width:${w}%"></span><span class="obnav-vol">×${lvl.v}</span></div>`;
+    };
+    // Asks shown high → low (so lowest ask sits next to mid), then mid, then bids high → low
+    const asksDesc = [book.asks[2],book.asks[1],book.asks[0]];
+    const bidsDesc = [book.bids[0],book.bids[1],book.bids[2]];
+    bookEl.innerHTML =
+      asksDesc.map(l=>mkRow('ask',l)).join('') +
+      `<div class="obnav-row mid">mid ${book.mid!=null?book.mid.toLocaleString():'—'}</div>` +
+      bidsDesc.map(l=>mkRow('bid',l)).join('');
+
+    // Fill explanations
+    if(!fillsHere.length){
+      fillsEl.innerHTML = '<div class="obnav-empty">no fills this tick</div>';
+    } else {
+      fillsEl.innerHTML = fillsHere.map(f=>{
+        const why = explainFill(f, book);
+        return `<div class="obnav-fill ${f.side.toLowerCase()}"><div class="head"><span>${f.side}</span><span class="side">${f.side}</span></div><div class="why">${why}</div></div>`;
+      }).join('');
+    }
+  }
+
+  symSel.addEventListener('change', e=>{
+    curSym = e.target.value;
+    series = buildSymbolBookSeries(actCsv, curSym);
+    fillIdx = buildSymbolFillIndex(tradesCsv, curSym);
+    paint(+range.value);
+  });
+  range.addEventListener('input', e=> paint(+e.target.value));
+  btnPrev.addEventListener('click', ()=>{ const v=Math.max(0,+range.value-1); range.value=v; paint(v); });
+  btnNext.addEventListener('click', ()=>{ const v=Math.min(+range.max,+range.value+1); range.value=v; paint(v); });
+
+  paint(0);
+}
 
 function buildBookIndex(rows){
   const idx={};
@@ -254,6 +457,11 @@ async function init(){
         data:{datasets:[{label:'Total',data:sam.map(x=>({x:+x.timestamp,y:+x.total})),borderColor:'#111827',borderWidth:2,pointRadius:0,tension:.1},
           ...products.map((q,i)=>({label:q,data:sam.map(x=>({x:+x.timestamp,y:+(x[q]||0)})),borderColor:colors[i%colors.length],borderWidth:1.5,pointRadius:0,tension:.1}))]},
         options:co()}))},50);
+    }
+
+    // === Order book tick navigator (path 2 visualizer) ===
+    if(r.actCsv && r.actCsv.length > 0){
+      renderObnav(p, r.id, r.actCsv, r.tradesCsv);
     }
 
     if(r.tradesCsv&&r.tradesCsv.length>0){
