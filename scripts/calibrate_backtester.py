@@ -38,17 +38,39 @@ def find_latest_log_folder() -> Path:
     return max(candidates, key=lambda p: p.stat().st_mtime)
 
 
+def detect_day_and_max_ts(log_path: Path) -> tuple[int, int]:
+    """Read first/last activitiesLog row to learn which day and how many ticks
+    the sandbox actually ran. Newer sandboxes run a full 10k-tick day; older
+    ones ran only the first 1k ticks of an existing dataset day."""
+    payload = json.loads(log_path.read_text())
+    activities = payload["activitiesLog"]
+    lines = activities.split("\n")
+    # lines[0] = header, lines[1] = first row, last non-empty = last row
+    first = lines[1].split(";")
+    last = next(l for l in reversed(lines) if l).split(";")
+    day = int(first[0])
+    max_ts = int(last[1])
+    return day, max_ts
+
+
 def main():
     log_dir = find_latest_log_folder()
     log_id = log_dir.name
     json_path = log_dir / f"{log_id}.json"
     py_path = log_dir / f"{log_id}.py"
+    log_path = log_dir / f"{log_id}.log"
 
     payload = json.loads(json_path.read_text())
     real_pnl = float(payload["profit"])
-    print(f"Reference: {log_dir.name}/  status={payload.get('status')}  round={payload.get('round')}")
+    round_num = int(payload.get("round", 3))
+    day, max_ts = detect_day_and_max_ts(log_path)
+    print(f"Reference: {log_dir.name}/  status={payload.get('status')}  round={round_num}  day={day}  max_ts={max_ts}")
     print(f"Real PnL:  {real_pnl:+,.2f}")
     print()
+
+    dataset = f"round{round_num}"
+    day_prefix_plus = f"D+{day}"
+    day_prefix_eq = f"D={day}"
 
     print(f"{'QP':>5}  {'backtester':>12}  {'delta':>10}  {'pct_err':>8}")
     best = None
@@ -56,8 +78,8 @@ def main():
         proc = subprocess.run(
             ["cargo", "run", "--release", "--quiet", "--",
              "--trader", str(py_path),
-             "--dataset", "round3", "--day=2",
-             "--max-timestamp=99900",
+             "--dataset", dataset, f"--day={day}",
+             f"--max-timestamp={max_ts}",
              f"--queue-penetration={qp}",
              "--products", "summary"],
             cwd=REPO / "backtester", capture_output=True, text=True,
@@ -65,10 +87,10 @@ def main():
         if proc.returncode != 0:
             print(f"  qp={qp} FAILED: {proc.stderr[:200]}")
             continue
-        # Parse FINAL_PNL from "D+2 ... <ticks> <trades> <pnl>" row
+        # Parse FINAL_PNL from "D+<day> ... <ticks> <trades> <pnl>" row
         pnl = None
         for line in proc.stdout.splitlines():
-            if line.lstrip().startswith("D+2") or line.lstrip().startswith("D=2"):
+            if line.lstrip().startswith(day_prefix_plus) or line.lstrip().startswith(day_prefix_eq):
                 parts = line.split()
                 if len(parts) >= 5:
                     try:

@@ -9,19 +9,23 @@ Strongly negative t-stats → reject unit root → series is mean-reverting.
 Critical values (constant, no trend):
   5%: -2.86,  1%: -3.43
 
-Output: notebooks/round3_adf.png
+Set ROUND/DAYS env vars to retarget.
+Output: notebooks/round{ROUND}_adf.png
 """
 
 import csv
 import math
+import os
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
 
 REPO = Path(__file__).resolve().parent.parent
-DATA = REPO / "backtester" / "datasets" / "round3"
-OUT = REPO / "notebooks" / "round3_adf.png"
+ROUND = int(os.environ.get("ROUND", "3"))
+DAYS = [int(x) for x in os.environ.get("DAYS", "0,1,2").split(",")]
+DATA = REPO / "backtester" / "datasets" / f"round{ROUND}"
+OUT = REPO / "notebooks" / f"round{ROUND}_adf.png"
 
 PRODUCTS = ["HYDROGEL_PACK", "VELVETFRUIT_EXTRACT"]
 WINDOW = 1000   # ticks per ADF window
@@ -31,13 +35,13 @@ LAGS = 2        # augmentation lags
 
 def load_mid(product):
     out = []
-    for d in (0, 1, 2):
-        with (DATA / f"prices_round_3_day_{d}.csv").open() as f:
+    for slot, d in enumerate(DAYS):
+        with (DATA / f"prices_round_{ROUND}_day_{d}.csv").open() as f:
             for r in csv.DictReader(f, delimiter=";"):
                 if r["product"] != product or not r["mid_price"]:
                     continue
                 ts = int(r["timestamp"])
-                gi = d * 10000 + ts // 100
+                gi = slot * 10000 + ts // 100
                 out.append((gi, float(r["mid_price"])))
     return out
 
@@ -104,8 +108,8 @@ def main():
         ax.axhline(-3.43, color="red", lw=0.7, ls="--",
                    label="1% critical (−3.43)")
         ax.axhline(0, color="black", lw=0.3, alpha=0.5)
-        for d_end in (10000, 20000):
-            ax.axvline(d_end, color="black", lw=0.4, alpha=0.4)
+        for k in range(1, len(DAYS)):
+            ax.axvline(k * 10000, color="black", lw=0.4, alpha=0.4)
         ax.set_ylabel(f"{prod}\nADF t-stat")
         ax.legend(fontsize=8, loc="lower right")
         ax.grid(alpha=0.25)
@@ -115,7 +119,7 @@ def main():
               f"min={min(ys):+.2f}  max={max(ys):+.2f}  "
               f"below 5%: {below5}/{len(ys)} ({100*below5/len(ys):.0f}%)  "
               f"below 1%: {below1}/{len(ys)} ({100*below1/len(ys):.0f}%)")
-    axes[-1].set_xlabel("global tick (D0 → D1 → D2)")
+    axes[-1].set_xlabel(f"global tick ({' → '.join(f'D{d}' for d in DAYS)})")
     fig.suptitle(f"Rolling ADF — window={WINDOW}, stride={STRIDE}, lags={LAGS}",
                  fontsize=12)
     plt.tight_layout()

@@ -1,20 +1,23 @@
 """
 Black-Scholes diagnostic plot for the Velvetfruit Extract Vouchers.
 
-For each tick of round 3 (3 days):
+For each tick of the configured days:
   S      = VELVETFRUIT_EXTRACT mid
   K_i    = strike of voucher i
-  T      = (T_DAYS_AT_DAY_0 - day - tick_in_day/10000) / 365
+  T      = (TTE_AT_FIRST_DAY - (d - first_day) - tick_in_day/10000) / 365
   IV_i   = invert BS_call(S, K_i, T, σ) = market_mid_i
 
-Output: notebooks/round3_voucher_bs.png
-  Panel 1: IV smile (IV vs log-moneyness) at four time snapshots
-  Panel 2: IV time series per voucher across all 3 days
-  Panel 3: market mid vs BS intrinsic — shows time value per voucher
+Set ROUND/DAYS/TTE_DAYS env vars to retarget. TTE_DAYS = days-to-expiry
+at the start of DAYS[0]. Round 3 default: 5d (vouchers expire 7d after
+round 1 start). Round 4 default: 2d (continuation; deep-ITM TV ≈ 0 in
+the data confirms vouchers are at/near expiry).
+
+Output: notebooks/round{ROUND}_voucher_bs.png
 """
 
 import csv
 import math
+import os
 from collections import defaultdict
 from pathlib import Path
 
@@ -22,8 +25,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 REPO = Path(__file__).resolve().parent.parent
-DATA = REPO / "backtester" / "datasets" / "round3"
-OUT = REPO / "notebooks" / "round3_voucher_bs.png"
+ROUND = int(os.environ.get("ROUND", "3"))
+DAYS = [int(x) for x in os.environ.get("DAYS", "0,1,2").split(",")]
+DATA = REPO / "backtester" / "datasets" / f"round{ROUND}"
+OUT = REPO / "notebooks" / f"round{ROUND}_voucher_bs.png"
 
 VEV_STRIKES = {
     "VEV_4000": 4000, "VEV_4500": 4500, "VEV_5000": 5000,
@@ -32,8 +37,8 @@ VEV_STRIKES = {
     "VEV_6000": 6000, "VEV_6500": 6500,
 }
 SPOT = "VELVETFRUIT_EXTRACT"
-# Vouchers expire 7 days after start of round 1; round 3 starts at TTE=5d.
-T_DAYS_AT_DAY_0 = 5
+# Days to expiry at the start of DAYS[0]. Round 3 default 5; round 4 default 2.
+TTE_AT_FIRST_DAY = float(os.environ.get("TTE_DAYS", "4" if ROUND == 4 else "5"))
 TICKS_PER_DAY = 10_000
 
 
@@ -64,15 +69,21 @@ def implied_vol(price, S, K, T, lo=0.001, hi=2.0):
 def load_mids():
     """Returns dict[product] -> list[(global_tick_idx, day, ts, mid)]."""
     out = {p: [] for p in list(VEV_STRIKES) + [SPOT]}
-    for d in (0, 1, 2):
-        with (DATA / f"prices_round_3_day_{d}.csv").open() as f:
+    for slot, d in enumerate(DAYS):
+        with (DATA / f"prices_round_{ROUND}_day_{d}.csv").open() as f:
             for r in csv.DictReader(f, delimiter=";"):
                 if r["product"] not in out or not r["mid_price"]:
                     continue
                 ts = int(r["timestamp"])
-                global_idx = d * TICKS_PER_DAY + ts // 100
+                global_idx = slot * TICKS_PER_DAY + ts // 100
                 out[r["product"]].append((global_idx, d, ts, float(r["mid_price"])))
     return out
+
+
+def t_for(d, tick_in_day):
+    """Days-to-expiry → years, given absolute day d in DAYS list."""
+    slot = DAYS.index(d)
+    return (TTE_AT_FIRST_DAY - slot - tick_in_day / TICKS_PER_DAY) / 365.0
 
 
 def main():
@@ -92,7 +103,7 @@ def main():
             if S is None:
                 continue
             tick_in_day = ts // 100
-            T = (T_DAYS_AT_DAY_0 - d - tick_in_day / TICKS_PER_DAY) / 365.0
+            T = t_for(d, tick_in_day)
             if T <= 0:
                 continue
             iv = implied_vol(mid, S, K, T)
@@ -101,19 +112,23 @@ def main():
                 pooled.append((math.log(K / S) / math.sqrt(T), iv, K))
             market_series[prod].append((gi, mid))
 
-    # Snapshots: pick four ticks (start D0, end D0, mid D1, end D2)
-    snap_idx = [0, TICKS_PER_DAY - 1, int(1.5 * TICKS_PER_DAY), 3 * TICKS_PER_DAY - 1]
-    snap_labels = [f"D0 t=0", f"D0 t=99,900", f"D1 t=49,900", f"D2 t=99,900"]
+    # Snapshots: start of first day, end of first day, mid of middle day, end of last day
+    n = len(DAYS)
+    snap_idx = [0, TICKS_PER_DAY - 1, int((n // 2 + 0.5) * TICKS_PER_DAY) if n > 1 else TICKS_PER_DAY // 2, n * TICKS_PER_DAY - 1]
+    snap_labels = [f"D{DAYS[0]} t=0", f"D{DAYS[0]} t=99,900",
+                   f"D{DAYS[min(n-1, n//2)]} t=mid",
+                   f"D{DAYS[-1]} t=99,900"]
     snapshots = []
     for sidx in snap_idx:
-        # Find the closest spot record at this global idx
-        # Spot records for that day:
-        d = sidx // TICKS_PER_DAY
+        slot = sidx // TICKS_PER_DAY
+        if slot >= n:
+            continue
+        d = DAYS[slot]
         ts = (sidx % TICKS_PER_DAY) * 100
         S = spot_by.get((d, ts))
         if S is None:
             continue
-        T = (T_DAYS_AT_DAY_0 - d - (ts / 100) / TICKS_PER_DAY) / 365.0
+        T = t_for(d, ts // 100)
         rows = []
         for prod, K in VEV_STRIKES.items():
             mids_for_prod = dict(((g, m) for g, _, _, m in
@@ -176,7 +191,7 @@ def main():
     ax_smile.set_xlabel("standardized moneyness  m = ln(K/S) / √T")
     ax_smile.set_ylabel("implied volatility")
     ax_smile.set_title(
-        f"Vol smile: pooled {len(pooled):,} quotes across 3 days, quadratic fit",
+        f"Vol smile: pooled {len(pooled):,} quotes across {len(DAYS)} days, quadratic fit",
         fontsize=11,
     )
     ax_smile.legend(fontsize=7, loc="upper left", ncol=2,
@@ -193,11 +208,11 @@ def main():
         ys = [iv for _, iv in ser]
         ax_iv.plot(xs, ys, lw=0.45, color=cmap(i % 10), alpha=0.8, label=f"{prod}")
     ax_iv.set_ylabel("implied volatility")
-    ax_iv.set_title(f"IV per voucher over 3 days  (T={T_DAYS_AT_DAY_0}d at D0 start, decreasing)", fontsize=11)
+    ax_iv.set_title(f"IV per voucher over {len(DAYS)} days  (T={TTE_AT_FIRST_DAY}d at D{DAYS[0]} start, decreasing)", fontsize=11)
     ax_iv.legend(fontsize=7, loc="upper right", ncol=2)
     ax_iv.grid(alpha=0.25)
-    for d_end in (TICKS_PER_DAY, 2 * TICKS_PER_DAY):
-        ax_iv.axvline(d_end, color="black", lw=0.4, alpha=0.4)
+    for k in range(1, len(DAYS)):
+        ax_iv.axvline(k * TICKS_PER_DAY, color="black", lw=0.4, alpha=0.4)
     ax_iv.set_ylim(0, 1.0)
 
     # Panel 3: time value (market - intrinsic) per voucher
@@ -207,7 +222,9 @@ def main():
         xs = []
         ys = []
         for gi, mid in market_series[prod]:
-            d = gi // TICKS_PER_DAY
+            slot = gi // TICKS_PER_DAY
+            if slot >= len(DAYS): continue
+            d = DAYS[slot]
             ts = (gi % TICKS_PER_DAY) * 100
             S = spot_by.get((d, ts))
             if S is None: continue
@@ -216,13 +233,13 @@ def main():
             ys.append(tv)
         ax_tv.plot(xs, ys, lw=0.45, color=cmap(i % 10), alpha=0.8, label=prod)
     ax_tv.set_ylabel("time value (mid − intrinsic)")
-    ax_tv.set_xlabel("tick index (D0 → D1 → D2)")
+    ax_tv.set_xlabel(f"tick index ({' → '.join(f'D{d}' for d in DAYS)})")
     ax_tv.set_title("Time value per voucher", fontsize=11)
     ax_tv.set_yscale("symlog", linthresh=1)
     ax_tv.legend(fontsize=7, loc="upper right", ncol=2)
     ax_tv.grid(alpha=0.25)
-    for d_end in (TICKS_PER_DAY, 2 * TICKS_PER_DAY):
-        ax_tv.axvline(d_end, color="black", lw=0.4, alpha=0.4)
+    for k in range(1, len(DAYS)):
+        ax_tv.axvline(k * TICKS_PER_DAY, color="black", lw=0.4, alpha=0.4)
 
     plt.suptitle("Black-Scholes diagnostic: VEV vouchers vs VELVETFRUIT_EXTRACT spot", fontsize=12)
     plt.savefig(OUT, dpi=140, bbox_inches="tight")

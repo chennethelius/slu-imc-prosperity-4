@@ -1,23 +1,23 @@
 """
-Plot mid prices for HYDROGEL_PACK and VELVETFRUIT_EXTRACT across all 3 days,
-with markers at ticks where the per-tick traded volume is ≥ MIN_VOL.
+Plot mid prices for HYDROGEL_PACK and VELVETFRUIT_EXTRACT across the
+configured days, with markers at ticks where the per-tick traded volume
+is ≥ MIN_VOL. Set ROUND/DAYS env vars to retarget.
 
-Inputs:
-  backtester/datasets/round3/prices_round_3_day_{d}.csv   (mid_price)
-  backtester/datasets/round3/trades_round_3_day_{d}.csv   (quantity)
-
-Output: notebooks/round3_volume_spikes.png
+Output: notebooks/round{ROUND}_volume_spikes.png
 """
 
 import csv
+import os
 from collections import defaultdict
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 
 REPO = Path(__file__).resolve().parent.parent
-DATA = REPO / "backtester" / "datasets" / "round3"
-OUT = REPO / "notebooks" / "round3_volume_spikes.png"
+ROUND = int(os.environ.get("ROUND", "3"))
+DAYS = [int(x) for x in os.environ.get("DAYS", "0,1,2").split(",")]
+DATA = REPO / "backtester" / "datasets" / f"round{ROUND}"
+OUT = REPO / "notebooks" / f"round{ROUND}_volume_spikes.png"
 
 PRODUCTS = ["HYDROGEL_PACK", "VELVETFRUIT_EXTRACT"]
 # Per-product cutoffs (~top 5% per-tick volume). HYDROGEL caps at 6/tick,
@@ -29,13 +29,13 @@ TICKS_PER_DAY = 10_000
 def load_mids():
     """Returns dict[product] -> list[(global_idx, mid)]."""
     out = {p: [] for p in PRODUCTS}
-    for d in (0, 1, 2):
-        with (DATA / f"prices_round_3_day_{d}.csv").open() as f:
+    for slot, d in enumerate(DAYS):
+        with (DATA / f"prices_round_{ROUND}_day_{d}.csv").open() as f:
             for r in csv.DictReader(f, delimiter=";"):
                 if r["product"] not in out or not r["mid_price"]:
                     continue
                 ts = int(r["timestamp"])
-                gi = d * TICKS_PER_DAY + ts // 100
+                gi = slot * TICKS_PER_DAY + ts // 100
                 out[r["product"]].append((gi, float(r["mid_price"])))
     return out
 
@@ -43,13 +43,13 @@ def load_mids():
 def load_trade_vol():
     """Returns dict[product] -> dict[global_idx] -> total qty traded at that tick."""
     out = {p: defaultdict(int) for p in PRODUCTS}
-    for d in (0, 1, 2):
-        with (DATA / f"trades_round_3_day_{d}.csv").open() as f:
+    for slot, d in enumerate(DAYS):
+        with (DATA / f"trades_round_{ROUND}_day_{d}.csv").open() as f:
             for r in csv.DictReader(f, delimiter=";"):
                 if r["symbol"] not in out:
                     continue
                 ts = int(r["timestamp"])
-                gi = d * TICKS_PER_DAY + ts // 100
+                gi = slot * TICKS_PER_DAY + ts // 100
                 out[r["symbol"]][gi] += int(r["quantity"])
     return out
 
@@ -88,18 +88,18 @@ def main():
                      f"{len(spike_x)} spikes",
                      fontsize=10)
         ax.grid(alpha=0.25)
-        for d_end in (TICKS_PER_DAY, 2 * TICKS_PER_DAY):
-            ax.axvline(d_end, color="black", lw=0.4, alpha=0.4)
+        for k in range(1, len(DAYS)):
+            ax.axvline(k * TICKS_PER_DAY, color="black", lw=0.4, alpha=0.4)
 
         # Print per-day spike summary
-        per_day = defaultdict(int)
+        per_slot = defaultdict(int)
         for gi in spike_x:
-            per_day[gi // TICKS_PER_DAY] += 1
-        print(f"{prod}:  total spikes={len(spike_x)}  "
-              f"per-day: D0={per_day[0]}  D1={per_day[1]}  D2={per_day[2]}  "
+            per_slot[gi // TICKS_PER_DAY] += 1
+        per_day_msg = "  ".join(f"D{d}={per_slot[s]}" for s, d in enumerate(DAYS))
+        print(f"{prod}:  total spikes={len(spike_x)}  per-day: {per_day_msg}  "
               f"max qty={max(spike_v) if spike_v else 0}")
 
-    axes[-1].set_xlabel("global tick (D0 → D1 → D2)")
+    axes[-1].set_xlabel(f"global tick ({' → '.join(f'D{d}' for d in DAYS)})")
     fig.suptitle(f"Mid + volume spikes (per-tick traded qty ≥ {MIN_VOL})",
                  fontsize=12)
     plt.tight_layout()
