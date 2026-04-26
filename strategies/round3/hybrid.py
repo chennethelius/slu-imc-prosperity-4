@@ -1,64 +1,30 @@
 """
 Round 3 submission — two pipelines, one Trader.
 
-  HYDROGEL_PACK            → proportional MR + Kalman fair  (kalman_mr)
-  VELVETFRUIT_EXTRACT      → proportional MR + Kalman fair  (kalman_mr)
-  VEV_4000 … VEV_5500      → anchor-divergence + market-make (zscore)
+  HYDROGEL_PACK / VELVETFRUIT_EXTRACT → Kalman-MR (proportional reversion to fair_static)
+  VEV_4000 … VEV_5500                 → anchor-divergence + market-make
 
 PRE-SUBMISSION CHECKLIST:
-  - Re-sweep fair_static for HYDROGEL_PACK and VELVETFRUIT_EXTRACT against
-    the latest available data (round-N day_0..day_{N-1} CSVs).
-  - Score each candidate by per-day mean AND min PnL — IMC submissions
-    only run a single day, so a high-mean param that bombs on one day
-    is worse than a flatter one. Don't pick the global-sum optimum.
-  - Sanity check: rerun against the most recent real Prosperity sandbox
-    log with --max-timestamp matching the sandbox length. Compare
-    per-product PnL within ~5% of reality.
-
-Both delta-1 products (HYDROGEL, VELVETFRUIT) are mean-reverting at every
-horizon (variance ratios <1) so the Kalman + proportional-MR engine is
-the right tool. VEVs use the existing anchor-divergence pipeline because
-they have crash regimes where threshold-take wins.
-
-Kalman-MR pipeline:
-  1. Kalman-track fair from the volume-weighted touch micro-price
-  2. Long-term anchor = fair_static (data-derived true mean), optionally
-     blended with a slow EMA of mid (anchor_alpha) to track day-level drift.
-     HYDROGEL has stable mean across days → pure static.
-     VELVETFRUIT has +5/day mean drift → static + slow EMA.
-  3. target = MR_GAIN · ((fair − mid) + (anchor − fair)) / σ
-     — short-term reversion + long-term anchor pull, both scaled by σ
-  4. Cross book up to fair + TAKE_MAX_PAY (0 = at-or-below fair only)
-  5. Post passive quotes one tick inside the nearest level at fair ± quote_edge.
-     HYDROGEL (wide spread 16, thin book) → quote_edge=3 stays clear of touch.
-     VELVETFRUIT (narrow spread 5, deep book) → quote_edge=1 quotes inside.
-
-Zscore pipeline:
-  1. fair = full_depth_mid + aggressor_lambda · rolling aggressor flow
-  2. anchor = expanding-window mean of mids
-  3. if |mid − anchor| ≥ diverge_threshold: aggressively take the
-     mean-reverting side
-  4. Standard take + inventory-skewed bid/ask quotes
+  - Re-sweep fair_static for HYDROGEL/VELVETFRUIT against the latest day CSVs.
+    Score by per-day mean AND min PnL — IMC submissions run a single day,
+    so a high-mean param that bombs on one day is worse than a flatter one.
+  - Validate against the latest Prosperity sandbox log with --max-timestamp
+    matching sandbox length; per-product PnL should match within ~5%.
 """
 
 import json
 import math
 
-from datamodel import Order, OrderDepth, TradingState
+from datamodel import Order, TradingState
 
-
-# =========================================================================
-# zscore (multi-product anchor-divergence) constants & helpers
-# =========================================================================
-
-SPREAD_FRACTION = 0.5
-SKEW_PER_UNIT = 0.02
-VOL_WINDOW = 100
-VOL_SCALE_MAX = 2.0
 TAKE_WIDTH = 1
-AGGRESSOR_WINDOW = 10
 ANCHOR_WARMUP = 100
 DIVERGE_TAKE_SIZE = 30
+
+
+# =========================================================================
+# Shared book helpers
+# =========================================================================
 
 
 def search_sells(depth):
@@ -79,56 +45,9 @@ def full_depth_mid(depth):
     return (sum(p * v for p, v in bids) / bv + sum(p * v for p, v in asks) / av) / 2
 
 
-def realized_vol(mids):
-    if len(mids) < 2:
-        return 0.0
-    diffs = [mids[i] - mids[i - 1] for i in range(1, len(mids))]
-    mean = sum(diffs) / len(diffs)
-    return math.sqrt(sum((d - mean) ** 2 for d in diffs) / len(diffs))
-
-
-def aggressor_side(price, best_bid, best_ask):
-    return 1 if price >= best_ask else -1 if price <= best_bid else 0
-
-
-def trim(history, window):
-    if len(history) > window:
-        del history[: len(history) - window]
-
-
-def update_anchor(scratch, mid):
-    n = scratch.get("anchor_n", 0) + 1
-    s = scratch.get("anchor_sum", 0.0) + mid
-    scratch["anchor_n"] = n
-    scratch["anchor_sum"] = s
-    return s / n
-
-
-def adjust_fair_for_aggressor_flow(cfg, fair, best_bid, best_ask, state, scratch):
-    lam = cfg.get("aggressor_lambda", 0.0)
-    if lam == 0.0:
-        return fair
-    flow = sum(
-        aggressor_side(t.price, best_bid, best_ask) * t.quantity
-        for t in state.market_trades.get(cfg["product"], [])
-    )
-    history = scratch.setdefault("agg_flow", [])
-    history.append(flow)
-    trim(history, AGGRESSOR_WINDOW)
-    return fair + lam * sum(history)
-
-
-def vol_widened_spread(cfg, scratch, best_bid, best_ask):
-    mids = scratch.setdefault("mids", [])
-    mids.append((best_bid + best_ask) / 2)
-    trim(mids, VOL_WINDOW)
-    if len(mids) < VOL_WINDOW // 2:
-        return SPREAD_FRACTION
-    baseline = cfg.get("baseline_vol", 1.5)
-    vol = realized_vol(mids)
-    if vol <= baseline or baseline <= 0:
-        return SPREAD_FRACTION
-    return min(1.0, SPREAD_FRACTION * min(VOL_SCALE_MAX, vol / baseline))
+# =========================================================================
+# Zscore pipeline (VEV_*)
+# =========================================================================
 
 
 def divergence_take_orders(cfg, depth, scratch, position, anchor, mid):
@@ -187,12 +106,12 @@ def take_orders(cfg, depth, fair, position):
     return out, bought, sold
 
 
-def make_quote(cfg, fair, best_bid, best_ask, position, c, bought, sold):
+def make_quote(cfg, fair, best_bid, best_ask, position, bought, sold):
     product, limit = cfg["product"], cfg["position_limit"]
     qsize = cfg.get("quote_size", 20)
-    skew = position * SKEW_PER_UNIT
-    bid_px = min(math.floor(fair - c * (fair - best_bid) - skew), best_ask - 1)
-    ask_px = max(math.ceil(fair + c * (best_ask - fair) - skew), best_bid + 1)
+    # Quote at midpoint between fair and the touch on each side.
+    bid_px = min(math.floor((fair + best_bid) / 2), best_ask - 1)
+    ask_px = max(math.ceil((fair + best_ask) / 2), best_bid + 1)
     buy = max(0, min(qsize, limit - position - bought))
     sell = max(0, min(qsize, limit + position - sold))
     out = []
@@ -212,10 +131,11 @@ def zscore_orders(cfg, state, scratch):
     best_ask = min(depth.sell_orders)
     mid = (best_bid + best_ask) / 2
     fair = full_depth_mid(depth)
-    fair = adjust_fair_for_aggressor_flow(cfg, fair, best_bid, best_ask, state, scratch)
 
-    anchor = update_anchor(scratch, mid)
-    c = vol_widened_spread(cfg, scratch, best_bid, best_ask)
+    n = scratch.get("anchor_n", 0) + 1
+    s = scratch.get("anchor_sum", 0.0) + mid
+    scratch["anchor_n"], scratch["anchor_sum"] = n, s
+    anchor = s / n
     position = state.position.get(cfg["product"], 0)
 
     diverge, d_bought, d_sold = divergence_take_orders(
@@ -225,12 +145,12 @@ def zscore_orders(cfg, state, scratch):
     takes, bought, sold = take_orders(cfg, depth, fair, pos_eff)
     bought += d_bought
     sold += d_sold
-    quotes = make_quote(cfg, fair, best_bid, best_ask, position, c, bought, sold)
+    quotes = make_quote(cfg, fair, best_bid, best_ask, position, bought, sold)
     return diverge + takes + quotes
 
 
 # =========================================================================
-# Kalman-MR pipeline (delta-1 products: HYDROGEL_PACK, VELVETFRUIT_EXTRACT)
+# Kalman-MR pipeline (HYDROGEL_PACK, VELVETFRUIT_EXTRACT)
 # =========================================================================
 
 
@@ -247,33 +167,25 @@ def kalman_mr_orders(cfg, depth, position, scratch):
     micro = (bb * av_tob + ba * bv_tob) / tot if tot > 0 else (bb + ba) / 2.0
     mid = (bb + ba) / 2.0
 
+    # Kalman-track fair on volume-weighted micro-price.
     k_ss = cfg["k_ss"]
     fair = scratch.get("_f", micro)
     innov = micro - fair
     err_ema = scratch.get("_err", abs(innov))
     err_ema += k_ss * (abs(innov) - err_ema)
-    scratch["_err"] = err_ema
     fair += (k_ss / (1.0 + err_ema)) * innov
-    scratch["_f"] = fair
+    scratch["_f"], scratch["_err"] = fair, err_ema
 
+    # Online σ estimate from (mid - fair) variance.
     n = scratch.get("_n", 0) + 1
     s2 = scratch.get("_s2", 0.0) + (mid - fair) ** 2
     scratch["_n"], scratch["_s2"] = n, s2
     sigma = max(1.0, (s2 / n) ** 0.5) if n > 50 else cfg["sigma_init"]
 
-    fair_static = cfg["fair_static"]
-    anchor_alpha = cfg.get("anchor_alpha", 0.0)
-    if anchor_alpha > 0:
-        anchor = scratch.get("_anc", fair_static)
-        anchor += anchor_alpha * (mid - anchor)
-        scratch["_anc"] = anchor
-    else:
-        anchor = fair_static
-
-    mr_gain = cfg["mr_gain"]
-    target_short = mr_gain * (fair - mid) / sigma
-    target_static = mr_gain * (anchor - fair) / sigma
-    target = max(-limit, min(limit, round(target_short + target_static)))
+    # target = mr_gain · (anchor − mid) / σ, clamped to ±limit.
+    # (Equivalently the sum of short-term and long-term reversion terms.)
+    anchor = cfg["fair_static"]
+    target = max(-limit, min(limit, round(cfg["mr_gain"] * (anchor - mid) / sigma)))
 
     take_max_pay = cfg["take_max_pay"]
     quote_edge = cfg["quote_edge"]
@@ -326,45 +238,35 @@ KALMAN_MR_PRODUCTS = [
         "product": "HYDROGEL_PACK",
         "position_limit": 200,
         "k_ss": 0.02,
-        "fair_static": 10030,       # mean+40 — sweep optimum (offset captures spread asymmetry)
-        "anchor_alpha": 0.0,        # day-mean rock stable → no drift adjustment
+        "fair_static": 10030,       # mean+40; mean across 3 days = 9990
         "mr_gain": 2000,
         "sigma_init": 30.0,
-        "take_max_pay": -6,         # only cross when offer ≥6 ticks below fair (~spread/2-2)
-        "quote_edge": 3,            # wide spread (16) + thin TOB (25) → keep clear
+        "take_max_pay": -6,         # only cross when offer ≥6 ticks below fair
+        "quote_edge": 3,
         "quote_size": 30,
     },
     {
         "product": "VELVETFRUIT_EXTRACT",
         "position_limit": 200,
         "k_ss": 0.02,
-        "fair_static": 5275,        # mean+25 — joint mean/min sweep optimum (re-sweep before submit)
-        "anchor_alpha": 0.0,        # day-mean drift small → static beats EMA decisively
+        "fair_static": 5275,        # mean+25; mean across 3 days = 5250
         "mr_gain": 2000,
         "sigma_init": 15.0,
-        "take_max_pay": -2,         # only cross when offer ≥2 ticks below fair (~spread/2-1)
-        "quote_edge": 1,            # narrow spread (5) + deep TOB (75) → quote inside
+        "take_max_pay": -2,         # only cross when offer ≥2 ticks below fair
+        "quote_edge": 1,
         "quote_size": 30,
     },
 ]
 
 ZSCORE_PRODUCTS = [
-    {"product": "VEV_4000", "position_limit": 300, "quote_size": 30, "baseline_vol": 0.5,
-     "aggressor_lambda": 0.015, "diverge_threshold": 25, "max_diverge_position": 295},
-    {"product": "VEV_4500", "position_limit": 300, "quote_size": 30, "baseline_vol": 0.5,
-     "diverge_threshold": 25, "max_diverge_position": 295},
-    {"product": "VEV_5000", "position_limit": 300, "quote_size": 30, "baseline_vol": 0.5,
-     "diverge_threshold": 22, "max_diverge_position": 295},
-    {"product": "VEV_5100", "position_limit": 300, "quote_size": 30, "baseline_vol": 0.5,
-     "diverge_threshold": 18, "max_diverge_position": 295},
-    {"product": "VEV_5200", "position_limit": 300, "quote_size": 30, "baseline_vol": 0.5,
-     "diverge_threshold": 14, "max_diverge_position": 295},
-    {"product": "VEV_5300", "position_limit": 300, "quote_size": 30, "baseline_vol": 0.5,
-     "diverge_threshold": 10, "max_diverge_position": 295},
-    {"product": "VEV_5400", "position_limit": 300, "quote_size": 30, "baseline_vol": 0.5,
-     "diverge_threshold": 5, "max_diverge_position": 295},
-    {"product": "VEV_5500", "position_limit": 300, "quote_size": 30, "baseline_vol": 0.3,
-     "diverge_threshold": 3, "max_diverge_position": 295},
+    {"product": "VEV_4000", "position_limit": 300, "quote_size": 30, "diverge_threshold": 25, "max_diverge_position": 295},
+    {"product": "VEV_4500", "position_limit": 300, "quote_size": 30, "diverge_threshold": 25, "max_diverge_position": 295},
+    {"product": "VEV_5000", "position_limit": 300, "quote_size": 30, "diverge_threshold": 22, "max_diverge_position": 295},
+    {"product": "VEV_5100", "position_limit": 300, "quote_size": 30, "diverge_threshold": 18, "max_diverge_position": 295},
+    {"product": "VEV_5200", "position_limit": 300, "quote_size": 30, "diverge_threshold": 14, "max_diverge_position": 295},
+    {"product": "VEV_5300", "position_limit": 300, "quote_size": 30, "diverge_threshold": 10, "max_diverge_position": 295},
+    {"product": "VEV_5400", "position_limit": 300, "quote_size": 30, "diverge_threshold": 5, "max_diverge_position": 295},
+    {"product": "VEV_5500", "position_limit": 300, "quote_size": 30, "diverge_threshold": 3, "max_diverge_position": 295},
 ]
 
 
