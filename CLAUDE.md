@@ -39,11 +39,26 @@ cd backtester && make tutorial TRADER=../strategies/tutorial/my_strat.py
 cd backtester && make round1 TRADER=../strategies/round1/my_strat.py
 cd backtester && make round1 TRADER=../strategies/round1/my_strat.py DAY=-1
 
-# REALISTIC mode — mirrors Prosperity fill rates. Default (QP=1.0) lets
-# your orders "inherit" competitor market-trade volume and overstates PnL
-# ~2-3×. Use QP=0.0 when tuning for the submission environment:
+# Queue-penetration (QP) controls how much of competitor market-trade volume
+# your passive resting orders are allowed to "inherit" as fills.
+#   QP=1.0 (default): your orders inherit all competitor flow at their price
+#   QP=0.0: passive orders only fill against the resting book at the time of
+#           your action, never via inherited market trades
+# Effect on PnL is strategy-dependent — verify against a real submission log:
+#   - Passive market-making strategies (RAINFOREST_RESIN-style) under QP=1.0
+#     typically inflate PnL 2-3× vs reality. Tune them with QP=0.0.
+#   - Take-driven strategies (cross-the-spread on signal) are largely
+#     QP-insensitive — both modes match real submission within a few percent.
+# When in doubt: pull the real Prosperity match log, run the backtester with
+# --max-timestamp matching the sandbox length, sweep QP=0.0/0.5/1.0, and pick
+# the value whose per-product PnL and trade count best match.
 cd backtester && cargo run --release -- --trader ../strategies/round1/my_strat.py \
   --dataset round1 --queue-penetration 0.0 --products summary
+
+# Sandbox-length comparison — match a real Prosperity sandbox match (which
+# typically runs only the first 1,000 ticks of a day, not all 10,000):
+cd backtester && cargo run --release -- --trader ../strategies/round3/hybrid.py \
+  --dataset round3 --day=2 --max-timestamp=99900 --queue-penetration 1.0 --products full
 
 # Analyze a run
 python scripts/analyze.py backtester/runs/<run_id>/
