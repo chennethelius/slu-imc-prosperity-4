@@ -191,34 +191,47 @@ const FAIR_BY_SYMBOL = {
 };
 
 function explainFill(fill, book, symbol){
-  // Generate a short why-this-filled sentence using local book context.
-  // Profit is computed vs the hardcoded fair (when known) — NOT mid.
-  // Mid can sit far from fair when the spread is wide; profit-vs-fair is
-  // what actually marks our PnL.
-  const sideWord = fill.side==='BUY'?'BOUGHT':'SOLD';
+  // Classify each fill from OUR perspective:
+  //   BUY  + fill.price >= bestAsk → we crossed up to lift their ask  (TAKER)
+  //   BUY  + otherwise            → someone hit our resting bid       (MAKER)
+  //   SELL + fill.price <= bestBid → we crossed down to hit their bid (TAKER)
+  //   SELL + otherwise            → someone lifted our resting ask    (MAKER)
+  // The book snapshot is post-fill, so a maker fill at our touch quote may
+  // sit inside the now-displayed spread — still us making the market.
   const fair = FAIR_BY_SYMBOL[symbol];
   const ref = fair != null ? fair : book?.mid;
   const refLabel = fair != null ? 'fair' : 'mid';
   const profit = ref != null ? (fill.side==='BUY' ? ref - fill.price : fill.price - ref) : null;
-  const parts = [`${sideWord} ${fill.qty} @ ${fill.price.toLocaleString()}`];
+
+  const bestAsk = book?.asks?.[0];
+  const bestBid = book?.bids?.[0];
+  const isTaker = (fill.side === 'BUY')
+    ? (bestAsk != null && fill.price >= bestAsk.p)
+    : (bestBid != null && fill.price <= bestBid.p);
+
+  // Action from OUR perspective — what we did, plain English.
+  // BUY + maker = our resting BID was hit (we bought at our bid).
+  // SELL + maker = our resting ASK was lifted (we sold at our ask).
+  // BUY + taker = we crossed up and lifted their best ask.
+  // SELL + taker = we crossed down and hit their best bid.
+  let role, action;
+  if(isTaker){
+    role = 'TAKER';
+    action = (fill.side === 'BUY')
+      ? `we lifted the ask @ ${fill.price.toLocaleString()} (paid the spread to buy)`
+      : `we hit the bid @ ${fill.price.toLocaleString()} (paid the spread to sell)`;
+  } else {
+    role = 'MAKER';
+    action = (fill.side === 'BUY')
+      ? `we bought at our resting bid @ ${fill.price.toLocaleString()} (someone sold to us)`
+      : `we sold at our resting ask @ ${fill.price.toLocaleString()} (someone bought from us)`;
+  }
+
+  const parts = [`<b>${role}</b> ${fill.qty} lots — ${action}`];
   if(profit != null){
     const sign = profit > 0 ? '+' : (profit < 0 ? '−' : '±');
     const word = profit > 0 ? 'profit' : profit < 0 ? 'LOSS' : 'breakeven';
-    parts.push(`(${sign}${Math.abs(profit).toFixed(1)} per lot vs ${refLabel}=${ref.toLocaleString()} → ${word} ${fill.qty * profit >= 0 ? '+' : ''}${(fill.qty * profit).toFixed(0)})`);
-  }
-  // Identify whether we crossed (active take) or got passively filled.
-  const bestAsk = book?.asks?.[0];
-  const bestBid = book?.bids?.[0];
-  if(fill.side === 'BUY' && bestAsk && fill.price >= bestAsk.p){
-    parts.push(`— LIFTED ASK (we crossed to take their offer)`);
-  } else if(fill.side === 'SELL' && bestBid && fill.price <= bestBid.p){
-    parts.push(`— HIT BID (we crossed to take their bid)`);
-  } else if(fill.side === 'BUY' && bestBid && fill.price <= bestBid.p){
-    parts.push(`— PASSIVE FILL on our bid (someone hit our resting order)`);
-  } else if(fill.side === 'SELL' && bestAsk && fill.price >= bestAsk.p){
-    parts.push(`— PASSIVE FILL on our ask (someone lifted our resting order)`);
-  } else {
-    parts.push(`— inside-spread fill (passive quote inside touch matched)`);
+    parts.push(`(${sign}${Math.abs(profit).toFixed(1)}/lot vs ${refLabel}=${ref.toLocaleString()} → ${word} ${fill.qty * profit >= 0 ? '+' : ''}${(fill.qty * profit).toFixed(0)})`);
   }
   return parts.join(' ');
 }
