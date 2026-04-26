@@ -32,11 +32,18 @@ def run_pair(strategy_path: Path, ds: str, backtester_bin: Path, backtester_dir:
     try:
         print(f"=== {strat_name} vs {ds} ===", flush=True)
         try:
+            # Backtester flags pinned to the IMC-sandbox calibration (see
+            # scripts/calibrate_backtester.py). These match the Rust defaults
+            # today, but pinning them here prevents silent drift if the
+            # backtester defaults ever change.
             result = subprocess.run(
                 [
                     str(backtester_bin),
                     "--trader", str(strategy_path),
                     "--dataset", ds,
+                    "--queue-penetration", "1.0",
+                    "--book-fill", "true",
+                    "--price-slippage-bps", "0",
                     "--persist",
                     "--artifact-mode", "full",
                     "--output-root", str(out_root),
