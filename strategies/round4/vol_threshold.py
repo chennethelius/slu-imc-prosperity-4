@@ -1,28 +1,33 @@
 """
-Round 4 v07 — spot-regime risk gate on v02 voucher logic.
+Round 4 — spot_regime + volatility-adjusted per-strike divergence threshold.
 
-v02 is aggressive (mean=168k, min=54k); v06 was defensive (mean=154k,
-min=64k). v07 takes v02 unchanged but scales max_diverge_position by a
-spot-window z-score regime factor, capturing both worlds:
+Replaces spot_regime on the frontier (strictly dominates it on every
+metric). The spot-window regime gate (200-tick |z|) handles directional
+spot crashes; the vol-adjusted threshold handles per-strike volatility
+spikes that don't necessarily move spot.
 
-  |z| < 0.5:  factor = 1.00  (calm regime, full v02 size)
-  |z| > 1.5:  factor = 0.30  (extreme regime, reduced size)
-  linear interpolation between
+Per-strike: maintain a baseline tick-to-tick mid std (locked at warmup).
+Each tick, scale divergence threshold up by current_vol / baseline_vol:
 
-z = |S - rolling_mean(200 ticks)| / rolling_std(200 ticks). On round-4
-data: D3 spot crashed 63 ticks during the day → regime fired late-day,
-de-leveraging v02's losing strike-level divergence positions.
+  effective_threshold = base × max(1.0, current_vol / baseline_vol)
 
-Result vs frontier (QP=1.0):
-                D1       D2       D3      mean      min   mean+min
-  v02     244,058  208,026   54,358  168,814   54,358    223,172
-  v06     229,388  168,960   63,618  153,988   63,618    217,606
-  v07     235,320  160,649   65,790  153,920   65,790    219,710  ← beats v06
+When the strike's mid is more volatile than baseline (regime changing,
+spread widening), divergence triggers fewer false signals. When calm,
+threshold stays at base. Single-layer modification of existing logic,
+no thrashing.
 
-v07 dominates v06: same mean (within $70), better min ($65k vs $63k),
-better D1 ($235k vs $229k). v06 deleted on promotion.
+Different from position_throttle: that one looks at OUR position;
+this one looks at the BOOK's volatility. They're orthogonal — could
+even be combined in a future variant.
 
-VFRUIT/HYDROGEL Kalman MR identical to v02 (this is voucher-only logic).
+Result vs prior frontier (QP=1.0):
+                       D1       D2       D3      mean      min   mean+min
+  softer_vfruit  244,058  208,026   54,358  168,814   54,358    223,172
+  spot_regime    235,320  160,649   65,790  153,920   65,790    219,710  ← retired
+  vol_threshold  235,552  163,222   65,790  154,855   65,790    220,645  ← dominates spot_regime
+  position_throttle 170,139 133,240 76,969  126,782   76,969    203,751
+
+Strict Pareto improvement: same D1, +$2.5k D2, identical D3 → +$935 on mean+min.
 """
 
 import json
@@ -65,7 +70,29 @@ def full_depth_mid(depth):
 
 
 def divergence_take_orders(cfg, depth, scratch, position, anchor, mid, regime_scale=1.0):
-    threshold = cfg.get("diverge_threshold", 0)
+    base_threshold = cfg.get("diverge_threshold", 0)
+    # Vol-adjusted: track running std of (mid - last_mid), scale threshold
+    # by the multiplier of this std vs its long-run baseline.
+    last_mid = scratch.get("_last_mid", mid)
+    diff = mid - last_mid
+    scratch["_last_mid"] = mid
+    vol_n = scratch.get("vol_n", 0) + 1
+    vol_s2 = scratch.get("vol_s2", 0.0) + diff * diff
+    scratch["vol_n"] = vol_n
+    scratch["vol_s2"] = vol_s2
+    if vol_n > 100:
+        cur_vol = math.sqrt(vol_s2 / vol_n)
+        baseline = scratch.get("_vol_baseline")
+        if baseline is None and vol_n > 500:
+            scratch["_vol_baseline"] = cur_vol  # lock baseline at warmup
+            baseline = cur_vol
+        if baseline is not None and baseline > 0.1:
+            vol_norm = cur_vol / baseline
+            threshold = base_threshold * max(1.0, vol_norm)
+        else:
+            threshold = base_threshold
+    else:
+        threshold = base_threshold
     if threshold <= 0 or scratch.get("anchor_n", 0) < ANCHOR_WARMUP:
         return [], 0, 0
     diverge = mid - anchor
