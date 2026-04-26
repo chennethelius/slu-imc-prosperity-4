@@ -25,6 +25,7 @@ ROUND = int(os.environ.get("ROUND", "4"))
 DAYS = [int(x) for x in os.environ.get("DAYS", "1,2,3").split(",")]
 TTE_AT_FIRST_DAY = float(os.environ.get("TTE_DAYS", "4"))
 DATA = REPO / "backtester" / "datasets" / f"round{ROUND}"
+CSV_OUT = REPO / "notebooks" / f"round{ROUND}_voucher_ticks.csv"
 
 VEV_STRIKES = {
     "VEV_4000": 4000, "VEV_4500": 4500, "VEV_5000": 5000,
@@ -224,6 +225,69 @@ def main():
     cells = "".join(f"{volume[sym][d]:>10}" for d in DAYS)
     total = sum(volume[sym][d] for d in DAYS)
     print(f"{sym:<12}{cells}{total:>10}")
+
+    # ---- Per-tick CSV dump for downstream analysis ----
+    # One row per (day, ts, voucher). Spot is also written so the consumer
+    # can join. Greeks are only computed when IV inversion succeeds.
+    n_rows = 0
+    with CSV_OUT.open("w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow([
+            "day", "ts", "product", "K", "bid", "ask", "bid_vol", "ask_vol",
+            "mid", "spread", "S", "T_years", "intrinsic", "time_value",
+            "iv", "delta", "gamma", "theta_per_day", "vega_per_pct",
+        ])
+        # Spot rows first (K blank).
+        for d, ts, bid, ask, bv, av, mid in prices.get(SPOT, []):
+            spr = (ask - bid) if (bid is not None and ask is not None) else ""
+            w.writerow([d, ts, SPOT, "", bid or "", ask or "", bv, av,
+                        mid if mid is not None else "", spr,
+                        mid if mid is not None else "",
+                        "", "", "", "", "", "", "", ""])
+            n_rows += 1
+        # Vouchers.
+        for sym, K in VEV_STRIKES.items():
+            for d, ts, bid, ask, bv, av, mid in prices.get(sym, []):
+                S = spot_by_ts.get((d, ts))
+                T = t_for(d, ts // 100)
+                spr = (ask - bid) if (bid is not None and ask is not None) else ""
+                if S is None or mid is None:
+                    intr = tv = iv = ""
+                    delta = gamma = theta = vega = ""
+                else:
+                    intr = max(0.0, S - K)
+                    tv = mid - intr
+                    iv_v = implied_vol(mid, S, K, T) if T > 0 else None
+                    if iv_v is None:
+                        iv = ""
+                        # At/past expiry deep-ITM: greeks degenerate to (1,0,0,0)
+                        if T <= 0 and S > K:
+                            delta, gamma, theta, vega = 1.0, 0.0, 0.0, 0.0
+                        else:
+                            delta = gamma = theta = vega = ""
+                    else:
+                        iv = f"{iv_v:.6f}"
+                        d_, g_, th_, vg_ = greeks(S, K, T, iv_v)
+                        delta = f"{d_:.6f}"
+                        gamma = f"{g_:.8f}"
+                        theta = f"{th_:.4f}"
+                        vega = f"{vg_:.4f}"
+                w.writerow([
+                    d, ts, sym, K,
+                    bid if bid is not None else "",
+                    ask if ask is not None else "",
+                    bv, av,
+                    mid if mid is not None else "",
+                    spr,
+                    f"{S:.2f}" if S is not None else "",
+                    f"{T:.6f}",
+                    f"{intr:.2f}" if intr != "" else "",
+                    f"{tv:.4f}" if tv != "" else "",
+                    iv, delta, gamma, theta, vega,
+                ])
+                n_rows += 1
+    print()
+    print(f"wrote {CSV_OUT}  ({n_rows:,} rows, {CSV_OUT.stat().st_size:,} bytes)")
 
 
 if __name__ == "__main__":

@@ -1,5 +1,6 @@
 # Backtest outputs (large, regenerable)
 runs/
+notebooks/round*_voucher_ticks.csv
 
 # Python
 __pycache__/
