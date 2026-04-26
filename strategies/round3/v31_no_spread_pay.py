@@ -315,7 +315,7 @@ KALMAN_MR_PRODUCTS = [
         "fair_static": 10030,       # mean+40; mean across 3 days = 9990
         "mr_gain": 1000,
         "sigma_init": 30.0,
-        # v31: HP never pays spread (re-triggered for dashboard) — set take_max_pay to a value that
+        # v31: HP never pays spread (re-triggered for dashboard (final)) — set take_max_pay to a value that
         # makes `a > fair + take_max_pay` always true (no ask crossing).
         "take_max_pay": -999,
         "quote_edge": 3,
