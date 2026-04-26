@@ -1,3 +1,4 @@
+# bump-for-ci: ensure v04/v05/v06 land on dashboard
 """Round 4 v06 — HP mean-reversion via inventory skew (no aggressive crossing).
 
 User's spec: HP fair is hard-coded at 10000. Use mean reversion to profit

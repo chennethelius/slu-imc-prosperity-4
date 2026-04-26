@@ -1,3 +1,4 @@
+# bump-for-ci: ensure v04/v05/v06 land on dashboard
 """Round 4 v04 — balanced two-sided MM with Avellaneda-Stoikov inventory sizing.
 
 User spec: super-high Sharpe, flat-and-up PnL, no inventory drift, no
