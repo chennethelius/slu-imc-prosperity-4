@@ -1,28 +1,33 @@
 """
-Round 4 — spot_regime + position-aware divergence threshold.
+Round 4 — vol_threshold + asymmetric long/short divergence thresholds.
 
-Single-layer alternative to active-unwind (which thrashed against
-divergence). When position is already large, RAISE the divergence
-threshold so no MORE accumulation happens — without actively selling.
-Existing positions hold; new accumulation paused when over-loaded.
+When position is long, raise the threshold for ADDING more long but
+keep normal threshold for SELLING (reducing). Inverse when short.
 
-Effective threshold:
-  base × (1 + POS_K × |position|/limit)
-  POS_K = 2.0 → at full limit, threshold triples; at 0 position, no change.
+  add_threshold    = base × vol_factor × (1 + 2|p|/limit)
+  reduce_threshold = base × vol_factor
 
-Single-layer = no thrashing. Unlike a regime gate, it doesn't kill the
-divergence signal in calm regimes — only when WE specifically have
-loaded too much.
+Trade-direction classification:
+  diverge > 0 (strategy SELLS): position > 0 → reducing → base
+                                position ≤ 0 → adding short → raised
+  diverge < 0 (strategy BUYS):  position < 0 → reducing → base
+                                position ≥ 0 → adding long → raised
 
-Result vs frontier (QP=1.0):
+Asymmetry keeps reducing trades flowing while slowing accumulation.
+Replaced position_throttle (which symmetrically throttled both sides
+and gave up $9k of mean).
+
+Result vs prior frontier (QP=1.0):
                        D1       D2       D3      mean      min   mean+min
-  softer_vfruit  244,058  208,026   54,358  168,814   54,358    223,172  ← best mean
-  spot_regime    235,320  160,649   65,790  153,920   65,790    219,710  ← best mean+min
-  position_throttle 170,139  133,240   76,969  126,782  76,969    203,751  ← BEST MIN
+  softer_vfruit     244,058  208,026   54,358  168,814   54,358    223,172
+  vol_threshold     235,552  163,222   65,790  154,855   65,790    220,645
+  position_throttle 170,139  133,240   76,969  126,782   76,969    203,751  ← retired
+  asymm_thresh      189,125  135,018   83,493  135,879   83,493    219,372  ← BEST MIN
 
-Trade-off: gives up $27k of mean to gain $11k of min vs spot_regime,
-or $42k mean for $22k min vs softer_vfruit. Pareto-frontier addition,
-not dominator. Pick this strategy if min-day defense is the priority.
+asymm_thresh dominates position_throttle on every metric:
+  +$9,097 mean, +$6,524 min, +$15,621 mean+min.
+
+Pick this when min-day defense is the priority.
 """
 
 import json
@@ -64,17 +69,44 @@ def full_depth_mid(depth):
 # =========================================================================
 
 
-POS_K = 2.0  # threshold scales 1×→3× as |position| goes 0→limit
-
-
 def divergence_take_orders(cfg, depth, scratch, position, anchor, mid, regime_scale=1.0):
     base_threshold = cfg.get("diverge_threshold", 0)
-    limit = cfg.get("position_limit", 1)
-    pos_factor = 1.0 + POS_K * abs(position) / max(1, limit)
-    threshold = base_threshold * pos_factor
-    if threshold <= 0 or scratch.get("anchor_n", 0) < ANCHOR_WARMUP:
+    # Vol-adjusted: track running std of (mid - last_mid), scale threshold
+    # by the multiplier of this std vs its long-run baseline.
+    last_mid = scratch.get("_last_mid", mid)
+    diff = mid - last_mid
+    scratch["_last_mid"] = mid
+    vol_n = scratch.get("vol_n", 0) + 1
+    vol_s2 = scratch.get("vol_s2", 0.0) + diff * diff
+    scratch["vol_n"] = vol_n
+    scratch["vol_s2"] = vol_s2
+    vol_factor = 1.0
+    if vol_n > 100:
+        cur_vol = math.sqrt(vol_s2 / vol_n)
+        baseline = scratch.get("_vol_baseline")
+        if baseline is None and vol_n > 500:
+            scratch["_vol_baseline"] = cur_vol
+            baseline = cur_vol
+        if baseline is not None and baseline > 0.1:
+            vol_factor = max(1.0, cur_vol / baseline)
+    if base_threshold <= 0 or scratch.get("anchor_n", 0) < ANCHOR_WARMUP:
         return [], 0, 0
     diverge = mid - anchor
+    if diverge == 0:
+        return [], 0, 0
+
+    # Asymmetric: ADD-side threshold raised by position-aware factor;
+    # REDUCE-side stays at base.
+    limit_p = cfg.get("position_limit", 1)
+    add_factor = 1.0 + 2.0 * abs(position) / max(1, limit_p)
+    add_threshold = base_threshold * vol_factor * add_factor
+    reduce_threshold = base_threshold * vol_factor
+    # diverge > 0 → strategy will SELL into bids → reduces long, adds short
+    if diverge > 0:
+        is_reducing = (position > 0)
+    else:
+        is_reducing = (position < 0)
+    threshold = reduce_threshold if is_reducing else add_threshold
     if abs(diverge) < threshold:
         return [], 0, 0
 
