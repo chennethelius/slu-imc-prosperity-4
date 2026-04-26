@@ -5,6 +5,16 @@ Round 3 submission — two pipelines, one Trader.
   VELVETFRUIT_EXTRACT      → proportional MR + Kalman fair  (kalman_mr)
   VEV_4000 … VEV_5500      → anchor-divergence + market-make (zscore)
 
+PRE-SUBMISSION CHECKLIST:
+  - Re-sweep fair_static for HYDROGEL_PACK and VELVETFRUIT_EXTRACT against
+    the latest available data (round-N day_0..day_{N-1} CSVs).
+  - Score each candidate by per-day mean AND min PnL — IMC submissions
+    only run a single day, so a high-mean param that bombs on one day
+    is worse than a flatter one. Don't pick the global-sum optimum.
+  - Sanity check: rerun against the most recent real Prosperity sandbox
+    log with --max-timestamp matching the sandbox length. Compare
+    per-product PnL within ~5% of reality.
+
 Both delta-1 products (HYDROGEL, VELVETFRUIT) are mean-reverting at every
 horizon (variance ratios <1) so the Kalman + proportional-MR engine is
 the right tool. VEVs use the existing anchor-divergence pipeline because
@@ -328,7 +338,7 @@ KALMAN_MR_PRODUCTS = [
         "product": "VELVETFRUIT_EXTRACT",
         "position_limit": 200,
         "k_ss": 0.02,
-        "fair_static": 5270,        # mean+20 — sweep optimum (mean=5250; offset captures spread asymmetry)
+        "fair_static": 5275,        # mean+25 — joint mean/min sweep optimum (re-sweep before submit)
         "anchor_alpha": 0.0,        # day-mean drift small → static beats EMA decisively
         "mr_gain": 2000,
         "sigma_init": 15.0,
