@@ -49,3 +49,6 @@ discord-bot/venv/
 !discord-bot/storage/.gitkeep
 
 strategies/round1/ref.md
+
+# Per-run extracted CSVs (regenerable via scripts/extract_run_csv.py)
+analytics/
