@@ -1,5 +1,39 @@
 """
-Round 4 — vol_threshold + asymmetric long/short divergence thresholds.
+Round 4 — direction-aware regime gate on top of asymm threshold.
+
+Round-4 V-shape pattern (from round4_exploration.ipynb): D1+D2 trend
++48 ticks above long-term mean ($5248), then D3 violently reverses
+(-63 in q1-q2), overshoots downside (trough $5191), then **q4 recovers
+to $5247** — within $1 of long-term mean. Recovery is a near-
+deterministic +37 ticks from the trough.
+
+Prior asymm_thresh (retired) defended the q1-q2 fall (regime gate
+scales position cap to 0.30) but stayed defensive into the q4
+recovery — giving up upside.
+
+Direction-aware regime: same defensive scaling on the way DOWN, but
+BOOST position cap to 1.3 once spot starts recovering from a local
+low. Detection: rolling 500-tick min tracker. "Recovery mode" = trough
+was hit ≥50 ticks ago AND current S ≥3 ticks above the trough.
+
+  |z| ≥ 1.5 + falling   → 0.30 scale (defensive)
+  |z| ≥ 1.5 + recovering → 1.3 scale (aggressive — captures rebound)
+  |z| in (0.5, 1.5)     → linear, direction-dependent slope
+
+Plus the asymmetric add/reduce threshold from asymm_thresh (kept).
+
+Result vs prior frontier (QP=1.0):
+                       D1       D2       D3      mean      min   mean+min
+  softer_vfruit     244,058  208,026   54,358  168,814   54,358    223,172
+  vol_threshold     235,552  163,222   65,790  154,855   65,790    220,645
+  asymm_thresh      189,125  135,018   83,493  135,879   83,493    219,372  ← retired
+  recovery_regime   197,208  132,219   91,602  140,343   91,602    231,945  ← BEST mean+min
+
+Strict Pareto improvement over asymm_thresh (+$4.5k mean, +$8.1k min,
++$12.6k mean+min) and FIRST strategy to beat softer_vfruit's mean+min
+ceiling. The V-bottom recovery insight is real and exploitable.
+
+Original asymm_thresh notes (kept since this builds on it):
 
 When position is long, raise the threshold for ADDING more long but
 keep normal threshold for SELLING (reducing). Inverse when short.
@@ -339,10 +373,9 @@ class Trader:
             if ors:
                 orders[cfg["product"]] = ors
 
-        # Regime detection via 200-tick rolling spot z-score.
-        # |z| > 1.5 → spot is far from rolling mean → divergence positions
-        # are loaded against the eventual reversion → scale max position
-        # down 1.0 → 0.30 linearly. Scale stays at 1.0 when spot is calm.
+        # Direction-aware regime: extreme |z| triggers defensive 0.30 scale
+        # if spot is FALLING, but aggressive 1.3 scale if spot is RECOVERING
+        # from a local low (post-trough reversal — captures D3 q4 rebound).
         S = 0.0
         vf_depth = state.order_depths.get(VFRUIT)
         if vf_depth and vf_depth.buy_orders and vf_depth.sell_orders:
@@ -353,16 +386,43 @@ class Trader:
             spot_buf.append(S)
             if len(spot_buf) > 200:
                 del spot_buf[0]
+
+            # Track rolling 500-tick min and the tick at which it was hit
+            min_tracker = store.setdefault("_min_tracker", {"min": S, "ts": state.timestamp})
+            if S < min_tracker["min"]:
+                min_tracker["min"] = S
+                min_tracker["ts"] = state.timestamp
+            # Forget the min if it's older than 500 ticks
+            ticks_since_min = (state.timestamp - min_tracker["ts"]) // 100
+            if ticks_since_min > 500:
+                # Reset to a fresh min from the recent buffer
+                if len(spot_buf) >= 50:
+                    fresh_min = min(spot_buf[-50:])
+                    min_tracker["min"] = fresh_min
+                    min_tracker["ts"] = state.timestamp
+                    ticks_since_min = 0
+
             if len(spot_buf) >= 100:
                 mu_w = sum(spot_buf) / len(spot_buf)
                 var_w = sum((x - mu_w) ** 2 for x in spot_buf) / len(spot_buf)
                 sd_w = math.sqrt(max(1e-6, var_w))
                 if sd_w > 0.5:
                     z = abs(S - mu_w) / sd_w
+                    # Recovery detection: rolling-min was hit ≥50 ticks ago
+                    # AND current S is ≥3 ticks above the trough.
+                    in_recovery = (ticks_since_min >= 50 and
+                                   S >= min_tracker["min"] + 3.0)
                     if z >= 1.5:
-                        regime_scale = 0.30
+                        if in_recovery:
+                            regime_scale = 1.3  # aggressive: capture rebound
+                        else:
+                            regime_scale = 0.30  # defensive: still falling
                     elif z > 0.5:
-                        regime_scale = 1.0 - 0.70 * (z - 0.5)
+                        if in_recovery:
+                            # Mild bias upward in transition zone
+                            regime_scale = 1.0 + 0.20 * (z - 0.5)
+                        else:
+                            regime_scale = 1.0 - 0.70 * (z - 0.5)
 
         for cfg in ZSCORE_PRODUCTS:
             ors = zscore_orders(cfg, state, store.setdefault(cfg["product"], {}),
