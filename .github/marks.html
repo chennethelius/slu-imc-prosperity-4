@@ -28,7 +28,7 @@
   .side-btn:last-child{border-radius:0 6px 6px 0;border-left:none}
   .side-btn.active{background:#0891b2;color:#fff;border-color:#0891b2}
   .chart-card{background:#fff;border:1px solid var(--border-subtle);border-radius:10px;padding:18px;margin-bottom:14px}
-  .chart-card h3{color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;font-weight:600}
+  .chart-card h3{color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:.6px;font-weight:600}
   .chart-canvas-wrap{position:relative;height:520px}
   .chart-canvas-wrap canvas{width:100%!important;height:100%!important}
   .stats{background:var(--bg-raised);border:1px solid var(--border-subtle);border-radius:10px;padding:14px}
@@ -73,9 +73,9 @@
     <div class="control-group">
       <span class="control-label">Side</span>
       <div class="side-toggle">
-        <button class="side-btn active" data-side="buy">Buy</button>
+        <button class="side-btn" data-side="buy">Buy</button>
         <button class="side-btn" data-side="sell">Sell</button>
-        <button class="side-btn" data-side="both">Both</button>
+        <button class="side-btn active" data-side="both">Both</button>
       </div>
     </div>
     <div class="control-group" style="flex:1;min-width:300px">
@@ -85,7 +85,12 @@
   </div>
 
   <div class="chart-card">
-    <h3 id="chart-title">—</h3>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;flex-wrap:wrap;gap:10px">
+      <h3 id="chart-title" style="margin:0">—</h3>
+      <div style="font-size:11px;color:var(--text-muted);font-family:var(--mono)">
+        <span style="color:#374151">▲</span> buy &nbsp; <span style="color:#374151">▼</span> sell &nbsp;·&nbsp; marker size = trade qty
+      </div>
+    </div>
     <div class="chart-canvas-wrap"><canvas id="main-chart"></canvas></div>
   </div>
 
@@ -103,7 +108,7 @@ const COLORS = {
   "Mark 67":"#db2777"
 };
 
-let DATA=null, dayIdx=0, product=null, side="buy", offMarks=new Set(), chart=null;
+let DATA=null, dayIdx=0, product=null, side="both", offMarks=new Set(), chart=null;
 
 async function init(){
   try {
