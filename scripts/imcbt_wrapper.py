@@ -233,15 +233,16 @@ def main():
                   if t["buyer"] == "SUBMISSION" or t["seller"] == "SUBMISSION"]
     own_trade_count = len(own_trades)
 
-    # Write trades.csv
+    # Write trades.csv (semicolon-delimited to match IMC convention; the
+    # SLU dashboard's fetchCsv expects ';' separator).
     with open(run_dir / "trades.csv", "w", newline="") as f:
-        w = csv.writer(f)
+        w = csv.writer(f, delimiter=";")
         w.writerow(["timestamp", "buyer", "seller", "symbol", "currency", "price", "quantity"])
         for t in trades:
             w.writerow([t["timestamp"], t["buyer"], t["seller"], t["symbol"],
                         "XIREC", t["price"], t["quantity"]])
 
-    # Write activity.csv
+    # Write activity.csv (already ';'-delimited from imc-p4-bt log).
     with open(run_dir / "activity.csv", "w", newline="") as f:
         for line in activity_lines:
             f.write(line + "\n")
@@ -249,7 +250,7 @@ def main():
     # Build pnl_by_product.csv from activity log's PnL column
     pnl_rows = _aggregate_pnl_from_activity(activity_lines)
     with open(run_dir / "pnl_by_product.csv", "w", newline="") as f:
-        w = csv.writer(f)
+        w = csv.writer(f, delimiter=";")
         for row in pnl_rows:
             w.writerow(row)
 

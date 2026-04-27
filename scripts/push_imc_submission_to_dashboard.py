@@ -105,18 +105,18 @@ def main():
         for line in activity_lines:
             f.write(line + "\n")
 
-    # trades.csv
+    # trades.csv (semicolon-delimited for SLU dashboard parser)
     with (out_dir / "trades.csv").open("w", newline="", encoding="utf-8") as f:
-        w = csv.writer(f)
+        w = csv.writer(f, delimiter=";")
         w.writerow(["timestamp", "buyer", "seller", "symbol", "currency", "price", "quantity"])
         for t in trades:
             w.writerow([t.get("timestamp", 0), t.get("buyer", ""), t.get("seller", ""),
                         t.get("symbol", ""), t.get("currency", "XIREC"),
                         t.get("price", 0), t.get("quantity", 0)])
 
-    # pnl_by_product.csv
+    # pnl_by_product.csv (semicolon-delimited)
     with (out_dir / "pnl_by_product.csv").open("w", newline="", encoding="utf-8") as f:
-        w = csv.writer(f)
+        w = csv.writer(f, delimiter=";")
         for row in pnl_rows:
             w.writerow(row)
 
