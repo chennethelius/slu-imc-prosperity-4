@@ -66,7 +66,7 @@ jobs:
 
       - name: Install imc-p4-bt
         if: steps.changes.outputs.files != ''
-        run: pip install prosperity4bt
+        run: pip install imc-p4-bt
 
       - name: Fetch existing manifest from gh-pages
         if: steps.changes.outputs.files != ''
