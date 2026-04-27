@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Discord Bot — Prosperity</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./shared.css">
+<style>
+  :root {
+    --green-dim:rgba(16,185,129,.1);
+    --red-dim:rgba(239,68,68,.1);
+    --amber:#f59e0b; --amber-dim:rgba(245,158,11,.12);
+    --purple:#a78bfa; --purple-dim:rgba(167,139,250,.1);
+    --cyan:#06b6d4;
+  }
+
+  .logo-mark { width:7px; height:7px; border-radius:50%; background:#94a3b8; flex-shrink:0; box-shadow:0 0 0 3px rgba(148,163,184,.18); }
+  .logo-mark.live { background:#34d399; box-shadow:0 0 0 3px rgba(52,211,153,.18),0 0 10px rgba(52,211,153,.6); animation:pulse 2.4s ease-in-out infinite; }
+
+  .topbar-right { display:flex; align-items:center; gap:12px; }
+  .search-wrap { position:relative; }
+  .search-icon { position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--text-muted); pointer-events:none; }
+  .search-wrap { position:relative; }
+  .search-icon { color:#94a3b8; }
+  .search {
+    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12); border-radius:8px;
+    padding:7px 12px 7px 32px; color:#fff; font-family:inherit; font-size:12px;
+    width:240px; outline:none; transition:all .15s;
+  }
+  .search:hover { border-color:rgba(255,255,255,.2); }
+  .search:focus { border-color:#818cf8; box-shadow:0 0 0 3px rgba(129,140,248,.25); }
+  .search::placeholder { color:#94a3b8; }
+  .badge { color:#cbd5e1; font-size:11px; font-weight:600; font-variant-numeric:tabular-nums; }
+
+  /* ── Stats Row ── */
+  .stats-row {
+    display:flex; gap:1px; background:var(--border); border-bottom:1px solid var(--border);
+  }
+  .stat-cell {
+    flex:1; background:var(--bg-surface); padding:12px 20px;
+    display:flex; flex-direction:column; gap:2px;
+  }
+  .stat-cell .label { font-size:10px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:.6px; }
+  .stat-cell .value { font-family:'JetBrains Mono',monospace; font-size:18px; font-weight:600; color:var(--text-primary); }
+  .stat-cell .value.blue { color:#2563eb; }
+  .stat-cell .value.green { color:var(--green); }
+  .stat-cell .value.purple { color:var(--purple); }
+  .stat-cell .value.small { font-size:11px; color:var(--text-muted); font-weight:400; }
+
+  /* ── Toolbar ── */
+  .toolbar {
+    display:flex; align-items:center; gap:8px; padding:8px 24px;
+    border-bottom:1px solid var(--border); background:var(--bg-surface); flex-wrap:wrap;
+  }
+  .chip {
+    background:transparent; border:1px solid var(--border); border-radius:6px;
+    padding:4px 12px; font-size:11px; font-weight:500; color:var(--text-muted);
+    cursor:pointer; font-family:inherit; transition:all .15s; white-space:nowrap;
+  }
+  .chip:hover { border-color:var(--text-muted); color:var(--text-secondary); }
+  .chip.active { background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600; }
+  .chip.active:hover { background:var(--accent-dim); }
+  .sep { width:1px; height:20px; background:var(--border); margin:0 4px; }
+
+  .range-group { display:flex; align-items:center; gap:8px; }
+  .range-group .label { font-size:11px; color:var(--text-muted); font-weight:500; }
+  .range-group input[type=range] {
+    -webkit-appearance:none; width:100px; height:3px;
+    background:var(--border); border-radius:2px; outline:none;
+  }
+  .range-group input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance:none; width:14px; height:14px;
+    background:var(--accent); border-radius:50%; cursor:pointer;
+    border:2px solid var(--bg-base);
+  }
+  .range-group .val { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--accent); min-width:20px; font-weight:500; }
+
+  .tab-group { margin-left:auto; display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+  .tab-btn {
+    background:transparent; border:none; padding:5px 14px; font-size:11px; font-weight:500;
+    color:var(--text-muted); cursor:pointer; font-family:inherit; transition:all .15s;
+    border-right:1px solid var(--border);
+  }
+  .tab-btn:last-child { border-right:none; }
+  .tab-btn:hover { color:var(--text-secondary); background:var(--bg-hover); }
+  .tab-btn.active { background:var(--accent); color:#fff; }
+
+  /* ── Content ── */
+  .content { padding:16px 24px; max-width:1400px; }
+
+  /* ── Product Cards ── */
+  .product-card {
+    background:var(--bg-surface); border:1px solid var(--border); border-radius:10px;
+    margin-bottom:8px; overflow:hidden; transition:border-color .2s;
+  }
+  .product-card:hover { border-color:var(--text-muted); }
+  .product-header {
+    display:flex; align-items:center; padding:14px 18px; cursor:pointer; gap:14px; transition:background .15s;
+  }
+  .product-header:hover { background:var(--bg-hover); }
+  .product-arrow {
+    color:var(--text-muted); font-size:10px; transition:transform .2s; width:14px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .product-card.expanded .product-arrow { transform:rotate(90deg); }
+  .product-name { font-family:'JetBrains Mono',monospace; font-weight:600; font-size:14px; color:var(--text-primary); min-width:180px; }
+  .product-tags { display:flex; gap:8px; flex:1; flex-wrap:wrap; align-items:center; }
+  .tag {
+    font-size:10px; font-weight:600; padding:3px 10px; border-radius:20px;
+    text-transform:uppercase; letter-spacing:.3px;
+  }
+  .tag-strategy { background:var(--purple-dim); color:var(--purple); }
+  .tag-msgs { background:rgba(78,143,255,.1); color:var(--accent); }
+  .tag-params { background:var(--green-dim); color:var(--green); }
+  .tag-code { background:var(--amber-dim); color:var(--amber); }
+
+  .product-detail { display:none; border-top:1px solid var(--border); padding:18px; background:var(--bg-base); }
+  .product-card.expanded .product-detail { display:block; }
+
+  .section { margin-bottom:18px; }
+  .section:last-child { margin-bottom:0; }
+  .section-title {
+    font-size:11px; font-weight:600; color:var(--text-muted); text-transform:uppercase;
+    letter-spacing:.5px; margin-bottom:10px; display:flex; align-items:center; gap:8px;
+  }
+  .section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+
+  .params-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:8px; }
+  .param-card {
+    background:var(--bg-surface); border:1px solid var(--border); border-radius:8px; padding:12px 14px;
+  }
+  .param-label { font-size:11px; font-weight:500; color:var(--text-muted); margin-bottom:2px; }
+  .param-val { font-family:'JetBrains Mono',monospace; font-size:20px; font-weight:600; color:var(--green); }
+  .param-meta { font-size:10px; color:var(--text-muted); margin-top:4px; }
+  .conf-bar { display:inline-block; width:40px; height:3px; background:var(--border); border-radius:2px; vertical-align:middle; margin-left:4px; }
+  .conf-fill { display:block; height:100%; background:var(--green); border-radius:2px; }
+
+  /* ── Message Cards ── */
+  .msg-card {
+    background:var(--bg-surface); border:1px solid var(--border); border-radius:8px;
+    padding:12px 16px; margin-bottom:6px; transition:border-color .15s;
+  }
+  .msg-card:hover { border-color:var(--text-muted); }
+  .msg-header { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+  .score-badge {
+    font-family:'JetBrains Mono',monospace; font-weight:600; font-size:11px;
+    padding:2px 8px; border-radius:4px; min-width:32px; text-align:center;
+  }
+  .score-high { background:var(--green-dim); color:var(--green); }
+  .score-mid { background:var(--amber-dim); color:var(--amber); }
+  .score-low { background:var(--bg-raised); color:var(--text-muted); }
+  .msg-author { font-weight:600; font-size:12px; color:var(--text-primary); }
+  .msg-channel { font-size:11px; color:var(--purple); font-weight:500; }
+  .msg-time { font-size:10px; color:var(--text-muted); margin-left:auto; }
+  .msg-link {
+    font-size:10px; color:var(--text-muted); text-decoration:none; padding:2px 8px;
+    border-radius:4px; transition:all .15s;
+  }
+  .msg-link:hover { color:var(--accent); background:rgba(78,143,255,.1); }
+  .msg-body {
+    font-size:12.5px; line-height:1.6; color:var(--text-secondary);
+    white-space:pre-wrap; word-break:break-word;
+  }
+  .msg-tags { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
+
+  /* ── Contributors ── */
+  .contrib-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:10px; }
+  .contrib-card {
+    background:var(--bg-surface); border:1px solid var(--border); border-radius:10px;
+    padding:14px 18px; display:flex; align-items:center; gap:14px; transition:border-color .15s;
+  }
+  .contrib-card:hover { border-color:var(--text-muted); }
+  .contrib-rank {
+    font-family:'JetBrains Mono',monospace; font-weight:600; font-size:14px;
+    color:var(--text-muted); min-width:28px; text-align:center;
+  }
+  .contrib-rank.top { color:var(--amber); }
+  .contrib-info { flex:1; min-width:0; }
+  .contrib-name { font-weight:600; font-size:13px; color:var(--text-primary); }
+  .contrib-meta { font-size:11px; color:var(--text-muted); margin-top:2px; display:flex; gap:12px; }
+  .contrib-meta span { display:flex; align-items:center; gap:4px; }
+  .contrib-bar-wrap { height:3px; background:var(--border); border-radius:2px; margin-top:8px; }
+  .contrib-bar-fill { height:100%; border-radius:2px; transition:width .4s ease; }
+
+  .code-block {
+    background:var(--bg-base); border:1px solid var(--border); border-radius:8px;
+    padding:12px 14px; margin:8px 0; font-family:'JetBrains Mono',monospace;
+    font-size:11px; line-height:1.6; overflow-x:auto; white-space:pre; color:var(--text-secondary);
+  }
+
+  .empty-state {
+    text-align:center; padding:60px 20px; color:var(--text-muted); font-size:13px;
+  }
+  .empty-state .icon { font-size:32px; margin-bottom:12px; opacity:.3; }
+
+  /* ── AI Summary Panel ── */
+  .ai-panel {
+    background:linear-gradient(135deg, var(--accent-soft), rgba(99,102,241,.02));
+    border:1px solid var(--border); border-radius:10px; padding:18px;
+    margin-bottom:16px;
+  }
+  .ai-head { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+  .ai-badge {
+    background:var(--accent); color:#fff; font-size:10px; font-weight:700;
+    padding:2px 8px; border-radius:4px; letter-spacing:.5px;
+  }
+  .ai-title { font-weight:600; font-size:13px; color:var(--text-primary); flex:1; }
+  .btn {
+    background:var(--accent); color:#fff; border:none; border-radius:6px;
+    padding:6px 14px; font-size:12px; font-weight:600; cursor:pointer;
+    font-family:inherit; transition:background .15s;
+  }
+  .btn:hover { background:var(--accent-dim); }
+  .btn:disabled { opacity:.5; cursor:not-allowed; }
+  .btn-sm { padding:4px 10px; font-size:11px; }
+  .btn-ghost { background:transparent; color:var(--text-muted); border:1px solid var(--border); }
+  .btn-ghost:hover { background:var(--bg-hover); color:var(--text-primary); }
+  .ai-body {
+    font-size:13px; line-height:1.7; color:var(--text-primary);
+    white-space:pre-wrap; word-break:break-word;
+  }
+  .ai-body h1, .ai-body h2, .ai-body h3 {
+    color:var(--accent); font-weight:700; margin:14px 0 6px 0;
+  }
+  .ai-body h1 { font-size:16px; }
+  .ai-body h2 { font-size:14px; }
+  .ai-body h3 { font-size:13px; }
+  .ai-body strong { color:var(--text-primary); font-weight:700; }
+  .ai-body ul, .ai-body ol { margin:6px 0 10px 20px; }
+  .ai-body li { margin-bottom:4px; }
+  .ai-body code { background:var(--bg-raised); padding:1px 5px; border-radius:3px; font-size:12px; font-family:'JetBrains Mono',monospace; }
+  .ai-meta { font-size:11px; color:var(--text-muted); margin-top:10px; padding-top:10px; border-top:1px solid var(--border); }
+  .ai-error { color:var(--red); font-size:12px; padding:10px; background:var(--red-dim); border-radius:6px; }
+  .ai-loading { color:var(--text-muted); font-size:12px; display:flex; align-items:center; gap:8px; }
+  .ai-spinner {
+    width:12px; height:12px; border:2px solid var(--border); border-top-color:var(--accent);
+    border-radius:50%; animation:spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .ai-key-input {
+    background:var(--bg-base); border:1px solid var(--border); border-radius:6px;
+    padding:6px 10px; color:var(--text-primary); font-family:'JetBrains Mono',monospace;
+    font-size:11px; width:100%; outline:none; margin-top:6px;
+  }
+  .ai-key-input:focus { border-color:var(--accent); }
+
+  /* ── Responsive ── */
+  @media(max-width:768px) {
+    .topbar { padding:0 16px; }
+    .stats-row { flex-wrap:wrap; }
+    .stat-cell { min-width:50%; }
+    .toolbar { padding:8px 16px; }
+    .content { padding:12px 16px; }
+    .search { width:160px; }
+    .tab-group { margin-left:0; margin-top:4px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <a class="logo" href="#">
+      <img src="./billiken-logo.jpg" alt="SLU" class="logo-img">
+      <h1><span>Prosperity</span></h1>
+      <span class="logo-mark" id="statusDot"></span>
+    </a>
+    <nav class="nav">
+      <a class="nav-link" href="./index.html">Traders</a>
+      <a class="nav-link active" href="./discord-intel.html">Discord Bot</a>
+    </nav>
+  </div>
+  <div class="topbar-right">
+    <div class="search-wrap">
+      <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input class="search" id="searchBox" placeholder="Search messages, authors..." />
+    </div>
+    <span class="badge" id="countLabel">--</span>
+  </div>
+</div>
+
+<div class="stats-row">
+  <div class="stat-cell"><span class="label">Messages</span><span class="value" id="statMessages">--</span></div>
+  <div class="stat-cell"><span class="label">Products</span><span class="value" id="statProducts">--</span></div>
+  <div class="stat-cell"><span class="label">Contributors</span><span class="value" id="statContribs">--</span></div>
+  <div class="stat-cell"><span class="label">Last Updated</span><span class="value small" id="statUpdated">--</span></div>
+</div>
+
+<div class="toolbar">
+  <div class="tab-group">
+    <button class="tab-btn active" data-view="digest">Digest</button>
+    <button class="tab-btn" data-view="leaderboard">Leaderboard</button>
+    <button class="tab-btn" data-view="products">Products</button>
+    <button class="tab-btn" data-view="messages">Messages</button>
+    <button class="tab-btn" data-view="contributors">Contributors</button>
+  </div>
+</div>
+
+<!-- Hidden controls preserved for JS compatibility; not rendered -->
+<div style="display:none">
+  <button class="chip active" data-filter="all">All</button>
+  <span id="productFilters"></span>
+  <span id="strategyFilters"></span>
+  <input type="range" id="scoreSlider" min="0" max="100" value="0" />
+  <span id="scoreVal">0</span>
+  <input type="range" id="pnlSlider" min="0" max="50000" value="0" />
+  <span id="pnlVal">0</span>
+  <span id="statCode">--</span>
+  <span id="statParams">--</span>
+</div>
+
+<div class="content" id="mainContent">
+  <div class="empty-state"><div class="icon">&#9673;</div>Loading intel data...</div>
+</div>
+
+<script>
+let DATA = null;
+let MESSAGES = [];
+let DIGEST = null;
+let LEADERBOARD = null;
+let lbChart = null;
+let currentView = 'digest';
+let activeProduct = 'all';
+let activeStrategy = 'all';
+let minScore = 0;
+let minPnl = 0;
+let searchQuery = '';
+
+async function loadData() {
+  try {
+    const [intelRes, msgsRes, digestRes, lbRes] = await Promise.allSettled([
+      fetch('./discord-intel/claude_intel.json'),
+      fetch('./discord-intel/messages.json'),
+      fetch('./discord-intel/digest.json'),
+      fetch('./discord-intel/leaderboard_analysis.json')
+    ]);
+    if (intelRes.status === 'fulfilled' && intelRes.value.ok) DATA = await intelRes.value.json();
+    if (msgsRes.status === 'fulfilled' && msgsRes.value.ok) MESSAGES = await msgsRes.value.json();
+    if (digestRes.status === 'fulfilled' && digestRes.value.ok) DIGEST = await digestRes.value.json();
+    if (lbRes.status === 'fulfilled' && lbRes.value.ok) LEADERBOARD = await lbRes.value.json();
+    if (!DATA) { document.getElementById('mainContent').innerHTML = '<div class="empty-state"><div class="icon">&#9888;</div>No intel data found. Run the Discord bot first.</div>'; return; }
+    initUI();
+  } catch (e) {
+    document.getElementById('mainContent').innerHTML = '<div class="empty-state">Error: ' + e.message + '</div>';
+  }
+}
+
+function initUI() {
+  const dot = document.getElementById('statusDot');
+  const age = (Date.now() - new Date(DATA.generated_at).getTime()) / 60000;
+  dot.classList.toggle('live', age < 30);
+
+  document.getElementById('statMessages').textContent = DATA.total_messages_scraped;
+  document.getElementById('statProducts').textContent = Object.keys(DATA.products).length;
+  document.getElementById('statCode').textContent = DATA.total_code_blocks;
+  document.getElementById('statParams').textContent = DATA.total_parameters_extracted;
+  document.getElementById('statContribs').textContent = DATA.top_contributors?.length || 0;
+  const d = new Date(DATA.generated_at);
+  document.getElementById('statUpdated').textContent = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+
+  const pf = document.getElementById('productFilters');
+  Object.keys(DATA.products).forEach(p => {
+    const btn = document.createElement('button');
+    btn.className = 'chip'; btn.dataset.product = p; btn.textContent = p;
+    btn.onclick = () => setProductFilter(p);
+    pf.appendChild(btn);
+  });
+
+  const sf = document.getElementById('strategyFilters');
+  const strategies = new Set();
+  Object.values(DATA.products).forEach(p => { if (p.strategy_consensus) strategies.add(p.strategy_consensus); });
+  MESSAGES.forEach(m => { if (m.strategy_type) strategies.add(m.strategy_type); });
+  strategies.forEach(s => {
+    const btn = document.createElement('button');
+    btn.className = 'chip'; btn.dataset.strategy = s;
+    btn.textContent = s.replace(/_/g, ' ');
+    btn.onclick = () => setStrategyFilter(s);
+    sf.appendChild(btn);
+  });
+
+  document.getElementById('scoreSlider').oninput = (e) => {
+    minScore = parseInt(e.target.value);
+    document.getElementById('scoreVal').textContent = minScore;
+    render();
+  };
+  document.getElementById('pnlSlider').oninput = (e) => {
+    minPnl = parseInt(e.target.value);
+    document.getElementById('pnlVal').textContent = minPnl.toLocaleString();
+    render();
+  };
+  document.getElementById('searchBox').oninput = (e) => { searchQuery = e.target.value.toLowerCase(); render(); };
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active'); currentView = btn.dataset.view; render();
+    };
+  });
+  render();
+}
+
+function setProductFilter(p) {
+  activeProduct = activeProduct === p ? 'all' : p;
+  document.querySelectorAll('[data-product]').forEach(b => b.classList.toggle('active', b.dataset.product === activeProduct));
+  document.querySelector('[data-filter="all"]').classList.toggle('active', activeProduct === 'all');
+  render();
+}
+function setStrategyFilter(s) {
+  activeStrategy = activeStrategy === s ? 'all' : s;
+  document.querySelectorAll('[data-strategy]').forEach(b => b.classList.toggle('active', b.dataset.strategy === activeStrategy));
+  render();
+}
+document.querySelector('[data-filter="all"]').onclick = () => {
+  activeProduct = 'all'; activeStrategy = 'all';
+  document.querySelectorAll('.chip').forEach(b => b.classList.remove('active'));
+  document.querySelector('[data-filter="all"]').classList.add('active'); render();
+};
+
+function render() {
+  const el = document.getElementById('mainContent');
+  if (lbChart) { lbChart.destroy(); lbChart = null; }
+  if (currentView === 'digest') renderDigest(el);
+  else if (currentView === 'leaderboard') renderLeaderboard(el);
+  else if (currentView === 'products') renderProducts(el);
+  else if (currentView === 'messages') renderMessages(el);
+  else renderContributors(el);
+}
+
+function renderLeaderboard(el) {
+  if (!LEADERBOARD) { el.innerHTML = '<div class="empty-state">No leaderboard data. Run the scraper first.</div>'; return; }
+  const lb = LEADERBOARD;
+  const pctl = lb.percentiles;
+
+  // Stats cards
+  let html = `<div class="section"><div class="section-title">Round 1 Leaderboard — ${lb.total_teams.toLocaleString()} Teams</div>
+  <div class="params-grid">
+    <div class="param-card"><div class="param-label">Total Teams</div><div class="param-val" style="color:var(--text-primary)">${lb.total_teams.toLocaleString()}</div></div>
+    <div class="param-card"><div class="param-label">Positive PnL</div><div class="param-val">${lb.positive_teams.toLocaleString()}</div><div class="param-meta">${lb.pct_positive}% of all teams</div></div>
+    <div class="param-card"><div class="param-label">#1 Score</div><div class="param-val">${lb.max.toLocaleString()}</div><div class="param-meta">xirecs</div></div>
+    <div class="param-card"><div class="param-label">Top 1%</div><div class="param-val">${pctl.p1.toLocaleString()}</div><div class="param-meta">rank ~${Math.round(lb.positive_teams * 0.01)}</div></div>
+    <div class="param-card"><div class="param-label">Top 5%</div><div class="param-val">${pctl.p5.toLocaleString()}</div><div class="param-meta">rank ~${Math.round(lb.positive_teams * 0.05)}</div></div>
+    <div class="param-card"><div class="param-label">Top 10%</div><div class="param-val">${pctl.p10.toLocaleString()}</div><div class="param-meta">rank ~${Math.round(lb.positive_teams * 0.10)}</div></div>
+    <div class="param-card"><div class="param-label">Top 25%</div><div class="param-val">${pctl.p25.toLocaleString()}</div><div class="param-meta">rank ~${Math.round(lb.positive_teams * 0.25)}</div></div>
+    <div class="param-card"><div class="param-label">Median (positive)</div><div class="param-val">${pctl.p50.toLocaleString()}</div><div class="param-meta">rank ~${Math.round(lb.positive_teams * 0.50)}</div></div>
+  </div></div>`;
+
+  // Chart container
+  html += `<div class="section" style="margin-top:16px">
+    <div class="section-title">PnL Distribution (positive teams only)</div>
+    <div style="background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;padding:18px">
+      <canvas id="lbChart" height="120"></canvas>
+    </div>
+  </div>`;
+
+  // Top 20 teams table
+  if (lb.positive_scores) {
+    html += `<div class="section" style="margin-top:16px">
+      <div class="section-title">Top 20 Teams</div>
+      <div style="overflow-x:auto">`;
+    // We only have scores, not names in analysis.json. Fetch from raw if available.
+    html += '<table style="width:100%;border-collapse:collapse;font-size:12px">';
+    html += '<thead><tr style="border-bottom:2px solid var(--border)"><th style="padding:8px;text-align:left;color:var(--text-muted);font-size:11px">RANK</th><th style="padding:8px;text-align:right;color:var(--text-muted);font-size:11px">SCORE (xirecs)</th><th style="padding:8px;text-align:right;color:var(--text-muted);font-size:11px">vs #1</th></tr></thead><tbody>';
+    for (let i = 0; i < Math.min(20, lb.positive_scores.length); i++) {
+      const s = lb.positive_scores[i];
+      const diff = s - lb.max;
+      const rc = i < 3 ? 'color:var(--amber);font-weight:700' : 'color:var(--text-muted)';
+      html += '<tr style="border-bottom:1px solid var(--border)">' +
+        '<td style="padding:6px 8px;font-family:JetBrains Mono,monospace;' + rc + '">' + (i+1) + '</td>' +
+        '<td style="padding:6px 8px;text-align:right;font-family:JetBrains Mono,monospace;font-weight:600">' + s.toLocaleString() + '</td>' +
+        '<td style="padding:6px 8px;text-align:right;font-family:JetBrains Mono,monospace;color:var(--red)">' + diff.toLocaleString() + '</td></tr>';
+    }
+    html += '</tbody></table></div></div>';
+  }
+
+  html += `<div class="ai-meta">Scraped: ${new Date(lb.scraped_at).toLocaleString()}</div>`;
+
+  el.innerHTML = html;
+  updateCount(lb.positive_teams + ' positive teams');
+
+  // Draw chart
+  const ctx = document.getElementById('lbChart');
+  if (ctx && lb.histogram) {
+    const labels = lb.histogram.map(b => (b.lo/1000) + 'k');
+    const counts = lb.histogram.map(b => b.count);
+    lbChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Teams',
+          data: counts,
+          backgroundColor: counts.map((_, i) => {
+            const pct = i / counts.length;
+            return pct > 0.85 ? 'rgba(99,102,241,0.8)' : pct > 0.7 ? 'rgba(99,102,241,0.5)' : 'rgba(99,102,241,0.25)';
+          }),
+          borderRadius: 4,
+        }]
+      },
+      options: {
+        responsive: true,
+        animation: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: (c) => c.raw + ' teams' } }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: '#9ca3af', font: { size: 10 } } },
+          y: { grid: { color: '#e2e5ea' }, ticks: { color: '#9ca3af', font: { size: 10 } } }
+        }
+      }
+    });
+  }
+}
+
+function renderDigest(el) {
+  if (!DIGEST) { el.innerHTML = '<div class="empty-state">No digest available. Run the bot export.</div>'; return; }
+
+  let products = Object.entries(DIGEST.products || {});
+  if (activeProduct !== 'all') products = products.filter(([n]) => n === activeProduct);
+  if (searchQuery) products = products.filter(([n]) => n.toLowerCase().includes(searchQuery));
+
+  // Overall top hits (filtered by pnl + score + search)
+  const topMsgs = (DIGEST.overall_top_messages || []).filter(m => {
+    if (m.score < minScore) return false;
+    if (minPnl > 0 && !(m.pnls || []).some(v => v >= minPnl)) return false;
+    if (searchQuery && !m.content.toLowerCase().includes(searchQuery)) return false;
+    return true;
+  });
+
+  let html = '';
+
+  // Top insights banner
+  if (topMsgs.length) {
+    html += `<div class="section"><div class="section-title">Top Insights</div>`;
+    html += topMsgs.slice(0, 6).map(m => {
+      const pnlTag = m.pnls && m.pnls.length ? `<span class="tag tag-params">${m.pnls.map(v=>fmtPnl(v)).join(', ')} xirecs</span>` : '';
+      const prods = (m.products || []).map(p => `<span class="tag tag-msgs">${esc(p)}</span>`).join('');
+      return `<div class="msg-card">
+        <div class="msg-header">
+          <span class="score-badge ${m.score>=50?'score-high':m.score>=25?'score-mid':'score-low'}">${m.score}</span>
+          <span class="msg-author">${esc(m.author)}</span>
+          <span class="msg-channel">#${esc(m.channel || '')}</span>
+          ${m.url ? `<a class="msg-link" href="${m.url}" target="_blank" rel="noopener" style="margin-left:auto">Open</a>` : ''}
+        </div>
+        <div class="msg-body">${esc(m.content)}</div>
+        <div class="msg-tags">${prods}${pnlTag}</div>
+      </div>`;
+    }).join('');
+    html += `</div>`;
+  }
+
+  // Per-product digest
+  products.forEach(([name, p]) => {
+    const ps = p.pnl_stats;
+    const statsHtml = ps ? `<div class="params-grid" style="margin-bottom:12px">
+      <div class="param-card"><div class="param-label">Max PnL Reported</div><div class="param-val">${fmtPnl(ps.max)}</div><div class="param-meta">${ps.count} mentions</div></div>
+      <div class="param-card"><div class="param-label">Median PnL</div><div class="param-val">${fmtPnl(ps.median)}</div><div class="param-meta">typical</div></div>
+      <div class="param-card"><div class="param-label">Common Values</div><div class="param-val" style="font-size:14px">${ps.common.map(v=>fmtPnl(v)).join(' · ')}</div><div class="param-meta">most reported</div></div>
+    </div>` : '';
+
+    const filteredTop = (p.top_messages || []).filter(m => {
+      if (m.score < minScore) return false;
+      if (minPnl > 0 && !(m.pnls || []).some(v => v >= minPnl)) return false;
+      if (searchQuery && !m.content.toLowerCase().includes(searchQuery)) return false;
+      return true;
+    });
+
+    const msgsHtml = filteredTop.map(m => {
+      const pnlTag = m.pnls && m.pnls.length ? `<span class="tag tag-params">${m.pnls.map(v=>fmtPnl(v)).join(', ')} xirecs</span>` : '';
+      return `<div class="msg-card">
+        <div class="msg-header">
+          <span class="score-badge ${m.score>=50?'score-high':m.score>=25?'score-mid':'score-low'}">${m.score}</span>
+          <span class="msg-author">${esc(m.author)}</span>
+          ${m.url ? `<a class="msg-link" href="${m.url}" target="_blank" rel="noopener" style="margin-left:auto">Open</a>` : ''}
+        </div>
+        <div class="msg-body">${esc(m.content)}</div>
+        ${pnlTag ? `<div class="msg-tags">${pnlTag}</div>` : ''}
+      </div>`;
+    }).join('');
+
+    html += `<div class="product-card expanded" style="margin-top:16px">
+      <div class="product-header" style="cursor:default">
+        <span class="product-name">${esc(name)}</span>
+        <div class="product-tags">
+          <span class="tag tag-msgs">${p.message_count} msgs</span>
+          ${ps ? `<span class="tag tag-params">${ps.count} PnL mentions</span>` : ''}
+        </div>
+      </div>
+      <div class="product-detail">
+        ${statsHtml}
+        <div class="section-title">Top Messages</div>
+        ${msgsHtml || '<div class="empty-state">No matches with current filters</div>'}
+      </div>
+    </div>`;
+  });
+
+  el.innerHTML = html || '<div class="empty-state">No digest data for current filters</div>';
+  updateCount((topMsgs.length + products.reduce((s,[,p]) => s + (p.top_messages?.length || 0), 0)) + ' items');
+}
+
+function fmtPnl(v) {
+  if (v == null) return '--';
+  if (Math.abs(v) >= 1000) return (v/1000).toFixed(v % 1000 ? 1 : 0) + 'k';
+  return v.toString();
+}
+
+function renderProducts(el) {
+  const products = Object.entries(DATA.products).filter(([name, data]) => {
+    if (activeProduct !== 'all' && name !== activeProduct) return false;
+    if (activeStrategy !== 'all' && data.strategy_consensus !== activeStrategy) return false;
+    if (searchQuery && !name.toLowerCase().includes(searchQuery)) return false;
+    return true;
+  });
+  if (!products.length) { el.innerHTML = '<div class="empty-state">No products match filters</div>'; return; }
+
+  el.innerHTML = products.map(([name, data]) => {
+    const params = Object.entries(data.parameters || {});
+    const obs = (data.key_observations || []).filter(o => o.score >= minScore);
+    const code = data.code_snippets || [];
+
+    const paramsHtml = params.length ? `<div class="section"><div class="section-title">Parameters</div><div class="params-grid">${
+      params.map(([pn, p]) => `<div class="param-card">
+        <div class="param-label">${esc(pn)}</div>
+        <div class="param-val">${p.value}</div>
+        <div class="param-meta">${p.sources} source${p.sources>1?'s':''} <span class="conf-bar"><span class="conf-fill" style="width:${(p.confidence*100).toFixed(0)}%"></span></span> ${(p.confidence*100).toFixed(0)}%</div>
+      </div>`).join('')
+    }</div></div>` : '';
+
+    const obsHtml = obs.length ? `<div class="section"><div class="section-title">Key Observations (${obs.length})</div>${
+      obs.map(o => `<div class="msg-card"><div class="msg-header">
+        <span class="score-badge ${o.score>=50?'score-high':o.score>=25?'score-mid':'score-low'}">${o.score}</span>
+        <span class="msg-author">${esc(o.author)}</span>
+        <span class="msg-time">${fmtTime(o.timestamp)}</span>
+      </div><div class="msg-body">${esc(trunc(o.text, 500))}</div></div>`).join('')
+    }</div>` : '';
+
+    const codeHtml = code.length ? `<div class="section"><div class="section-title">Code Snippets (${code.length})</div>${
+      code.map(c => `<div class="code-block">${esc(c.code || c)}</div>`).join('')
+    }</div>` : '';
+
+    return `<div class="product-card" onclick="this.classList.toggle('expanded')">
+      <div class="product-header">
+        <span class="product-arrow">&#9654;</span>
+        <span class="product-name">${esc(name)}</span>
+        <div class="product-tags">
+          ${data.strategy_consensus ? `<span class="tag tag-strategy">${data.strategy_consensus.replace(/_/g,' ')}</span>` : ''}
+          <span class="tag tag-msgs">${data.message_count} msgs</span>
+          ${params.length ? `<span class="tag tag-params">${params.length} params</span>` : ''}
+          ${code.length ? `<span class="tag tag-code">${code.length} snippets</span>` : ''}
+        </div>
+      </div>
+      <div class="product-detail" onclick="event.stopPropagation()">
+        ${paramsHtml}${obsHtml}${codeHtml}
+        ${!paramsHtml && !obsHtml && !codeHtml ? '<div class="empty-state">No detailed data yet</div>' : ''}
+      </div>
+    </div>`;
+  }).join('');
+  updateCount(products.length + ' product' + (products.length !== 1 ? 's' : ''));
+}
+
+function renderMessages(el) {
+  let msgs = MESSAGES.filter(m => {
+    if (m.relevance_score < minScore) return false;
+    if (minPnl > 0 && !(m.pnl_mentions || []).some(v => v >= minPnl)) return false;
+    if (activeProduct !== 'all' && !(m.products || []).includes(activeProduct)) return false;
+    if (activeStrategy !== 'all' && m.strategy_type !== activeStrategy) return false;
+    if (searchQuery && !m.content.toLowerCase().includes(searchQuery) && !m.author_name.toLowerCase().includes(searchQuery)) return false;
+    return true;
+  }).sort((a, b) => b.relevance_score - a.relevance_score);
+
+  if (!msgs.length) { el.innerHTML = '<div class="empty-state">No messages match filters</div>'; updateCount('0 messages'); return; }
+
+  el.innerHTML = msgs.map(m => {
+    const prods = (m.products || []).map(p => `<span class="tag tag-msgs">${esc(p)}</span>`).join('');
+    const strat = m.strategy_type ? `<span class="tag tag-strategy">${m.strategy_type.replace(/_/g,' ')}</span>` : '';
+    const code = m.has_code ? '<span class="tag tag-code">code</span>' : '';
+    const pnl = (m.pnl_mentions && m.pnl_mentions.length) ? `<span class="tag tag-params">${m.pnl_mentions.map(v=>fmtPnl(v)).join(', ')} xirecs</span>` : '';
+    return `<div class="msg-card">
+      <div class="msg-header">
+        <span class="score-badge ${m.relevance_score>=50?'score-high':m.relevance_score>=25?'score-mid':'score-low'}">${m.relevance_score}</span>
+        <span class="msg-author">${esc(m.author_name)}</span>
+        <span class="msg-channel">#${esc(m.channel_name)}</span>
+        <span class="msg-time">${fmtTime(m.timestamp)}</span>
+        ${m.url ? `<a class="msg-link" href="${m.url}" target="_blank" rel="noopener">Open</a>` : ''}
+      </div>
+      <div class="msg-body">${esc(trunc(m.content, 600))}</div>
+      <div class="msg-tags">${prods}${strat}${code}${pnl}</div>
+    </div>`;
+  }).join('');
+  updateCount(msgs.length + ' message' + (msgs.length !== 1 ? 's' : ''));
+}
+
+function renderContributors(el) {
+  let contribs = (DATA.top_contributors || []).filter(c =>
+    !searchQuery || c.name.toLowerCase().includes(searchQuery)
+  );
+  const maxMsgs = Math.max(...contribs.map(c => c.messages), 1);
+  const colors = ['var(--accent)', 'var(--green)', 'var(--purple)', 'var(--amber)'];
+
+  el.innerHTML = '<div class="contrib-grid">' + contribs.map((c, i) => {
+    const barColor = colors[i % colors.length];
+    return `<div class="contrib-card">
+      <span class="contrib-rank ${i < 3 ? 'top' : ''}">${i + 1}</span>
+      <div class="contrib-info">
+        <div class="contrib-name">${esc(c.name)}</div>
+        <div class="contrib-meta">
+          <span>${c.messages} msgs</span>
+          <span>${c.code_messages} code</span>
+          <span>avg ${c.avg_relevance.toFixed(1)}</span>
+        </div>
+        <div class="contrib-bar-wrap"><div class="contrib-bar-fill" style="width:${(c.messages/maxMsgs*100).toFixed(0)}%;background:${barColor}"></div></div>
+      </div>
+    </div>`;
+  }).join('') + '</div>';
+  updateCount(contribs.length + ' contributor' + (contribs.length !== 1 ? 's' : ''));
+}
+
+function updateCount(t) { document.getElementById('countLabel').textContent = t; }
+function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+function trunc(s, n) { return s && s.length > n ? s.slice(0, n) + '...' : (s || ''); }
+function fmtTime(t) { const d = new Date(t); return d.toLocaleDateString([], {month:'short',day:'numeric'}) + ' ' + d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); }
+
+loadData();
+</script>
+</body>
+</html>

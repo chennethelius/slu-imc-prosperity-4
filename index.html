@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Traders — Prosperity</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./shared.css">
+<style>
+  :root {
+    /* Tinted surfaces — each section gets its own hue so the page isn't a wall of white */
+    --surf-card:#fafbff;       --surf-card-border:#dfe3f2;
+    --surf-detail:#eceef9;     /* expanded drawer — slightly deeper indigo */
+    --surf-stats:#f3f0fb;      --surf-stats-border:#e4dff3;   /* violet */
+    --surf-chart:#eef5fb;      --surf-chart-border:#d9e6f2;   /* sky */
+    --surf-trades:#fbf5ec;     --surf-trades-border:#f0e4cf;  /* amber */
+    --surf-code:#f1f4f9;       --surf-code-border:#dde3ee;    /* slate */
+    --surf-code-pre:#1e293b;   --surf-code-pre-text:#cbd5e1;  /* dark code block */
+    --green-soft:rgba(16,185,129,.1);
+    --red-soft:rgba(239,68,68,.1);
+    --gold:#f59e0b; --gold-soft:rgba(245,158,11,.14);
+    --silver:#94a3b8; --silver-soft:rgba(148,163,184,.18);
+    --bronze:#b45309; --bronze-soft:rgba(180,83,9,.12);
+    /* Per-round accents (active tab styling only; chrome stays indigo) */
+    --r-tut:#78716c; --r-tut-soft:rgba(120,113,108,.12);
+    --r-1:#0d9488;   --r-1-soft:rgba(13,148,136,.12);
+    --r-2:#6366f1;   --r-2-soft:rgba(99,102,241,.12);
+    --r-3:#be185d;   --r-3-soft:rgba(190,24,93,.12);
+    --r-4:#d97706;   --r-4-soft:rgba(217,119,6,.12);
+    --r-5:#7c3aed;   --r-5-soft:rgba(124,58,237,.12);
+  }
+
+  .badge{color:#cbd5e1;font-size:11px;font-weight:600;font-variant-numeric:tabular-nums;transition:color .2s}
+
+  /* ── Toolbar ── */
+  .toolbar{display:flex;align-items:center;gap:6px;padding:10px 24px;background:var(--bg-surface);flex-wrap:wrap;position:relative;box-shadow:0 1px 0 rgba(15,23,42,.04)}
+  .toolbar::after{content:'';position:absolute;left:24px;right:24px;bottom:0;height:1px;background:linear-gradient(90deg,transparent,var(--border) 10%,var(--border) 90%,transparent)}
+  .chip{background:transparent;border:1px solid var(--border);border-radius:999px;padding:4px 12px;font-size:11px;font-weight:500;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
+  .chip:hover{border-color:var(--border-strong);color:var(--text-primary);background:var(--bg-hover)}
+  .chip.active{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:var(--shadow-sm)}
+  .sep{width:1px;height:18px;background:var(--border);margin:0 6px}
+
+  .round-tabs{display:flex;gap:4px;flex:1}
+  .round-tab{background:transparent;border:none;padding:8px 18px;font-size:13px;font-weight:500;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all .15s;border-radius:7px;position:relative;letter-spacing:-.1px;--rc:var(--accent);--rc-soft:var(--accent-soft)}
+  .round-tab[data-round="Tutorial"]{--rc:var(--r-tut);--rc-soft:var(--r-tut-soft)}
+  .round-tab[data-round="Round 1"]{--rc:var(--r-1);--rc-soft:var(--r-1-soft)}
+  .round-tab[data-round="Round 2"]{--rc:var(--r-2);--rc-soft:var(--r-2-soft)}
+  .round-tab[data-round="Round 3"]{--rc:var(--r-3);--rc-soft:var(--r-3-soft)}
+  .round-tab[data-round="Round 4"]{--rc:var(--r-4);--rc-soft:var(--r-4-soft)}
+  .round-tab[data-round="Round 5"]{--rc:var(--r-5);--rc-soft:var(--r-5-soft)}
+  .round-tab:hover{color:var(--text-primary);background:var(--bg-hover)}
+  .round-tab.active{color:var(--rc);background:var(--rc-soft);font-weight:600}
+  .round-tab.active::after{content:'';position:absolute;left:18px;right:18px;bottom:-11px;height:2px;background:var(--rc);border-radius:2px}
+
+  .sort-label{color:var(--text-muted);font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin-right:2px}
+  .sort-group{display:flex;background:var(--bg-raised);padding:3px;border-radius:8px;gap:2px}
+  .sort-btn{background:transparent;border:none;padding:5px 12px;font-size:11.5px;font-weight:500;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all .15s;border-radius:6px}
+  .sort-btn:hover{color:var(--text-primary)}
+  .sort-btn.active{background:var(--bg-surface);color:var(--accent);box-shadow:var(--shadow-sm);font-weight:600}
+
+  .content{padding:18px 24px 40px;max-width:1400px;margin:0 auto}
+
+  /* ── Commit Rows (compact) ── */
+  .commit-card{background:var(--surf-card);border:1px solid var(--surf-card-border);border-radius:var(--radius);margin-bottom:6px;overflow:hidden;transition:all .15s;box-shadow:var(--shadow-sm);position:relative}
+  .commit-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--accent),var(--accent-warm));opacity:0;transition:opacity .15s;border-radius:var(--radius) 0 0 var(--radius)}
+  .commit-card:hover{border-color:var(--border-strong);box-shadow:var(--shadow-md);transform:translateY(-1px)}
+  .commit-card:hover::before{opacity:.6}
+  .commit-header{display:flex;align-items:center;padding:8px 14px;gap:12px;text-decoration:none;color:inherit;transition:background .15s}
+  .commit-header:hover{background:var(--bg-hover)}
+  .rank-badge{min-width:26px;height:26px;padding:0 8px;display:inline-flex;align-items:center;justify-content:center;background:var(--bg-raised);color:var(--text-muted);border:1px solid var(--border-subtle);border-radius:999px;font-family:var(--mono);font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;flex-shrink:0}
+  .rank-badge.g{background:var(--gold-soft);color:var(--gold);border-color:rgba(245,158,11,.28)}
+  .rank-badge.s{background:var(--silver-soft);color:#64748b;border-color:rgba(148,163,184,.3)}
+  .rank-badge.b{background:var(--bronze-soft);color:var(--bronze);border-color:rgba(180,83,9,.25)}
+  .commit-info{flex:1;min-width:0;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .commit-strat{color:var(--text-primary);font-size:13.5px;font-weight:700;font-family:var(--mono);letter-spacing:-.1px}
+  .commit-author{color:var(--text-secondary);font-weight:500;font-size:12px}
+  .commit-author::before{content:'by ';color:var(--text-muted)}
+  .commit-time{color:var(--text-muted);font-size:10.5px;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .commit-runs{display:flex;gap:4px;flex-wrap:wrap}
+  .run-chip{background:transparent;border:1px solid var(--border-subtle);border-radius:5px;padding:2px 7px;font-size:11px;display:inline-flex;gap:6px;align-items:center;font-weight:500}
+  .run-chip .label{color:var(--text-muted);font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.3px}
+  .run-chip .val{font-family:var(--mono);font-weight:700;font-variant-numeric:tabular-nums}
+  .commit-total{text-align:right;min-width:110px;padding-left:10px}
+  .commit-total .sub-label{font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;font-weight:600;margin-bottom:1px}
+  .commit-total .sub-pnl{font-family:var(--mono);font-size:16px;font-weight:700;letter-spacing:-.3px;font-variant-numeric:tabular-nums;line-height:1.1}
+
+  /* ── Day Tabs ── */
+  .day-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);padding:0 18px;background:var(--surf-detail)}
+  .day-tab{padding:12px 16px;font-size:12px;color:var(--text-muted);cursor:pointer;border:none;border-bottom:2px solid transparent;font-family:inherit;background:transparent;transition:all .15s;font-weight:500;margin-bottom:-1px}
+  .day-tab:hover{color:var(--text-secondary)}
+  .day-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+  .day-panel{display:none;padding:20px 18px}
+  .day-panel.active{display:block}
+
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:14px;margin-bottom:18px;padding:14px 16px;background:var(--surf-stats);border:1px solid var(--surf-stats-border);border-radius:8px}
+  .stats>div{display:flex;flex-direction:column;gap:2px}
+  .stat-label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;font-weight:600}
+  .stat-value{font-family:var(--mono);font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.2px}
+
+  .charts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+  .chart-box{background:var(--surf-chart);border:1px solid var(--surf-chart-border);border-radius:8px;padding:14px}
+  .chart-box.wide{grid-column:1/-1}
+  .chart-box h3{color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px;font-weight:600}
+
+  .trades-box{background:var(--surf-trades);border:1px solid var(--surf-trades-border);border-radius:8px;padding:14px;max-height:320px;overflow-y:auto;margin-bottom:16px}
+  .trades-box h3{color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px;font-weight:600}
+  .trades-box table{width:100%;border-collapse:collapse;font-size:11px}
+  .trades-box th{text-align:left;padding:6px 10px;color:var(--text-muted);border-bottom:1px solid var(--border);font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.4px;position:sticky;top:-14px;background:var(--surf-trades)}
+  .trades-box td{padding:5px 10px;border-bottom:1px solid var(--border-subtle);font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:11px}
+  .trades-box tr:last-child td{border-bottom:none}
+
+  .code-box{background:var(--surf-code);border:1px solid var(--surf-code-border);border-radius:8px;margin:0 18px 18px;overflow:hidden}
+  .code-box h3{color:var(--text-muted);font-size:11px;margin:0;padding:10px 14px;border-bottom:1px solid var(--surf-code-border);display:flex;justify-content:space-between;align-items:center;font-weight:600;font-family:var(--mono)}
+  .code-box pre{color:var(--surf-code-pre-text);font-family:var(--mono);font-size:11.5px;line-height:1.65;overflow-x:auto;white-space:pre;max-height:440px;overflow-y:auto;padding:14px;background:var(--surf-code-pre)}
+  .copy-btn{background:var(--bg-surface);border:1px solid var(--border);border-radius:6px;color:var(--text-secondary);font-size:10px;padding:3px 10px;cursor:pointer;font-family:inherit;transition:all .15s;font-weight:500}
+  .copy-btn:hover{color:var(--text-primary);border-color:var(--border-strong);background:var(--bg-hover)}
+
+  .feed{display:block}
+  .empty{color:var(--text-muted);text-align:center;padding:80px 20px;font-size:14px}
+  .empty::before{content:'';display:block;width:40px;height:40px;margin:0 auto 16px;border-radius:999px;background:var(--accent-soft);background-image:radial-gradient(circle at center,var(--accent) 2px,transparent 3px)}
+  .no-results{color:var(--text-muted);text-align:center;padding:60px 20px;display:none;font-size:14px}
+
+  /* ── Dynamic effects ── */
+  @keyframes fadeInUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes countFlash{0%{background:var(--accent-soft)}100%{background:transparent}}
+  @keyframes tabSweep{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+
+  .commit-card{animation:fadeInUp .3s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0)*22ms)}
+  .commit-card.expanded{animation:none}
+  .commit-card.just-updated{animation:countFlash 1.2s ease-out}
+
+  button:focus-visible,.round-tab:focus-visible,.sort-btn:focus-visible{outline:2px solid var(--accent-soft);outline-offset:2px}
+
+  .round-tab.active::after{transform-origin:left;animation:tabSweep .3s cubic-bezier(.2,.8,.2,1)}
+
+  .badge.flash{animation:badgeFlash .7s ease-out}
+  @keyframes badgeFlash{0%{color:var(--accent)}100%{color:var(--text-secondary)}}
+
+  @media(prefers-reduced-motion:reduce){
+    .commit-card,.badge.flash,.round-tab.active::after{animation:none!important}
+    .commit-card:hover{transform:none}
+  }
+
+  @media(max-width:900px){
+    .topbar{padding:0 16px;height:48px}
+    .toolbar,.content{padding-left:16px;padding-right:16px}
+    .charts{grid-template-columns:1fr}
+    .commit-header{flex-wrap:wrap}
+    .commit-total{min-width:auto;border-left:none;padding-left:0;margin-top:4px}
+    .commit-time{margin-left:0}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <a class="logo" href="#">
+      <img src="./billiken-logo.jpg" alt="SLU" class="logo-img">
+      <h1><span>Prosperity</span></h1>
+    </a>
+    <nav class="nav">
+      <a class="nav-link active" href="./index.html">Traders</a>
+      <a class="nav-link" href="./discord-intel.html">Discord Bot</a>
+    </nav>
+  </div>
+  <div class="topbar-right">
+    <div class="status" title="Auto-updating"><span class="status-dot"></span></div>
+    <span class="badge" id="run-count"></span>
+  </div>
+</div>
+
+<div class="toolbar" id="toolbar">
+  <div class="round-tabs">
+    <button class="round-tab" data-round="Tutorial">Tutorial</button>
+    <button class="round-tab" data-round="Round 1">Round 1</button>
+    <button class="round-tab" data-round="Round 2">Round 2</button>
+    <button class="round-tab" data-round="Round 3">Round 3</button>
+    <button class="round-tab" data-round="Round 4">Round 4</button>
+    <button class="round-tab" data-round="Round 5">Round 5</button>
+  </div>
+  <div class="sort-group">
+    <button class="sort-btn active" data-sort="pnl">PnL</button>
+    <button class="sort-btn" data-sort="latest">Latest</button>
+    <button class="sort-btn" data-sort="author">Author</button>
+  </div>
+</div>
+
+<div class="content">
+  <div class="no-results" id="no-results">Nothing here yet — try a different round or clear the search.</div>
+  <div class="feed" id="feed"></div>
+</div>
+
+<script src="./shared.js"></script>
+<script>
+const BASE='./runs';
+let RUNS=[],groups=[],filtered=[];
+const allCharts={};
+let activeFilters={round:null};
+let sortMode='pnl';
+
+function normRound(ds){
+  const s=String(ds||'').toLowerCase();
+  if(s.includes('tutorial'))return'Tutorial';
+  const m=s.match(/round[_-]?(\d+)/);
+  if(m)return'Round '+m[1];
+  if(s.includes('submission'))return'Submission';
+  return null;
+}
+const roundRank=r=>r==='Tutorial'?0:r==='Submission'?99:parseInt((r||'').replace(/\D/g,''))||50;
+
+let lastEtag='';
+let pollTimer=null;
+let pollDelay=30000;
+const POLL_MIN=30000,POLL_MAX=300000;
+
+function rebuildGroups(){
+  const gm={};
+  for(const r of RUNS){
+    const k=`${r.author}|${r.strategy}|${r.commit}`;
+    if(!gm[k])gm[k]={author:r.author,strategy:r.strategy,commit:r.commit,timestamp:r.timestamp,runs:[]};
+    gm[k].runs.push(r);
+  }
+  groups=Object.values(gm);
+  for(const g of groups){
+    const sub=g.runs.find(r=>String(r.dataset).includes('submission'));
+    g.sub_pnl=sub?sub.pnl:null;
+    g.total_pnl=g.runs.reduce((s,r)=>s+(r.pnl||0),0);
+    g.avg_pnl=g.runs.length?g.total_pnl/g.runs.length:0;
+    g.total_trades=g.runs.reduce((s,r)=>s+(r.trades||0),0);
+    g.rounds=[...new Set(g.runs.map(r=>normRound(r.dataset)).filter(Boolean))];
+  }
+}
+
+function wireRoundTabs(){
+  document.querySelectorAll('.round-tab').forEach(t=>{
+    t.onclick=()=>{
+      document.querySelectorAll('.round-tab').forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+      activeFilters.round=t.dataset.round;
+      applyFilters();
+    };
+  });
+}
+
+function wireSortButtons(){
+  document.querySelectorAll('.sort-btn').forEach(b=>{
+    b.onclick=()=>{
+      document.querySelectorAll('.sort-btn').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      sortMode=b.dataset.sort;
+      renderFeed();
+    };
+  });
+}
+
+function ensureDefaultRound(){
+  if(document.querySelector('.round-tab.active'))return;
+  const rounds=[...new Set(groups.flatMap(g=>g.rounds))];
+  // Pick the most recent round that actually has data; fall back to Round 1.
+  const ranked=rounds.sort((a,b)=>roundRank(b)-roundRank(a));
+  const pick=ranked.find(r=>r && r !== 'Submission') || 'Round 1';
+  const tab=document.querySelector(`.round-tab[data-round="${pick}"]`);
+  if(tab){tab.classList.add('active');activeFilters.round=pick}
+}
+
+async function loadManifest(){
+  const r=await fetch('./results.json',{cache:'no-cache'});
+  if(!r.ok)throw new Error('fetch failed');
+  const etag=r.headers.get('ETag')||r.headers.get('Last-Modified')||'';
+  if(etag&&etag===lastEtag)return false;
+  const data=await r.json();
+  lastEtag=etag;
+  RUNS=data;
+  rebuildGroups();
+  ensureDefaultRound();
+  applyFilters();
+  return true;
+}
+
+function flashUpdated(){
+  const el=document.getElementById('run-count');
+  if(el){el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash')}
+  // Also flash the first few cards briefly to draw the eye
+  document.querySelectorAll('.commit-card').forEach((c,i)=>{
+    if(i<3){c.classList.remove('just-updated');void c.offsetWidth;c.classList.add('just-updated')}
+  });
+}
+
+function schedulePoll(){
+  clearTimeout(pollTimer);
+  pollTimer=setTimeout(pollOnce,pollDelay);
+}
+
+async function pollOnce(){
+  if(document.hidden){schedulePoll();return}
+  try{
+    if(await loadManifest()){
+      flashUpdated();
+      pollDelay=POLL_MIN;
+    }else{
+      pollDelay=Math.min(pollDelay*1.5,POLL_MAX);
+    }
+  }catch{}
+  schedulePoll();
+}
+
+async function init(){
+  wireRoundTabs();
+  wireSortButtons();
+  try{await loadManifest()}
+  catch{document.getElementById('feed').innerHTML='<div class="empty">No submissions yet — push a strategy to see it here!</div>';return}
+  document.addEventListener('visibilitychange',()=>{
+    if(!document.hidden){pollDelay=POLL_MIN;clearTimeout(pollTimer);pollOnce()}
+  });
+  schedulePoll();
+}
+
+function applyFilters(){
+  filtered=groups.filter(g=>!activeFilters.round||g.rounds.includes(activeFilters.round));
+  renderFeed();
+  document.getElementById('run-count').textContent=`${filtered.length} submissions`;
+  document.getElementById('no-results').style.display=filtered.length===0?'block':'none';
+}
+
+function renderFeed(){
+  Object.values(allCharts).flat().forEach(c=>c.destroy());
+  for(const k in allCharts)delete allCharts[k];
+  const fd=document.getElementById('feed');
+  fd.innerHTML='';
+
+  const scoreOf=g=>g.sub_pnl!=null?g.sub_pnl:(g.avg_pnl||0);
+  // Pre-compute PnL rank so rank badges stay anchored to PnL position
+  // regardless of the currently selected sort mode.
+  const pnlRank=new Map([...filtered].sort((a,b)=>scoreOf(b)-scoreOf(a)).map((g,i)=>[g,i+1]));
+
+  const sorted=[...filtered].sort((a,b)=>{
+    if(sortMode==='latest'){
+      return new Date(b.timestamp||0)-new Date(a.timestamp||0);
+    }
+    if(sortMode==='author'){
+      const av=(a.author||'').toLowerCase(),bv=(b.author||'').toLowerCase();
+      if(av!==bv)return av<bv?-1:1;
+      return scoreOf(b)-scoreOf(a);
+    }
+    return scoreOf(b)-scoreOf(a); // 'pnl'
+  });
+
+  sorted.forEach((g,gi)=>{
+    const subPnl=g.sub_pnl!=null?g.sub_pnl:g.avg_pnl;
+    const time=g.timestamp?new Date(g.timestamp).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'';
+    const rank=pnlRank.get(g)||(gi+1);
+    const rc=rank===1?' g':rank===2?' s':rank===3?' b':'';
+
+    const card=document.createElement('div');
+    card.className='commit-card';card.id=`card-${gi}`;
+    card.style.setProperty('--i',Math.min(gi,20));
+
+    const chips=g.runs.map(r=>{
+      const lbl=String(r.dataset).includes('submission')?'SUB':`D${r.day}`;
+      return `<span class="run-chip"><span class="label">${lbl}</span><span class="val ${pc(r.pnl)}">${fp(r.pnl)}</span></span>`;
+    }).join('');
+
+    const key=encodeURIComponent(`${g.author}|${g.strategy}|${g.commit}`);
+    card.innerHTML=`
+      <a class="commit-header" href="./run.html?g=${key}">
+        <div class="rank-badge${rc}">${rank}</div>
+        <div class="commit-info">
+          <span class="commit-strat">${g.strategy}</span>
+          <span class="commit-author">${g.author}</span>
+          <div class="commit-runs">${chips}</div>
+        </div>
+        <div class="commit-total">
+          <div class="sub-label">Avg PnL / day</div>
+          <div class="sub-pnl ${pc(subPnl)}">${fp(subPnl)}</div>
+          <div class="commit-time">${time}</div>
+        </div>
+      </a>
+    `;
+    fd.appendChild(card);
+  });
+}
+
+init();
+</script>
+</body>
+</html>

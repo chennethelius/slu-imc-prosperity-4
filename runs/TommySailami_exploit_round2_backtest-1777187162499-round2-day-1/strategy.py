@@ -1,0 +1,190 @@
+from datamodel import Order, OrderDepth, TradingState
+import json
+
+
+class Trader:
+    """exploit: v22 + v27 + v31 + v43 with OSM_ONESIDED_OFFSET tuned to 1.
+    All gain over the v26–v43 family comes from posting tight (±1) rather
+    than wide (±10) fallback quotes on one-sided books."""
+
+    LIMITS = {"ASH_COATED_OSMIUM": 80, "INTARIAN_PEPPER_ROOT": 80}
+
+    OSM_KALMAN_GAIN = 0.1353
+    OSM_FAIR_STATIC = 10001
+    OSM_TAKE_WIDTH = 2
+    OSM_CLEAR_WIDTH = 2
+    OSM_VOLUME_LIMIT = 30
+    OSM_MAKE_EDGE = 1
+    OSM_SKEW_UNIT = 16
+    OSM_ONESIDED_OFFSET = 1
+
+    PEP_DRIFT = 0.100188
+    PEP_ENTRY_TAKE = 7
+    PEP_ENTRY_TIMEOUT = 200
+    PEP_BID_FLOOR = -6
+    PEP_BID_CEIL = 5
+
+    def bid(self) -> int:
+        return 0
+
+    def run(self, state: TradingState):
+        try:
+            trader_state = json.loads(state.traderData) if state.traderData else {}
+        except Exception:
+            trader_state = {}
+        result: dict[str, list[Order]] = {}
+        for symbol, depth in state.order_depths.items():
+            position = state.position.get(symbol, 0)
+            if symbol == "ASH_COATED_OSMIUM":
+                result[symbol] = self._osmium(depth, position, trader_state)
+            elif symbol == "INTARIAN_PEPPER_ROOT":
+                result[symbol] = self._pepper(symbol, depth, position, state.timestamp, trader_state)
+            else:
+                result[symbol] = []
+        return result, 0, json.dumps(trader_state)
+
+    def _osmium(self, depth: OrderDepth, position: int, trader_state: dict):
+        symbol = "ASH_COATED_OSMIUM"
+        limit = self.LIMITS[symbol]
+
+        # one-sided-book fallback: post a tight quote on the missing side so
+        # incoming market orders have only our liquidity to fill against.
+        if not depth.buy_orders or not depth.sell_orders:
+            last_fair = trader_state.get("_osm_f", self.OSM_FAIR_STATIC)
+            offset = self.OSM_ONESIDED_OFFSET
+            orders: list[Order] = []
+            if not depth.sell_orders and limit + position > 0:
+                orders.append(Order(symbol, int(round(last_fair + offset)), -(limit + position)))
+            if not depth.buy_orders and limit - position > 0:
+                orders.append(Order(symbol, int(round(last_fair - offset)), limit - position))
+            return orders
+
+        best_bid = max(depth.buy_orders)
+        best_ask = min(depth.sell_orders)
+        best_bid_vol = depth.buy_orders[best_bid]
+        best_ask_vol = -depth.sell_orders[best_ask]
+        tob_vol = best_bid_vol + best_ask_vol
+        microprice = (best_bid * best_ask_vol + best_ask * best_bid_vol) / tob_vol if tob_vol > 0 else (best_bid + best_ask) / 2.0
+
+        # adaptive Kalman filter for fair value
+        fair = trader_state.get("_osm_f", microprice)
+        innovation = microprice - fair
+        err_ema = trader_state.get("_osm_err", abs(innovation))
+        err_ema += self.OSM_KALMAN_GAIN * (abs(innovation) - err_ema)
+        fair += (self.OSM_KALMAN_GAIN / (1.0 + err_ema)) * innovation
+        trader_state["_osm_err"] = err_ema
+        trader_state["_osm_f"] = fair
+        confidence = 1.0 / (1.0 + err_ema)
+
+        static_fair = self.OSM_FAIR_STATIC
+        clear_width = self.OSM_CLEAR_WIDTH
+        position_skew = round(position / self.OSM_SKEW_UNIT)
+        orders = []
+        bought_this_tick = sold_this_tick = 0
+
+        # TAKE: lift cheap asks, hit expensive bids
+        ask_threshold = max(static_fair, fair) - max(0, self.OSM_TAKE_WIDTH + position_skew)
+        bid_threshold = min(static_fair, fair) + max(0, self.OSM_TAKE_WIDTH - position_skew)
+        for ask_price in sorted(depth.sell_orders):
+            if ask_price > ask_threshold:
+                break
+            qty = min(-depth.sell_orders[ask_price], limit - position - bought_this_tick)
+            if qty > 0:
+                orders.append(Order(symbol, ask_price, qty))
+                bought_this_tick += qty
+        for bid_price in sorted(depth.buy_orders, reverse=True):
+            if bid_price < bid_threshold:
+                break
+            qty = min(depth.buy_orders[bid_price], limit + position - sold_this_tick)
+            if qty > 0:
+                orders.append(Order(symbol, bid_price, -qty))
+                sold_this_tick += qty
+
+        # CLEAR: v31 dual-signal gate + v43 force-clear at hard limit
+        position_after = position + bought_this_tick - sold_this_tick
+        clear_bid_price = int(round(fair - clear_width))
+        clear_ask_price = int(round(fair + clear_width))
+        long_favorable = fair < static_fair
+        short_favorable = fair > static_fair
+        long_confirmed = long_favorable and microprice >= fair
+        short_confirmed = short_favorable and microprice <= fair
+        force_clear = abs(position) >= limit
+        if position_after > 0 and (not long_confirmed or force_clear):
+            clearable_qty = min(position_after, sum(v for p, v in depth.buy_orders.items() if p >= clear_ask_price))
+            send = min(limit + position - sold_this_tick, clearable_qty)
+            if send > 0:
+                orders.append(Order(symbol, clear_ask_price, -send))
+                sold_this_tick += send
+        elif position_after < 0 and (not short_confirmed or force_clear):
+            clearable_qty = min(-position_after, sum(-v for p, v in depth.sell_orders.items() if p <= clear_bid_price))
+            send = min(limit - position - bought_this_tick, clearable_qty)
+            if send > 0:
+                orders.append(Order(symbol, clear_bid_price, send))
+                bought_this_tick += send
+
+        # MAKE: v27 regime-gated edges + v42 confidence-scaled size
+        favorable_inventory = (position > 0 and long_favorable) or (position < 0 and short_favorable)
+        if favorable_inventory:
+            bid_edge = ask_edge = max(1, self.OSM_MAKE_EDGE)
+        else:
+            bid_edge = max(1, self.OSM_MAKE_EDGE + position_skew)
+            ask_edge = max(1, self.OSM_MAKE_EDGE - position_skew)
+        make_ask_ref = min((p for p in depth.sell_orders if p > fair + ask_edge - 1), default=None)
+        make_bid_ref = max((p for p in depth.buy_orders if p < fair - bid_edge + 1), default=None)
+        if make_ask_ref is not None and make_bid_ref is not None:
+            if make_ask_ref <= fair + ask_edge and position <= self.OSM_VOLUME_LIMIT:
+                make_ask_ref = int(round(fair + ask_edge + 1))
+            if make_bid_ref >= fair - bid_edge and position >= -self.OSM_VOLUME_LIMIT:
+                make_bid_ref = int(round(fair - bid_edge - 1))
+            make_buy_qty = int(round((limit - position - bought_this_tick) * confidence))
+            if make_buy_qty > 0:
+                orders.append(Order(symbol, make_bid_ref + 1, make_buy_qty))
+            make_sell_qty = int(round((limit + position - sold_this_tick) * confidence))
+            if make_sell_qty > 0:
+                orders.append(Order(symbol, make_ask_ref - 1, -make_sell_qty))
+        return orders
+
+    def _pepper(self, symbol: str, depth: OrderDepth, position: int, timestamp: int, trader_state: dict):
+        limit = self.LIMITS[symbol]
+        tick = timestamp // 100
+        need = limit - position
+        if need <= 0:
+            return []
+
+        if depth.buy_orders and depth.sell_orders:
+            best_bid = max(depth.buy_orders)
+            best_ask = min(depth.sell_orders)
+            best_bid_vol = depth.buy_orders[best_bid]
+            best_ask_vol = -depth.sell_orders[best_ask]
+            tob_vol = best_bid_vol + best_ask_vol
+            mid = (best_bid * best_ask_vol + best_ask * best_bid_vol) / tob_vol if tob_vol > 0 else (best_bid + best_ask) / 2.0
+            trader_state["_pep_sum"] = trader_state.get("_pep_sum", 0.0) + mid - self.PEP_DRIFT * tick
+            trader_state["_pep_cnt"] = trader_state.get("_pep_cnt", 0) + 1
+
+        sample_count = trader_state.get("_pep_cnt", 0)
+        if sample_count == 0:
+            return []
+        fair = trader_state["_pep_sum"] / sample_count + self.PEP_DRIFT * tick
+        fair_int = int(round(fair))
+
+        orders = []
+        bought_this_tick = 0
+        selective = tick < self.PEP_ENTRY_TIMEOUT
+        take_threshold = fair + self.PEP_ENTRY_TAKE if selective else float("inf")
+
+        for ask_price in sorted(depth.sell_orders):
+            if bought_this_tick >= need or ask_price > take_threshold:
+                break
+            qty = min(-depth.sell_orders[ask_price], need - bought_this_tick)
+            if qty > 0:
+                orders.append(Order(symbol, ask_price, qty))
+                bought_this_tick += qty
+
+        if selective and bought_this_tick < need:
+            if depth.buy_orders:
+                competing_bid = max(depth.buy_orders)
+                offset = max(self.PEP_BID_FLOOR, min(self.PEP_BID_CEIL, competing_bid + 1 - fair_int))
+            else:
+                offset = self.PEP_BID_FLOOR
+            orders.append(Order(symbol, fair_int + offset, need - bought_this_tick))
+        return orders

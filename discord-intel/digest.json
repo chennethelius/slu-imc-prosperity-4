@@ -1,0 +1,951 @@
+{
+  "generated_at": "2026-04-19T03:15:22.189602+00:00",
+  "total_messages": 2767,
+  "products": {
+    "ASH_COATED_OSMIUM": {
+      "message_count": 9,
+      "top_messages": [
+        {
+          "score": 100,
+          "author": "t3chg0d",
+          "content": "```\n➜  prosperity_rust_backtester git:(main) ✗ rust_backtester --trader traders/round1-portal-v2-corrected.py --dataset round1 --day=-2 --persist --artifact-mode full --products full\nrust_backtester --trader traders/round1-portal-v2-corrected.py --dataset round1 --day=-1 --persist --artifact-mode full --products full\nrust_backtester --trader traders/round1-portal-v2-corrected.py --dataset round1 -",
+          "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494566985579626506",
+          "pnls": [
+            10000.0,
+            866.0,
+            93811.0,
+            76495.5,
+            17315.5,
+            10000.0,
+            861.0,
+            94682.0,
+            75639.0,
+            19043.0,
+            10000.0,
+            849.0,
+            93174.0,
+            75982.0,
+            17192.0,
+            30000.0,
+            2567.0,
+            284383.0,
+            230698.0,
+            53685.0
+          ]
+        },
+        {
+          "score": 84,
+          "author": "quillua",
+          "content": "100%|#######################################| 10000/10000 [00:01<00:00, 9901.58it/s] ASH_COATED_OSMIUM: 21,234 INTARIAN_PEPPER_ROOT: 79,543 Total profit: 100,777\nBacktesting C:\\Users\\kylel\\OneDrive\\Documents\\GitHub\\ERN-East-River-Network-\\algos\\r1_sub.py for round: 1 day: -1\n100%|#######################################| 10000/10000 [00:01<00:00, 9036.82it/s] ASH_COATED_OSMIUM: 24,381 INTARIAN_PEPP",
+          "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494554713440518194",
+          "pnls": [
+            100.0,
+            10000.0,
+            10000.0,
+            9901.0,
+            21234.0,
+            79543.0,
+            100777.0,
+            100.0,
+            10000.0,
+            10000.0,
+            9036.0,
+            24381.0,
+            79192.0,
+            103573.0,
+            100.0,
+            10000.0,
+            10000.0,
+            10493.0,
+            79926.0,
+            24385.0,
+            104311.0,
+            100777.0,
+            103573.0,
+            104311.0,
+            308661.0
+          ]
+        },
+        {
+          "score": 60,
+          "author": "kami1432",
+          "content": "for the ASH_COATED_OSMIUM they say ASH_COATED_OSMIUM is rumored to be a bit more volatile, but empirically that doesnt seem to be the case, its barely volatile at all and swings around a fv of 10k, or am I missing smthg",
+          "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494158307093385287",
+          "pnls": [
+            10000.0
+          ]
+        },
+        {
+          "score": 54,
+          "author": "cynter01",
+          "content": "I can't get past:\n\nASH_COATED_OSMIUM 2337.6875\nINTARIAN_PEPPER_ROOT 7106.0000\n\nI give up",
+          "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494586786272251925",
+          "pnls": [
+            2337.6875,
+            7106.0
+          ]
+        },
+        {
+          "score": 42,
+          "author": "sumiseraaa",
+          "content": "what are u guys opening the lgos on for it to be readable rn my json is one long line on vs code?\n\"positions\":[{\"symbol\":\"ASH_COATED_OSMIUM\",\"quantity\":38},{\"symbol\":\"INTARIAN_PEPPER_ROOT\",\"quantity\":80},{\"symbol\":\"XIRECS\",\"quantity\":-1337985}]}",
+          "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494409654040793279",
+          "pnls": []
+        }
+      ],
+      "pnl_stats": {
+        "min": -504.0,
+        "max": 308661.0,
+        "median": 17192.0,
+        "common": [
+          10000,
+          1000,
+          0
+        ],
+        "count": 52
+      },
+      "top_contributors": [
+        {
+          "name": "t3chg0d",
+          "messages": 1
+        },
+        {
+          "name": "quillua",
+          "messages": 1
+        },
+        {
+          "name": "kami1432",
+          "messages": 1
+        },
+        {
+          "name": "cynter01",
+          "messages": 1
+        },
+        {
+          "name": "sumiseraaa",
+          "messages": 1
+        }
+      ]
+    },
+    "INTARIAN_PEPPER_ROOT": {
+      "message_count": 9,
+      "top_messages": [
+        {
+          "score": 100,
+          "author": "t3chg0d",
+          "content": "```\n➜  prosperity_rust_backtester git:(main) ✗ rust_backtester --trader traders/round1-portal-v2-corrected.py --dataset round1 --day=-2 --persist --artifact-mode full --products full\nrust_backtester --trader traders/round1-portal-v2-corrected.py --dataset round1 --day=-1 --persist --artifact-mode full --products full\nrust_backtester --trader traders/round1-portal-v2-corrected.py --dataset round1 -",
+          "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494566985579626506",
+          "pnls": [
+            10000.0,
+            866.0,
+            93811.0,
+            76495.5,
+            17315.5,
+            10000.0,
+            861.0,
+            94682.0,
+            75639.0,
+            19043.0,
+            10000.0,
+            849.0,
+            93174.0,
+            75982.0,
+            17192.0,
+            30000.0,
+            2567.0,
+            284383.0,
+            230698.0,
+            53685.0
+          ]
+        },
+        {
+          "score": 84,
+          "author": "quillua",
+          "content": "100%|#######################################| 10000/10000 [00:01<00:00, 9901.58it/s] ASH_COATED_OSMIUM: 21,234 INTARIAN_PEPPER_ROOT: 79,543 Total profit: 100,777\nBacktesting C:\\Users\\kylel\\OneDrive\\Documents\\GitHub\\ERN-East-River-Network-\\algos\\r1_sub.py for round: 1 day: -1\n100%|#######################################| 10000/10000 [00:01<00:00, 9036.82it/s] ASH_COATED_OSMIUM: 24,381 INTARIAN_PEPP",
+          "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494554713440518194",
+          "pnls": [
+            100.0,
+            10000.0,
+            10000.0,
+            9901.0,
+            21234.0,
+            79543.0,
+            100777.0,
+            100.0,
+            10000.0,
+            10000.0,
+            9036.0,
+            24381.0,
+            79192.0,
+            103573.0,
+            100.0,
+            10000.0,
+            10000.0,
+            10493.0,
+            79926.0,
+            24385.0,
+            104311.0,
+            100777.0,
+            103573.0,
+            104311.0,
+            308661.0
+          ]
+        },
+        {
+          "score": 54,
+          "author": "cynter01",
+          "content": "I can't get past:\n\nASH_COATED_OSMIUM 2337.6875\nINTARIAN_PEPPER_ROOT 7106.0000\n\nI give up",
+          "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494586786272251925",
+          "pnls": [
+            2337.6875,
+            7106.0
+          ]
+        },
+        {
+          "score": 42,
+          "author": "sumiseraaa",
+          "content": "what are u guys opening the lgos on for it to be readable rn my json is one long line on vs code?\n\"positions\":[{\"symbol\":\"ASH_COATED_OSMIUM\",\"quantity\":38},{\"symbol\":\"INTARIAN_PEPPER_ROOT\",\"quantity\":80},{\"symbol\":\"XIRECS\",\"quantity\":-1337985}]}",
+          "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494409654040793279",
+          "pnls": []
+        },
+        {
+          "score": 36,
+          "author": "mrajabkh",
+          "content": "this is the name dont misspell it \"INTARIAN_PEPPER_ROOT\"",
+          "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494056803305001051",
+          "pnls": []
+        }
+      ],
+      "pnl_stats": {
+        "min": -504.0,
+        "max": 308661.0,
+        "median": 17192.0,
+        "common": [
+          10000,
+          1000,
+          0
+        ],
+        "count": 51
+      },
+      "top_contributors": [
+        {
+          "name": "t3chg0d",
+          "messages": 1
+        },
+        {
+          "name": "quillua",
+          "messages": 1
+        },
+        {
+          "name": "cynter01",
+          "messages": 1
+        },
+        {
+          "name": "sumiseraaa",
+          "messages": 1
+        },
+        {
+          "name": "mrajabkh",
+          "messages": 1
+        }
+      ]
+    },
+    "OSMIUM": {
+      "message_count": 499,
+      "top_messages": [
+        {
+          "score": 100,
+          "author": "t3chg0d",
+          "content": "```\n➜  prosperity_rust_backtester git:(main) ✗ rust_backtester --trader traders/round1-portal-v2-corrected.py --dataset round1 --day=-2 --persist --artifact-mode full --products full\nrust_backtester --trader traders/round1-portal-v2-corrected.py --dataset round1 --day=-1 --persist --artifact-mode full --products full\nrust_backtester --trader traders/round1-portal-v2-corrected.py --dataset round1 -",
+          "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494566985579626506",
+          "pnls": [
+            10000.0,
+            866.0,
+            93811.0,
+            76495.5,
+            17315.5,
+            10000.0,
+            861.0,
+            94682.0,
+            75639.0,
+            19043.0,
+            10000.0,
+            849.0,
+            93174.0,
+            75982.0,
+            17192.0,
+            30000.0,
+            2567.0,
+            284383.0,
+            230698.0,
+            53685.0
+          ]
+        },
+        {
+          "score": 84,
+          "author": "quillua",
+          "content": "100%|#######################################| 10000/10000 [00:01<00:00, 9901.58it/s] ASH_COATED_OSMIUM: 21,234 INTARIAN_PEPPER_ROOT: 79,543 Total profit: 100,777\nBacktesting C:\\Users\\kylel\\OneDrive\\Documents\\GitHub\\ERN-East-River-Network-\\algos\\r1_sub.py for round: 1 day: -1\n100%|#######################################| 10000/10000 [00:01<00:00, 9036.82it/s] ASH_COATED_OSMIUM: 24,381 INTARIAN_PEPP",
+          "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494554713440518194",
+          "pnls": [
+            100.0,
+            10000.0,
+            10000.0,
+            9901.0,
+            21234.0,
+            79543.0,
+            100777.0,
+            100.0,
+            10000.0,
+            10000.0,
+            9036.0,
+            24381.0,
+            79192.0,
+            103573.0,
+            100.0,
+            10000.0,
+            10000.0,
+            10493.0,
+            79926.0,
+            24385.0,
+            104311.0,
+            100777.0,
+            103573.0,
+            104311.0,
+            308661.0
+          ]
+        },
+        {
+          "score": 66,
+          "author": "spartan_35961",
+          "content": "Pepper is currently negative edge. It’s not a clean mean-reversion asset in this run, so the benchmark is basically ~0 PnL. My current strategy is overtrading it and losing ~25k total. I’m going to widen thresholds, add a no-trade band around fair value, and reduce trading frequency. Osmium I’ll leave unchanged since it’s the only consistent positive contributor",
+          "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494410066734874734",
+          "pnls": [
+            25000.0
+          ]
+        },
+        {
+          "score": 66,
+          "author": "tribesdev",
+          "content": "keeping a position of 70, and then doing the same thing as osmium, where you buy and sell undervalued/overvalued asks/bids, then market make as well for pepper. I used a regression line on mid to get fair value for pepper",
+          "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494641453656444979",
+          "pnls": []
+        },
+        {
+          "score": 60,
+          "author": "kami1432",
+          "content": "for the ASH_COATED_OSMIUM they say ASH_COATED_OSMIUM is rumored to be a bit more volatile, but empirically that doesnt seem to be the case, its barely volatile at all and swings around a fv of 10k, or am I missing smthg",
+          "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494158307093385287",
+          "pnls": [
+            10000.0
+          ]
+        }
+      ],
+      "pnl_stats": {
+        "min": -500000.0,
+        "max": 308661.0,
+        "median": 4000.0,
+        "common": [
+          3000,
+          10000,
+          2500
+        ],
+        "count": 299
+      },
+      "top_contributors": [
+        {
+          "name": "we43_76280",
+          "messages": 20
+        },
+        {
+          "name": "atharvabhardwaj_77149",
+          "messages": 13
+        },
+        {
+          "name": "nimbacosta_47523",
+          "messages": 11
+        },
+        {
+          "name": "chrono55",
+          "messages": 9
+        },
+        {
+          "name": "mrbean1985",
+          "messages": 9
+        }
+      ]
+    },
+    "PEPPER": {
+      "message_count": 579,
+      "top_messages": [
+        {
+          "score": 100,
+          "author": "t3chg0d",
+          "content": "```\n➜  prosperity_rust_backtester git:(main) ✗ rust_backtester --trader traders/round1-portal-v2-corrected.py --dataset round1 --day=-2 --persist --artifact-mode full --products full\nrust_backtester --trader traders/round1-portal-v2-corrected.py --dataset round1 --day=-1 --persist --artifact-mode full --products full\nrust_backtester --trader traders/round1-portal-v2-corrected.py --dataset round1 -",
+          "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494566985579626506",
+          "pnls": [
+            10000.0,
+            866.0,
+            93811.0,
+            76495.5,
+            17315.5,
+            10000.0,
+            861.0,
+            94682.0,
+            75639.0,
+            19043.0,
+            10000.0,
+            849.0,
+            93174.0,
+            75982.0,
+            17192.0,
+            30000.0,
+            2567.0,
+            284383.0,
+            230698.0,
+            53685.0
+          ]
+        },
+        {
+          "score": 84,
+          "author": "quillua",
+          "content": "100%|#######################################| 10000/10000 [00:01<00:00, 9901.58it/s] ASH_COATED_OSMIUM: 21,234 INTARIAN_PEPPER_ROOT: 79,543 Total profit: 100,777\nBacktesting C:\\Users\\kylel\\OneDrive\\Documents\\GitHub\\ERN-East-River-Network-\\algos\\r1_sub.py for round: 1 day: -1\n100%|#######################################| 10000/10000 [00:01<00:00, 9036.82it/s] ASH_COATED_OSMIUM: 24,381 INTARIAN_PEPP",
+          "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494554713440518194",
+          "pnls": [
+            100.0,
+            10000.0,
+            10000.0,
+            9901.0,
+            21234.0,
+            79543.0,
+            100777.0,
+            100.0,
+            10000.0,
+            10000.0,
+            9036.0,
+            24381.0,
+            79192.0,
+            103573.0,
+            100.0,
+            10000.0,
+            10000.0,
+            10493.0,
+            79926.0,
+            24385.0,
+            104311.0,
+            100777.0,
+            103573.0,
+            104311.0,
+            308661.0
+          ]
+        },
+        {
+          "score": 66,
+          "author": "spartan_35961",
+          "content": "Pepper is currently negative edge. It’s not a clean mean-reversion asset in this run, so the benchmark is basically ~0 PnL. My current strategy is overtrading it and losing ~25k total. I’m going to widen thresholds, add a no-trade band around fair value, and reduce trading frequency. Osmium I’ll leave unchanged since it’s the only consistent positive contributor",
+          "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494410066734874734",
+          "pnls": [
+            25000.0
+          ]
+        },
+        {
+          "score": 66,
+          "author": "tribesdev",
+          "content": "keeping a position of 70, and then doing the same thing as osmium, where you buy and sell undervalued/overvalued asks/bids, then market make as well for pepper. I used a regression line on mid to get fair value for pepper",
+          "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494641453656444979",
+          "pnls": []
+        },
+        {
+          "score": 60,
+          "author": "sbmxz1143",
+          "content": "last hint i would ask this variable order book situation can be solved by basic market making or there is a different way (for both osmium and pepper since both have variable order book situation)",
+          "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494326338356645939",
+          "pnls": []
+        }
+      ],
+      "pnl_stats": {
+        "min": -120000.0,
+        "max": 401000.0,
+        "median": 7700.0,
+        "common": [
+          7500,
+          10000,
+          8000
+        ],
+        "count": 239
+      },
+      "top_contributors": [
+        {
+          "name": "ponts_13588",
+          "messages": 11
+        },
+        {
+          "name": "tribesdev",
+          "messages": 10
+        },
+        {
+          "name": "blaster_1111",
+          "messages": 9
+        },
+        {
+          "name": "we43_76280",
+          "messages": 8
+        },
+        {
+          "name": "nimbacosta_47523",
+          "messages": 7
+        }
+      ]
+    },
+    "PEPPER_ROOT": {
+      "message_count": 10,
+      "top_messages": [
+        {
+          "score": 100,
+          "author": "t3chg0d",
+          "content": "```\n➜  prosperity_rust_backtester git:(main) ✗ rust_backtester --trader traders/round1-portal-v2-corrected.py --dataset round1 --day=-2 --persist --artifact-mode full --products full\nrust_backtester --trader traders/round1-portal-v2-corrected.py --dataset round1 --day=-1 --persist --artifact-mode full --products full\nrust_backtester --trader traders/round1-portal-v2-corrected.py --dataset round1 -",
+          "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494566985579626506",
+          "pnls": [
+            10000.0,
+            866.0,
+            93811.0,
+            76495.5,
+            17315.5,
+            10000.0,
+            861.0,
+            94682.0,
+            75639.0,
+            19043.0,
+            10000.0,
+            849.0,
+            93174.0,
+            75982.0,
+            17192.0,
+            30000.0,
+            2567.0,
+            284383.0,
+            230698.0,
+            53685.0
+          ]
+        },
+        {
+          "score": 84,
+          "author": "quillua",
+          "content": "100%|#######################################| 10000/10000 [00:01<00:00, 9901.58it/s] ASH_COATED_OSMIUM: 21,234 INTARIAN_PEPPER_ROOT: 79,543 Total profit: 100,777\nBacktesting C:\\Users\\kylel\\OneDrive\\Documents\\GitHub\\ERN-East-River-Network-\\algos\\r1_sub.py for round: 1 day: -1\n100%|#######################################| 10000/10000 [00:01<00:00, 9036.82it/s] ASH_COATED_OSMIUM: 24,381 INTARIAN_PEPP",
+          "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494554713440518194",
+          "pnls": [
+            100.0,
+            10000.0,
+            10000.0,
+            9901.0,
+            21234.0,
+            79543.0,
+            100777.0,
+            100.0,
+            10000.0,
+            10000.0,
+            9036.0,
+            24381.0,
+            79192.0,
+            103573.0,
+            100.0,
+            10000.0,
+            10000.0,
+            10493.0,
+            79926.0,
+            24385.0,
+            104311.0,
+            100777.0,
+            103573.0,
+            104311.0,
+            308661.0
+          ]
+        },
+        {
+          "score": 54,
+          "author": "cynter01",
+          "content": "I can't get past:\n\nASH_COATED_OSMIUM 2337.6875\nINTARIAN_PEPPER_ROOT 7106.0000\n\nI give up",
+          "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494586786272251925",
+          "pnls": [
+            2337.6875,
+            7106.0
+          ]
+        },
+        {
+          "score": 42,
+          "author": "sumiseraaa",
+          "content": "what are u guys opening the lgos on for it to be readable rn my json is one long line on vs code?\n\"positions\":[{\"symbol\":\"ASH_COATED_OSMIUM\",\"quantity\":38},{\"symbol\":\"INTARIAN_PEPPER_ROOT\",\"quantity\":80},{\"symbol\":\"XIRECS\",\"quantity\":-1337985}]}",
+          "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494409654040793279",
+          "pnls": []
+        },
+        {
+          "score": 36,
+          "author": "mrajabkh",
+          "content": "this is the name dont misspell it \"INTARIAN_PEPPER_ROOT\"",
+          "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494056803305001051",
+          "pnls": []
+        }
+      ],
+      "pnl_stats": {
+        "min": -504.0,
+        "max": 308661.0,
+        "median": 17192.0,
+        "common": [
+          10000,
+          1000,
+          0
+        ],
+        "count": 51
+      },
+      "top_contributors": [
+        {
+          "name": "t3chg0d",
+          "messages": 1
+        },
+        {
+          "name": "quillua",
+          "messages": 1
+        },
+        {
+          "name": "cynter01",
+          "messages": 1
+        },
+        {
+          "name": "sumiseraaa",
+          "messages": 1
+        },
+        {
+          "name": "mrajabkh",
+          "messages": 1
+        }
+      ]
+    },
+    "TOMATOES": {
+      "message_count": 10,
+      "top_messages": [
+        {
+          "score": 48,
+          "author": "sbmxz1143",
+          "content": "ok so if you dont mind i have one Q in tutorial round we had these tomatoes i could only think of order book imbalance market making and inventory management but other than those i couldnt understand what is the process to find the new alpha like what is that process how should i look at it ??? everybody found many things and the avg pnl was over 3000",
+          "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494325001556590622",
+          "pnls": [
+            3000.0
+          ]
+        },
+        {
+          "score": 36,
+          "author": "_maverick_05",
+          "content": "for what it's worth, my unchanged tomatoes code on osmium netted 2.3k I think",
+          "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494041525389099150",
+          "pnls": [
+            2300.0
+          ]
+        },
+        {
+          "score": 36,
+          "author": "geyzsonkristoffer",
+          "content": "Just like how Tomatoes and Emeralds got trashed, Osmium and Pepper roots won't be on Round 2 either",
+          "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494221621668352020",
+          "pnls": []
+        },
+        {
+          "score": 36,
+          "author": "50noh",
+          "content": "Next Round Dataset is Live Guys they are bringing back tomatoes and Emeralds",
+          "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494689864958873671",
+          "pnls": []
+        },
+        {
+          "score": 30,
+          "author": ".hahahe",
+          "content": "whats a good pnl for tomatoes?",
+          "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494581008568160386",
+          "pnls": []
+        }
+      ],
+      "pnl_stats": {
+        "min": 2300.0,
+        "max": 3400.0,
+        "median": 3000.0,
+        "common": [
+          3000,
+          2500,
+          3500
+        ],
+        "count": 3
+      },
+      "top_contributors": [
+        {
+          "name": "_maverick_05",
+          "messages": 2
+        },
+        {
+          "name": "geyzsonkristoffer",
+          "messages": 2
+        },
+        {
+          "name": "sbmxz1143",
+          "messages": 1
+        },
+        {
+          "name": "50noh",
+          "messages": 1
+        },
+        {
+          "name": ".hahahe",
+          "messages": 1
+        }
+      ]
+    },
+    "EMERALDS": {
+      "message_count": 10,
+      "top_messages": [
+        {
+          "score": 36,
+          "author": "geyzsonkristoffer",
+          "content": "Just like how Tomatoes and Emeralds got trashed, Osmium and Pepper roots won't be on Round 2 either",
+          "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494221621668352020",
+          "pnls": []
+        },
+        {
+          "score": 36,
+          "author": "hopefully_you_know_my_name_32586",
+          "content": "\"Similar to the EMERALDS products in the Tutorial round, the value of INTARIAN_PEPPER_ROOT is quite steady, but keep in mind that it’s a hardy, slow-growing root\"",
+          "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494446737597796405",
+          "pnls": []
+        },
+        {
+          "score": 36,
+          "author": "generoce",
+          "content": "I think it is similar to how you can never lose money in emeralds in tut round; it's very profitable like very to trade pepper",
+          "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494583105191809155",
+          "pnls": []
+        },
+        {
+          "score": 36,
+          "author": "50noh",
+          "content": "Next Round Dataset is Live Guys they are bringing back tomatoes and Emeralds",
+          "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494689864958873671",
+          "pnls": []
+        },
+        {
+          "score": 18,
+          "author": "_jaisheth",
+          "content": "?? why am i getting emeralds and tamatoes in the round1 bot logs 😿",
+          "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494107345137963100",
+          "pnls": []
+        }
+      ],
+      "pnl_stats": {
+        "min": 1050.0,
+        "max": 10000.0,
+        "median": 10000.0,
+        "common": [
+          10000,
+          1000
+        ],
+        "count": 2
+      },
+      "top_contributors": [
+        {
+          "name": "geyzsonkristoffer",
+          "messages": 2
+        },
+        {
+          "name": "cats_are_cool_",
+          "messages": 2
+        },
+        {
+          "name": "hopefully_you_know_my_name_32586",
+          "messages": 1
+        },
+        {
+          "name": "generoce",
+          "messages": 1
+        },
+        {
+          "name": "50noh",
+          "messages": 1
+        }
+      ]
+    }
+  },
+  "overall_top_messages": [
+    {
+      "score": 100,
+      "author": "t3chg0d",
+      "channel": "algo-trading",
+      "content": "```\n➜  prosperity_rust_backtester git:(main) ✗ rust_backtester --trader traders/round1-portal-v2-corrected.py --dataset round1 --day=-2 --persist --artifact-mode full --products full\nrust_backtester --trader traders/round1-portal-v2-corrected.py --dataset round1 --day=-1 --persist --artifact-mode full --products full\nrust_backtester --trader traders/round1-portal-v2-corrected.py --dataset round1 -",
+      "products": [
+        "ASH_COATED_OSMIUM",
+        "INTARIAN_PEPPER_ROOT",
+        "OSMIUM",
+        "PEPPER",
+        "PEPPER_ROOT"
+      ],
+      "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494566985579626506",
+      "pnls": [
+        10000.0,
+        866.0,
+        93811.0,
+        76495.5,
+        17315.5,
+        10000.0,
+        861.0,
+        94682.0,
+        75639.0,
+        19043.0,
+        10000.0,
+        849.0,
+        93174.0,
+        75982.0,
+        17192.0,
+        30000.0,
+        2567.0,
+        284383.0,
+        230698.0,
+        53685.0
+      ]
+    },
+    {
+      "score": 84,
+      "author": "quillua",
+      "channel": "algo-trading",
+      "content": "100%|#######################################| 10000/10000 [00:01<00:00, 9901.58it/s] ASH_COATED_OSMIUM: 21,234 INTARIAN_PEPPER_ROOT: 79,543 Total profit: 100,777\nBacktesting C:\\Users\\kylel\\OneDrive\\Documents\\GitHub\\ERN-East-River-Network-\\algos\\r1_sub.py for round: 1 day: -1\n100%|#######################################| 10000/10000 [00:01<00:00, 9036.82it/s] ASH_COATED_OSMIUM: 24,381 INTARIAN_PEPP",
+      "products": [
+        "ASH_COATED_OSMIUM",
+        "INTARIAN_PEPPER_ROOT",
+        "OSMIUM",
+        "PEPPER",
+        "PEPPER_ROOT"
+      ],
+      "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494554713440518194",
+      "pnls": [
+        100.0,
+        10000.0,
+        10000.0,
+        9901.0,
+        21234.0,
+        79543.0,
+        100777.0,
+        100.0,
+        10000.0,
+        10000.0,
+        9036.0,
+        24381.0,
+        79192.0,
+        103573.0,
+        100.0,
+        10000.0,
+        10000.0,
+        10493.0,
+        79926.0,
+        24385.0,
+        104311.0,
+        100777.0,
+        103573.0,
+        104311.0,
+        308661.0
+      ]
+    },
+    {
+      "score": 66,
+      "author": "spartan_35961",
+      "channel": "algo-trading",
+      "content": "Pepper is currently negative edge. It’s not a clean mean-reversion asset in this run, so the benchmark is basically ~0 PnL. My current strategy is overtrading it and losing ~25k total. I’m going to widen thresholds, add a no-trade band around fair value, and reduce trading frequency. Osmium I’ll leave unchanged since it’s the only consistent positive contributor",
+      "products": [
+        "OSMIUM",
+        "PEPPER"
+      ],
+      "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494410066734874734",
+      "pnls": [
+        25000.0
+      ]
+    },
+    {
+      "score": 66,
+      "author": "tribesdev",
+      "channel": "algo-trading",
+      "content": "keeping a position of 70, and then doing the same thing as osmium, where you buy and sell undervalued/overvalued asks/bids, then market make as well for pepper. I used a regression line on mid to get fair value for pepper",
+      "products": [
+        "OSMIUM",
+        "PEPPER"
+      ],
+      "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494641453656444979",
+      "pnls": []
+    },
+    {
+      "score": 60,
+      "author": "kami1432",
+      "channel": "algo-trading",
+      "content": "for the ASH_COATED_OSMIUM they say ASH_COATED_OSMIUM is rumored to be a bit more volatile, but empirically that doesnt seem to be the case, its barely volatile at all and swings around a fv of 10k, or am I missing smthg",
+      "products": [
+        "ASH_COATED_OSMIUM",
+        "OSMIUM"
+      ],
+      "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494158307093385287",
+      "pnls": [
+        10000.0
+      ]
+    },
+    {
+      "score": 60,
+      "author": "sbmxz1143",
+      "channel": "algo-trading",
+      "content": "last hint i would ask this variable order book situation can be solved by basic market making or there is a different way (for both osmium and pepper since both have variable order book situation)",
+      "products": [
+        "OSMIUM",
+        "PEPPER"
+      ],
+      "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494326338356645939",
+      "pnls": []
+    },
+    {
+      "score": 60,
+      "author": "mannansaood",
+      "channel": "algo-trading",
+      "content": "Btw the backtester you sent here has 80 as position limit for osmium and pepper, isnt it 50?",
+      "products": [
+        "OSMIUM",
+        "PEPPER"
+      ],
+      "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494362067484803204",
+      "pnls": []
+    },
+    {
+      "score": 60,
+      "author": "chrono55",
+      "channel": "algo-trading",
+      "content": "I mean profit of pepper root is ~2x that of osmium and the strat has very high sharpe so makes sense that total pnl does as well",
+      "products": [
+        "OSMIUM",
+        "PEPPER"
+      ],
+      "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494399276313215188",
+      "pnls": []
+    },
+    {
+      "score": 60,
+      "author": "chrono55",
+      "channel": "algo-trading",
+      "content": "id expect it to be higher tbh. sharpe for mm on osmium is already high and sharpe for pepper root is wild so 18 seems low",
+      "products": [
+        "OSMIUM",
+        "PEPPER"
+      ],
+      "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494414733548195983",
+      "pnls": []
+    },
+    {
+      "score": 54,
+      "author": "gxvaher",
+      "channel": "algo-trading",
+      "content": "6 peppers and 7 for osmium",
+      "products": [
+        "OSMIUM",
+        "PEPPER"
+      ],
+      "url": "https://discord.com/channels/1001852729725046804/1476867343068958781/1494095001938952344",
+      "pnls": []
+    }
+  ]
+}
