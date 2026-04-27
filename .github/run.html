@@ -149,6 +149,7 @@
       <a class="nav-link active" href="./index.html">Traders</a>
       <a class="nav-link" href="./manual-trading.html">Manual Trading</a>
       <a class="nav-link" href="./discord-intel.html">Discord Bot</a>
+      <a class="nav-link" href="./marks.html">Counterparties</a>
     </nav>
   </div>
 </div>
@@ -544,7 +545,7 @@ function renderInventory(parent, tradesCsv){
   wrap.className = 'invvis';
   wrap.innerHTML = `
     <div class="invvis-head">
-      <h3>Inventory at selected tick</h3>
+      <h3>Inventory &amp; fills</h3>
       <div>tick <span class="invvis-ts">—</span></div>
     </div>
     <div class="invvis-grid">
@@ -575,6 +576,42 @@ function renderInventory(parent, tradesCsv){
     };
   });
 
+  // Per-symbol buy/sell markers, plotted at (trade_ts, position_after_trade).
+  // Filtered to the active symbol so the chart doesn't get crowded — swapped
+  // by setSymbol below.
+  const fills = { buys:new Map(), sells:new Map() };
+  {
+    const events = (tradesCsv||[])
+      .filter(t=>t.buyer==='SUBMISSION'||t.seller==='SUBMISSION')
+      .map(t=>({ts:+t.timestamp, sym:t.symbol,
+                side:t.buyer==='SUBMISSION'?'buy':'sell',
+                d:(t.buyer==='SUBMISSION' ? +t.quantity : -t.quantity),
+                qty:+t.quantity, price:+t.price}))
+      .sort((a,b)=>a.ts-b.ts);
+    const cum = new Map();
+    for(const e of events){
+      const after = (cum.get(e.sym)||0) + e.d;
+      cum.set(e.sym, after);
+      const bag = e.side==='buy' ? fills.buys : fills.sells;
+      if(!bag.has(e.sym)) bag.set(e.sym, []);
+      bag.get(e.sym).push({x:e.ts, y:after, qty:e.qty, price:e.price});
+    }
+  }
+  datasets.push({
+    label:'our buy', type:'scatter', data:[],
+    backgroundColor:'#059669', borderColor:'#059669',
+    pointStyle:'triangle', pointRadius:5, pointHoverRadius:8, rotation:0,
+    showLine:false,
+  });
+  datasets.push({
+    label:'our sell', type:'scatter', data:[],
+    backgroundColor:'#dc2626', borderColor:'#dc2626',
+    pointStyle:'triangle', pointRadius:5, pointHoverRadius:8, rotation:180,
+    showLine:false,
+  });
+  const BUY_IDX = datasets.length - 2;
+  const SELL_IDX = datasets.length - 1;
+
   let chart;
   setTimeout(()=>{
     chart = new Chart(canvas, {
@@ -583,14 +620,23 @@ function renderInventory(parent, tradesCsv){
       options:{
         responsive:true, animation:false, maintainAspectRatio:false,
         plugins:{
-          legend:{position:'bottom', labels:{color:'#6b7280', font:{size:9.5, family:'Inter'}, boxWidth:10, boxHeight:10, padding:6}},
-          tooltip:{intersect:false, mode:'index'},
+          legend:{position:'bottom', labels:{color:'#6b7280', font:{size:9.5, family:'Inter'}, boxWidth:10, boxHeight:10, padding:6,
+            usePointStyle:true}},
+          tooltip:{intersect:false, mode:'nearest',
+            callbacks:{label(ctx){
+              const lab = ctx.dataset.label;
+              if(lab==='our buy' || lab==='our sell'){
+                const r = ctx.raw;
+                return `${lab.toUpperCase()} ${r.qty} @ ${r.price?.toLocaleString()}  → pos ${r.y>0?'+':''}${r.y}`;
+              }
+              return `${lab}: ${ctx.parsed.y}`;
+            }}},
         },
         scales:{
           x:{type:'linear', grid:{color:'#e5e7eb'}, ticks:{color:'#9ca3af', maxTicksLimit:8, font:{size:10}}},
           y:{grid:{color:'#e5e7eb'}, ticks:{color:'#9ca3af', font:{size:10}}, title:{display:true, text:'position', color:'#6b7280', font:{size:10}}},
         },
-        interaction:{intersect:false, mode:'index'}
+        interaction:{intersect:false, mode:'nearest'}
       },
       plugins:[{
         id:'tickMarker',
@@ -640,7 +686,10 @@ function renderInventory(parent, tradesCsv){
         }
       }]
     });
-    if(pendingTs != null){ chart.$markerTs = pendingTs; chart.update('none'); }
+    chart.data.datasets[BUY_IDX].data  = fills.buys.get(curSym)  || [];
+    chart.data.datasets[SELL_IDX].data = fills.sells.get(curSym) || [];
+    if(pendingTs != null){ chart.$markerTs = pendingTs; }
+    chart.update('none');
   }, 60);
 
   let curSym = symbols[0];
@@ -676,6 +725,11 @@ function renderInventory(parent, tradesCsv){
       if(!series.has(s)) return;
       curSym = s;
       paintSnapshot(pendingTs != null ? pendingTs : 0);
+      if(chart){
+        chart.data.datasets[BUY_IDX].data  = fills.buys.get(s)  || [];
+        chart.data.datasets[SELL_IDX].data = fills.sells.get(s) || [];
+        chart.update('none');
+      }
     }
   };
 }
