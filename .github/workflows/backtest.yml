@@ -127,6 +127,11 @@ jobs:
               with open(new_path) as f:
                   new = json.load(f)
               existing = new + existing
+          # One-time cleanup: drop the transient 'round4_data' dataset rows
+          # produced by an early wrapper iteration. The wrapper now writes
+          # per-day prices_round_4_day_N.csv names matching rust_backtester
+          # convention, so these stale rows are superseded.
+          existing = [r for r in existing if r.get('dataset') != 'round4_data']
           # Deduplicate: keep first (newest) per (author, strategy, dataset, day)
           seen = set()
           deduped = []

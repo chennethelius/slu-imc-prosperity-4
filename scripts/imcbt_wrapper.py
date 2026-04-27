@@ -255,8 +255,15 @@ def main():
         tick_count = 0
 
     # Write metrics.json
+    # dataset_path mirrors rust_backtester's convention (per-day prices CSV)
+    # so the dashboard dedup key (author, strategy, dataset, day) cleanly
+    # replaces older rust_backtester entries with the calibrated wrapper run.
+    if args.day is not None:
+        ds_csv = src_data / f"prices_round_{round_num}_day_{args.day}.csv"
+    else:
+        ds_csv = src_data
     metrics = {
-        "dataset_path": str(src_data),
+        "dataset_path": str(ds_csv),
         "day": args.day if args.day is not None else "all",
         "final_pnl_total": final_pnl_total,
         "final_pnl_by_product": final_pnl_by_product,
