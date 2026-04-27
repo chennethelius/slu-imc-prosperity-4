@@ -4,10 +4,8 @@ on:
   push:
     paths:
       - 'strategies/**'
-      - 'backtester/**'
       - 'datasets_extra/**'
-      - 'scripts/patches/**'
-      - 'scripts/patch_backtester.sh'
+      - 'scripts/imcbt_wrapper.py'
       - '.github/dashboard.html'
       - '.github/discord-intel.html'
       - '.github/run.html'
@@ -44,7 +42,7 @@ jobs:
           # strategies since behavior may have shifted.
           # Manual workflow_dispatch: run ALL strategies.
           STRAT_DIFF=$(git diff --name-only HEAD~1 HEAD -- 'strategies/**/*.py' 2>/dev/null || true)
-          BEHAVIOR_DIFF=$(git diff --name-only HEAD~1 HEAD -- 'backtester' 'datasets_extra/' 'scripts/patches/' 'scripts/patch_backtester.sh' '.github/collect_results.py' 2>/dev/null || true)
+          BEHAVIOR_DIFF=$(git diff --name-only HEAD~1 HEAD -- 'datasets_extra/' 'scripts/imcbt_wrapper.py' '.github/collect_results.py' '.github/workflows/backtest.yml' 2>/dev/null || true)
 
           if [ -n "$STRAT_DIFF" ]; then
             CHANGED="$STRAT_DIFF"
@@ -60,35 +58,15 @@ jobs:
           echo "$CHANGED" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Setup Rust
-        if: steps.changes.outputs.files != ''
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Cache Rust build
-        if: steps.changes.outputs.files != ''
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            backtester/target
-          key: rust-${{ runner.os }}-${{ hashFiles('backtester/Cargo.lock') }}
-          restore-keys: rust-${{ runner.os }}-
-
       - name: Setup Python
         if: steps.changes.outputs.files != ''
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
-      - name: Apply backtester patches
+      - name: Install imc-p4-bt
         if: steps.changes.outputs.files != ''
-        run: ./scripts/patch_backtester.sh
-
-      - name: Build backtester
-        if: steps.changes.outputs.files != ''
-        working-directory: backtester
-        run: cargo build --release
+        run: pip install imc-p4-bt
 
       - name: Fetch existing manifest from gh-pages
         if: steps.changes.outputs.files != ''
@@ -149,6 +127,11 @@ jobs:
               with open(new_path) as f:
                   new = json.load(f)
               existing = new + existing
+          # One-time cleanup: drop the transient 'round4_data' dataset rows
+          # produced by an early wrapper iteration. The wrapper now writes
+          # per-day prices_round_4_day_N.csv names matching rust_backtester
+          # convention, so these stale rows are superseded.
+          existing = [r for r in existing if r.get('dataset') != 'round4_data']
           # Deduplicate: keep first (newest) per (author, strategy, dataset, day)
           seen = set()
           deduped = []

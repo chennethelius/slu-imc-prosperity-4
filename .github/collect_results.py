@@ -12,13 +12,23 @@ from pathlib import Path
 
 
 def resolve_target_datasets(strategy_path: Path, datasets: list[str]) -> list[str]:
-    """Match a strategy file to its round's dataset(s)."""
+    """Match a strategy file to its round's dataset(s).
+
+    Prefers the staged `<round>_data` variant from datasets_extra when present,
+    since it contains current-round data. Falls back to the submodule-bundled
+    `<round>` directory only if the staged version isn't available.
+    """
     parent = strategy_path.parent.name
     if parent.startswith("round"):
         round_num = parent.replace("round", "")
         if round_num == "0":
             return [d for d in datasets if "tutorial" in d]
-        return [d for d in datasets if d == parent or d.startswith(f"{parent}_")]
+        suffixed = f"{parent}_data"
+        if suffixed in datasets:
+            return [suffixed]
+        if parent in datasets:
+            return [parent]
+        return [d for d in datasets if d.startswith(f"{parent}_")]
     if parent == "tutorial":
         return [d for d in datasets if "tutorial" in d]
     return datasets
@@ -32,25 +42,34 @@ def run_pair(strategy_path: Path, ds: str, backtester_bin: Path, backtester_dir:
     try:
         print(f"=== {strat_name} vs {ds} ===", flush=True)
         try:
-            # Backtester flags pinned to the IMC-sandbox calibration (see
-            # scripts/calibrate_backtester.py). These match the Rust defaults
-            # today, but pinning them here prevents silent drift if the
-            # backtester defaults ever change.
-            result = subprocess.run(
-                [
-                    str(backtester_bin),
-                    "--trader", str(strategy_path),
-                    "--dataset", ds,
-                    "--queue-penetration", "1.0",
-                    "--book-fill", "true",
-                    "--price-slippage-bps", "0",
-                    "--persist",
-                    "--artifact-mode", "full",
-                    "--output-root", str(out_root),
-                ],
-                cwd=str(backtester_dir),
-                capture_output=True, text=True, timeout=240,
-            )
+            # Wrapper invokes imc-p4-bt under the hood (calibrated to match
+            # IMC submission backtester's whole-day PnL). See scripts/imcbt_wrapper.py.
+            # We loop per day to populate one backtest- subdir per day.
+            result_strs = []
+            if ds.startswith("round4"):
+                days = (1, 2, 3)
+            elif ds.startswith("round3"):
+                days = (0, 1, 2)
+            else:
+                days = (0,)
+            for day in days:
+                r = subprocess.run(
+                    [
+                        sys.executable, str(backtester_bin),
+                        "--trader", str(strategy_path),
+                        "--dataset", ds,
+                        f"--day={day}",
+                        "--persist",
+                        "--artifact-mode", "full",
+                        "--output-root", str(out_root),
+                    ],
+                    capture_output=True, text=True, timeout=240,
+                )
+                if r.returncode != 0:
+                    print(f"[{strat_name}/{ds} day-{day}] FAIL rc={r.returncode}\n{r.stderr[-500:]}", flush=True)
+                else:
+                    result_strs.append(r.stdout)
+            result = type("R", (), {"stdout": "\n".join(result_strs), "stderr": ""})()
             tail = result.stdout[-400:] if len(result.stdout) > 400 else result.stdout
             print(f"[{strat_name}/{ds}]\n{tail}", flush=True)
             if result.stderr:
@@ -106,7 +125,12 @@ def main():
     timestamp = os.environ.get("TIMESTAMP", "")
     repo_root = Path(os.environ.get("REPO_ROOT", ".")).resolve()
     backtester_dir = repo_root / "backtester"
-    backtester_bin = backtester_dir / "target" / "release" / "rust_backtester"
+    # CALIBRATION: use imcbt_wrapper.py (calls imc-p4-bt) instead of rust_backtester.
+    # rust_backtester's matching mechanics under-report PnL by ~7x vs the IMC
+    # submission backtester. The wrapper produces the same output file format
+    # (metrics.json, pnl_by_product.csv, trades.csv, activity.csv, submission.log)
+    # but with imc-p4-bt's whole-day-accurate PnL numbers.
+    backtester_bin = repo_root / "scripts" / "imcbt_wrapper.py"
     results_dir = repo_root / "backtest-results"
     results_dir.mkdir(exist_ok=True)
     (backtester_dir / "runs").mkdir(exist_ok=True)

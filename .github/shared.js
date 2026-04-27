@@ -14,9 +14,12 @@ async function fetchCsv(u) {
     const t = await r.text();
     const l = t.trim().split('\n');
     if (l.length < 2) return [];
-    const h = l[0].split(';');
+    // Auto-detect delimiter: rust_backtester writes ';' (IMC convention),
+    // imcbt_wrapper.py writes ',' (Python csv default). Sniff from header.
+    const sep = l[0].includes(';') ? ';' : ',';
+    const h = l[0].split(sep);
     return l.slice(1).map(x => {
-      const v = x.split(';');
+      const v = x.split(sep);
       const o = {};
       h.forEach((k, i) => o[k] = v[i] || '');
       return o;
