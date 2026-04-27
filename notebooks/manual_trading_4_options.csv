@@ -1,0 +1,13 @@
+symbol,type,strike,barrier,payout,expiry_trading_days,expiry_years,bid,ask,mid,max_volume,notes
+AETHER_CRYSTAL,underlying,,,,,,49.975,50.025,50.0,200,Spot. Sigma=2.51 annualized. r=0. 4 steps/day, 252 days/yr.
+AC_50_P,vanilla_put,50,,,15,0.05952381,12.0,12.05,12.025,50,3-week ATM put
+AC_50_C,vanilla_call,50,,,15,0.05952381,12.0,12.05,12.025,50,3-week ATM call
+AC_35_P,vanilla_put,35,,,15,0.05952381,4.33,4.35,4.34,50,3-week 35-strike put
+AC_40_P,vanilla_put,40,,,15,0.05952381,6.5,6.55,6.525,50,3-week 40-strike put
+AC_45_P,vanilla_put,45,,,15,0.05952381,9.05,9.1,9.075,50,3-week 45-strike put
+AC_60_C,vanilla_call,60,,,15,0.05952381,8.8,8.85,8.825,50,3-week 60-strike call
+AC_50_P_2,vanilla_put,50,,,10,0.03968254,9.7,9.75,9.725,50,2-week ATM put
+AC_50_C_2,vanilla_call,50,,,10,0.03968254,9.7,9.75,9.725,50,2-week ATM call
+AC_50_CO,chooser,50,,,15,0.05952381,22.2,22.3,22.25,50,Choice at t=10td (2w); expires at 15td (3w). Holder picks call vs put.
+AC_40_BP,binary_put,40,,10,15,0.05952381,5.0,5.1,5.05,50,Pays 10 XIRECs if S(T)<40 else 0
+AC_45_KO,knockout_put,45,35,,15,0.05952381,0.15,0.175,0.1625,500,Down-and-out put. Knocked out if S ever falls below 35 before expiry.

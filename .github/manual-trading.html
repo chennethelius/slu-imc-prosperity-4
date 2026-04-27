@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manual Trading — Prosperity</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./shared.css">
+<style>
+  :root {
+    --r-1:#0d9488;   --r-1-soft:rgba(13,148,136,.12);
+    --r-2:#6366f1;   --r-2-soft:rgba(99,102,241,.12);
+    --r-3:#be185d;   --r-3-soft:rgba(190,24,93,.12);
+    --r-4:#d97706;   --r-4-soft:rgba(217,119,6,.12);
+    --r-5:#7c3aed;   --r-5-soft:rgba(124,58,237,.12);
+    --board-bg:#0b1220; --board-row:#111a2e; --board-row-alt:#0e1729;
+    --board-border:#1e2a44; --board-text:#e2e8f0; --board-muted:#7d8db0;
+    --board-bid:#34d399; --board-ask:#f87171;
+  }
+
+  /* Toolbar / round tabs (mirrors dashboard) */
+  .toolbar{display:flex;align-items:center;gap:6px;padding:10px 24px;background:var(--bg-surface);flex-wrap:wrap;position:relative;box-shadow:0 1px 0 rgba(15,23,42,.04)}
+  .toolbar::after{content:'';position:absolute;left:24px;right:24px;bottom:0;height:1px;background:linear-gradient(90deg,transparent,var(--border) 10%,var(--border) 90%,transparent)}
+  .round-tabs{display:flex;gap:4px;flex:1}
+  .round-tab{background:transparent;border:none;padding:8px 18px;font-size:13px;font-weight:500;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all .15s;border-radius:7px;position:relative;letter-spacing:-.1px;--rc:var(--accent);--rc-soft:var(--accent-soft)}
+  .round-tab[data-round="1"]{--rc:var(--r-1);--rc-soft:var(--r-1-soft)}
+  .round-tab[data-round="2"]{--rc:var(--r-2);--rc-soft:var(--r-2-soft)}
+  .round-tab[data-round="3"]{--rc:var(--r-3);--rc-soft:var(--r-3-soft)}
+  .round-tab[data-round="4"]{--rc:var(--r-4);--rc-soft:var(--r-4-soft)}
+  .round-tab[data-round="5"]{--rc:var(--r-5);--rc-soft:var(--r-5-soft)}
+  .round-tab:hover{color:var(--text-primary);background:var(--bg-hover)}
+  .round-tab.active{color:var(--rc);background:var(--rc-soft);font-weight:600}
+  .round-tab.active::after{content:'';position:absolute;left:18px;right:18px;bottom:-11px;height:2px;background:var(--rc);border-radius:2px}
+
+  .content{padding:18px 24px 60px;max-width:1400px;margin:0 auto}
+  .round-panel{display:none}
+  .round-panel.active{display:block}
+
+  /* Round-4 challenge header */
+  .challenge-head{background:linear-gradient(135deg,#fff5e8,#fef3c7);border:1px solid #f5d68b;border-radius:var(--radius-lg);padding:18px 22px;margin-bottom:18px;box-shadow:var(--shadow-sm)}
+  .challenge-head h2{font-size:18px;font-weight:700;color:#92400e;margin-bottom:6px;letter-spacing:-.2px}
+  .challenge-head p{font-size:13px;color:#78350f;line-height:1.55;max-width:900px}
+  .params-row{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
+  .param-chip{background:rgba(146,64,14,.08);border:1px solid rgba(146,64,14,.2);color:#78350f;font-family:var(--mono);font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px}
+
+  .stub-panel{background:var(--bg-surface);border:1px dashed var(--border);border-radius:var(--radius-lg);padding:48px 22px;text-align:center;color:var(--text-muted);font-size:14px}
+  .stub-panel a{color:var(--accent);text-decoration:none;font-weight:600}
+  .stub-panel a:hover{text-decoration:underline}
+
+  /* ── Trading board (matches screenshot palette) ── */
+  .board{background:var(--board-bg);border:1px solid var(--board-border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:18px;box-shadow:0 4px 12px rgba(15,23,42,.12)}
+  .board-head{background:#080d18;color:var(--board-muted);font-size:10px;font-weight:700;letter-spacing:1px;padding:11px 16px;border-bottom:1px solid var(--board-border);display:grid;grid-template-columns:1.3fr .8fr .55fr .8fr .8fr .55fr 1.1fr .9fr .7fr;gap:8px;text-transform:uppercase;align-items:center}
+  .board-row{padding:11px 16px;border-bottom:1px solid var(--board-border);display:grid;grid-template-columns:1.3fr .8fr .55fr .8fr .8fr .55fr 1.1fr .9fr .7fr;gap:8px;align-items:center;background:var(--board-row);font-family:var(--mono);font-size:13px;font-weight:600;color:var(--board-text);transition:background .15s}
+  .board-row:nth-child(even){background:var(--board-row-alt)}
+  .board-row:hover{background:#152138}
+  .board-row .sym{font-weight:700;letter-spacing:-.2px;font-size:13.5px}
+  .board-row .sym.under{color:#a5b4fc}
+  .board-row .expiry{color:var(--board-muted);font-weight:500}
+  .board-row .size{color:var(--board-bid);font-weight:600}
+  .board-row .size.right{color:var(--board-ask)}
+  .board-row .bid{color:var(--board-bid)}
+  .board-row .ask{color:var(--board-ask)}
+  .board-row .price{font-weight:700;text-align:right}
+  .board-row .price.pos{color:var(--board-bid)}
+  .board-row .price.neg{color:var(--board-ask)}
+  .board-row .price.zero{color:var(--board-muted)}
+  .board-row select,.board-row input{background:#1c2741;border:1px solid #2a3a5d;color:var(--board-text);font-family:var(--mono);font-size:12px;padding:6px 10px;border-radius:6px;width:100%;font-weight:600}
+  .board-row select:focus,.board-row input:focus{outline:none;border-color:#5b73c4;box-shadow:0 0 0 2px rgba(99,102,241,.25)}
+  .board-row input[type="number"]::-webkit-inner-spin-button{opacity:.4}
+  .board-row .desc{grid-column:1/-1;color:var(--board-muted);font-family:'Inter',sans-serif;font-size:11.5px;font-weight:400;line-height:1.5;padding-top:4px}
+  .board-row .desc b{color:#cbd5e1;font-weight:600}
+  .board-row.descrow{padding:10px 16px 14px;background:#0a121f}
+  .board-row.descrow:hover{background:#0a121f}
+
+  /* Analysis panel */
+  .analysis{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+  .panel{background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;box-shadow:var(--shadow-sm)}
+  .panel h3{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px}
+  .panel-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px dashed var(--border-subtle);font-size:12.5px}
+  .panel-row:last-child{border-bottom:none}
+  .panel-row .label{color:var(--text-secondary);font-weight:500}
+  .panel-row .val{font-family:var(--mono);font-weight:700;font-variant-numeric:tabular-nums}
+  .input-row{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+  .input-row label{display:flex;flex-direction:column;gap:3px;font-size:10.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+  .input-row input{background:var(--bg-base);border:1px solid var(--border);color:var(--text-primary);font-family:var(--mono);font-size:13px;padding:6px 10px;border-radius:6px;width:120px;font-weight:600}
+  .input-row input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+
+  /* Edges table inside analysis */
+  .edges-table{width:100%;border-collapse:collapse;font-size:11.5px;font-family:var(--mono)}
+  .edges-table th{text-align:left;padding:6px 8px;color:var(--text-muted);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border-subtle)}
+  .edges-table th.r{text-align:right}
+  .edges-table td{padding:5px 8px;border-bottom:1px solid var(--border-subtle);font-variant-numeric:tabular-nums;font-weight:600}
+  .edges-table td.r{text-align:right}
+  .edges-table tr:last-child td{border-bottom:none}
+  .edges-table .side-buy{color:var(--green);font-weight:700}
+  .edges-table .side-sell{color:var(--red);font-weight:700}
+  .edges-table .side-hold{color:var(--text-muted);font-weight:600}
+
+  /* Portfolio panel */
+  .portfolio-actions{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+  .btn{background:var(--accent);color:#fff;border:none;padding:8px 16px;font-size:12px;font-weight:600;border-radius:7px;cursor:pointer;font-family:inherit;transition:all .15s}
+  .btn:hover{background:var(--accent-dim);box-shadow:var(--shadow-md);transform:translateY(-1px)}
+  .btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+  .btn.secondary{background:var(--bg-raised);color:var(--text-primary);border:1px solid var(--border)}
+  .btn.secondary:hover{background:var(--bg-hover)}
+  .total-block{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
+  .total-block .stat{display:flex;flex-direction:column;gap:2px}
+  .total-block .label{font-size:9.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;font-weight:700}
+  .total-block .value{font-family:var(--mono);font-size:18px;font-weight:700;letter-spacing:-.3px}
+
+  /* MC simulator */
+  .mc-panel{background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;box-shadow:var(--shadow-sm);margin-bottom:18px}
+  .mc-controls{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:14px}
+  .mc-controls label{display:flex;flex-direction:column;gap:3px;font-size:10.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+  .mc-controls input{background:var(--bg-base);border:1px solid var(--border);color:var(--text-primary);font-family:var(--mono);font-size:13px;padding:6px 10px;border-radius:6px;width:100px;font-weight:600}
+  .mc-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:12px}
+  .mc-stats .stat{background:var(--bg-base);border:1px solid var(--border-subtle);padding:8px 12px;border-radius:6px}
+  .mc-stats .label{font-size:9.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;font-weight:700;margin-bottom:2px}
+  .mc-stats .value{font-family:var(--mono);font-size:14px;font-weight:700;letter-spacing:-.2px}
+  .mc-chart-box{height:240px;background:var(--bg-base);border:1px solid var(--border-subtle);border-radius:8px;padding:10px;position:relative}
+  .mc-note{margin-top:10px;color:var(--text-muted);font-size:11.5px;line-height:1.55}
+
+  @media(max-width:900px){
+    .toolbar,.content{padding-left:16px;padding-right:16px}
+    .analysis{grid-template-columns:1fr}
+    .board-head,.board-row{grid-template-columns:1.4fr .7fr 1fr 1fr 1fr 1fr;font-size:11.5px}
+    .board-head>:nth-child(3),.board-row>:nth-child(3){display:none}
+    .board-head>:nth-child(6),.board-row>:nth-child(6){display:none}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <a class="logo" href="#">
+      <img src="./billiken-logo.jpg" alt="SLU" class="logo-img">
+      <h1><span>Prosperity</span></h1>
+    </a>
+    <nav class="nav">
+      <a class="nav-link" href="./index.html">Traders</a>
+      <a class="nav-link active" href="./manual-trading.html">Manual Trading</a>
+      <a class="nav-link" href="./discord-intel.html">Discord Bot</a>
+    </nav>
+  </div>
+  <div class="topbar-right">
+    <div class="status" title="Live pricing"><span class="status-dot"></span></div>
+  </div>
+</div>
+
+<div class="toolbar">
+  <div class="round-tabs">
+    <button class="round-tab" data-round="1">Round 1</button>
+    <button class="round-tab" data-round="2">Round 2</button>
+    <button class="round-tab" data-round="3">Round 3</button>
+    <button class="round-tab active" data-round="4">Round 4</button>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- Round 1 stub -->
+  <div class="round-panel" data-round="1">
+    <div class="stub-panel">No manual trading challenge recorded for Round 1.</div>
+  </div>
+
+  <!-- Round 2 stub -->
+  <div class="round-panel" data-round="2">
+    <div class="stub-panel">No manual trading challenge recorded for Round 2.</div>
+  </div>
+
+  <!-- Round 3 stub (notebook lives in repo) -->
+  <div class="round-panel" data-round="3">
+    <div class="stub-panel">
+      Round 3 manual trading challenge: <b>Celestial Gardeners</b>.<br><br>
+      Working notebook in repo at <code>notebooks/manual_trading_3_celestial_gardeners.ipynb</code>.
+    </div>
+  </div>
+
+  <!-- Round 4: Aether Crystal options -->
+  <div class="round-panel active" data-round="4">
+
+    <div class="challenge-head">
+      <h2>Vanilla Just Isn&rsquo;t Exotic Enough</h2>
+      <p>
+        All products written on <b>AETHER_CRYSTAL</b>. Trade the underlying, vanilla calls/puts at 2 and 3 weeks,
+        and three exotics: a chooser, a binary put, and a knock-out put. Score = average PnL over 100 simulated paths.
+      </p>
+      <div class="params-row">
+        <span class="param-chip">GBM, r = 0</span>
+        <span class="param-chip">σ = 251% / yr</span>
+        <span class="param-chip">4 steps / trading day</span>
+        <span class="param-chip">252 trading days / yr</span>
+        <span class="param-chip">2w = 10 td, 3w = 15 td</span>
+      </div>
+    </div>
+
+    <!-- Trading board: matches screenshot layout -->
+    <div class="board" id="board">
+      <div class="board-head">
+        <div>OPTION</div><div>EXPIRY</div><div>SIZE</div>
+        <div>BID</div><div>ASK</div><div>SIZE</div>
+        <div>BUY/SELL</div><div>VOLUME</div><div>PRICE</div>
+      </div>
+      <!-- Rows injected by JS -->
+    </div>
+
+    <!-- Live analysis: fair value + edge per instrument -->
+    <div class="analysis">
+      <div class="panel">
+        <h3>Model parameters</h3>
+        <div class="input-row">
+          <label>Spot S<sub>0</sub><input id="param-S" type="number" step="0.001" value="50"></label>
+          <label>Sigma (annual)<input id="param-sigma" type="number" step="0.01" value="2.51"></label>
+          <label>Steps / day<input id="param-steps" type="number" step="1" value="4"></label>
+        </div>
+        <div class="panel-row"><span class="label">2-week T (yr)</span><span class="val" id="info-T2w">0.039683</span></div>
+        <div class="panel-row"><span class="label">3-week T (yr)</span><span class="val" id="info-T3w">0.059524</span></div>
+        <div class="panel-row"><span class="label">σ√T  (3w)</span><span class="val" id="info-vol3w">0.612</span></div>
+        <div class="panel-row"><span class="label">σ√T  (2w)</span><span class="val" id="info-vol2w">0.500</span></div>
+        <div class="panel-row"><span class="label">KO put fair (MC)</span><span class="val" id="info-ko">computing…</span></div>
+      </div>
+
+      <div class="panel">
+        <h3>Edges vs market (per contract)</h3>
+        <table class="edges-table" id="edges-table">
+          <thead><tr><th>Symbol</th><th class="r">Fair</th><th class="r">Buy edge</th><th class="r">Sell edge</th><th>Side</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Recommended portfolio -->
+    <div class="panel" style="margin-bottom:18px">
+      <h3>Recommended portfolio (max E[PnL] within volume caps)</h3>
+      <div class="portfolio-actions">
+        <button class="btn" id="btn-apply-optimal">Auto-fill optimal trades on board</button>
+        <button class="btn secondary" id="btn-clear">Clear board</button>
+      </div>
+      <table class="edges-table" id="recommended-table">
+        <thead><tr><th>Symbol</th><th>Side</th><th class="r">Size</th><th class="r">Price</th><th class="r">Fair</th><th class="r">E[PnL]</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <div class="total-block">
+        <div class="stat"><span class="label">Total E[PnL] (analytic)</span><span class="value pos" id="total-analytic">+0.00</span></div>
+        <div class="stat"><span class="label">Notional (long legs)</span><span class="value" id="total-long">0.00</span></div>
+        <div class="stat"><span class="label">Notional (short legs)</span><span class="value" id="total-short">0.00</span></div>
+      </div>
+    </div>
+
+    <!-- Monte Carlo simulator -->
+    <div class="mc-panel">
+      <h3 style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px">Monte Carlo simulator (current board)</h3>
+      <div class="mc-controls">
+        <label>Simulations<input id="mc-n" type="number" min="20" max="5000" step="10" value="100"></label>
+        <button class="btn" id="btn-run-mc">Run simulation</button>
+        <span id="mc-progress" style="font-size:12px;color:var(--text-muted);margin-left:auto"></span>
+      </div>
+      <div class="mc-stats">
+        <div class="stat"><span class="label">Mean PnL</span><div class="value" id="mc-mean">—</div></div>
+        <div class="stat"><span class="label">Std dev</span><div class="value" id="mc-std">—</div></div>
+        <div class="stat"><span class="label">P5</span><div class="value" id="mc-p5">—</div></div>
+        <div class="stat"><span class="label">Median</span><div class="value" id="mc-p50">—</div></div>
+        <div class="stat"><span class="label">P95</span><div class="value" id="mc-p95">—</div></div>
+        <div class="stat"><span class="label">% positive</span><div class="value" id="mc-ppos">—</div></div>
+      </div>
+      <div class="mc-chart-box"><canvas id="mc-chart"></canvas></div>
+      <div class="mc-note">
+        Each simulation draws an independent GBM path of the underlying with the chosen parameters and scores
+        the board with all current orders. The displayed mean is the unbiased estimator of the score the
+        challenge would assign.
+      </div>
+    </div>
+
+  </div><!-- /round-4 panel -->
+
+</div><!-- /content -->
+
+<script src="./shared.js"></script>
+<script>
+/* ────────────────────────────────────────────────────────────
+   Pricing primitives (BS r=q=0, chooser parity, binary put,
+   discrete-monitoring KO put MC, portfolio MC).
+   ──────────────────────────────────────────────────────────── */
+const TD_YR = 252;
+let SIGMA = 2.51, S0 = 50;
+let STEPS_PER_DAY = 4;
+const T_2W = () => 10 / TD_YR;
+const T_3W = () => 15 / TD_YR;
+
+// Standard normal CDF — Abramowitz & Stegun 7.1.26 (~1e-7 abs error)
+function normCDF(x){
+  const a1=0.254829592,a2=-0.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=0.3275911;
+  const sign=x<0?-1:1; const ax=Math.abs(x)/Math.SQRT2;
+  const t=1/(1+p*ax);
+  const y=1-(((((a5*t+a4)*t)+a3)*t+a2)*t+a1)*t*Math.exp(-ax*ax);
+  return 0.5*(1+sign*y);
+}
+function bsCall(S,K,T,sigma){if(T<=0)return Math.max(S-K,0);const v=sigma*Math.sqrt(T);const d1=(Math.log(S/K)+0.5*sigma*sigma*T)/v;const d2=d1-v;return S*normCDF(d1)-K*normCDF(d2);}
+function bsPut(S,K,T,sigma){if(T<=0)return Math.max(K-S,0);const v=sigma*Math.sqrt(T);const d1=(Math.log(S/K)+0.5*sigma*sigma*T)/v;const d2=d1-v;return K*normCDF(-d2)-S*normCDF(-d1);}
+function chooserFair(S,K,t1,T2,sigma){return bsPut(S,K,T2,sigma)+bsCall(S,K,t1,sigma);}
+function binaryPutFair(S,K,payout,T,sigma){if(T<=0)return S<K?payout:0;const v=sigma*Math.sqrt(T);const d2=(Math.log(S/K)-0.5*sigma*sigma*T)/v;return payout*normCDF(-d2);}
+
+// Box-Muller with cached pair
+let _rngCache=null;
+function randn(){
+  if(_rngCache!==null){const v=_rngCache;_rngCache=null;return v;}
+  let u1=Math.random();while(u1===0)u1=Math.random();
+  const u2=Math.random();const r=Math.sqrt(-2*Math.log(u1));const th=2*Math.PI*u2;
+  _rngCache=r*Math.sin(th);return r*Math.cos(th);
+}
+function koPutMC(S,K,H,T,sigma,stepsPerDay,nPaths){
+  const nSteps=Math.round(T*TD_YR*stepsPerDay);
+  const dt=T/nSteps, drift=-0.5*sigma*sigma*dt, vol=sigma*Math.sqrt(dt), lnH=Math.log(H);
+  let sum=0,sumSq=0;
+  for(let p=0;p<nPaths;p++){
+    let lnS=Math.log(S),alive=true;
+    for(let s=0;s<nSteps&&alive;s++){lnS+=drift+vol*randn();if(lnS<lnH)alive=false;}
+    const pay=alive?Math.max(K-Math.exp(lnS),0):0;
+    sum+=pay;sumSq+=pay*pay;
+  }
+  const mean=sum/nPaths, varv=sumSq/nPaths-mean*mean;
+  return {mean, stderr:Math.sqrt(Math.max(varv,0)/nPaths)};
+}
+/* Portfolio MC: simulates one full 3w path and scores all orders.
+   Each order's payoff captured per-path; cash leg = -qty*price upfront. */
+function portfolioMC(orders,nSims,sigma,stepsPerDay){
+  const T2=T_3W(), nSteps=Math.round(T2*TD_YR*stepsPerDay);
+  const dt=T2/nSteps, drift=-0.5*sigma*sigma*dt, vol=sigma*Math.sqrt(dt);
+  const stepT1=Math.round(T_2W()*TD_YR*stepsPerDay);
+  const out=new Array(nSims);
+  for(let sim=0;sim<nSims;sim++){
+    let lnS=Math.log(S0), minLn=lnS, lnS_t1=null;
+    for(let s=0;s<nSteps;s++){
+      lnS+=drift+vol*randn();
+      if(lnS<minLn)minLn=lnS;
+      if(s===stepT1-1)lnS_t1=lnS;
+    }
+    const ST=Math.exp(lnS), S1=lnS_t1!=null?Math.exp(lnS_t1):ST, minS=Math.exp(minLn);
+    let pnl=0;
+    for(const o of orders){
+      if(!o.size||!o.side)continue;
+      const qty=o.side==='BUY'?o.size:-o.size;
+      const price=o.side==='BUY'?o.ask:o.bid;
+      let payoff=0;
+      switch(o.kind){
+        case 'underlying': payoff=ST; break;
+        case 'vanilla_call': payoff=o.T===T_2W()?Math.max(S1-o.strike,0):Math.max(ST-o.strike,0); break;
+        case 'vanilla_put':  payoff=o.T===T_2W()?Math.max(o.strike-S1,0):Math.max(o.strike-ST,0); break;
+        case 'chooser':      payoff=(S1>o.strike)?Math.max(ST-o.strike,0):Math.max(o.strike-ST,0); break;
+        case 'binary_put':   payoff=ST<o.strike?o.payout:0; break;
+        case 'knockout_put': payoff=(minS<o.barrier)?0:Math.max(o.strike-ST,0); break;
+      }
+      pnl+=qty*(payoff-price);
+    }
+    out[sim]=pnl;
+  }
+  return out;
+}
+
+/* ────────────────────────────────────────────────────────────
+   Instrument table (mirrors the price board screenshots).
+   ──────────────────────────────────────────────────────────── */
+const INSTRS = [
+  {sym:'AC',         name:'Aether Crystal',           kind:'underlying',    expiry:'N/A',     T:0,        bid:49.975, ask:50.025, max_vol:200, price:'+0.71',
+   desc:'Aether Crystals (<b>AETHER-CRYSTAL</b>) are precision-grown minerals formed under controlled electromagnetic conditions. Each crystal stores and stabilizes ambient energy fluctuations.'},
+  {sym:'AC_50_P',    name:'AC 50 Put 3w',             kind:'vanilla_put',   expiry:'T + 21',  T:T_3W(),   strike:50, bid:12.00, ask:12.05,  max_vol:50, price:'+2.71',
+   desc:'<b>AC_50_P</b> is an Aether Crystal <b>PUT</b> Option contract with a Strike Price of 50 XIRECs and a Time To Expiry of 21 Solvenarian Days.'},
+  {sym:'AC_50_C',    name:'AC 50 Call 3w',            kind:'vanilla_call',  expiry:'T + 21',  T:T_3W(),   strike:50, bid:12.00, ask:12.05,  max_vol:50, price:'-0.45',
+   desc:'<b>AC_50_C</b> is an Aether Crystal <b>CALL</b> Option contract with a Strike Price of 50 XIRECs and a Time To Expiry of 21 Solvenarian Days.'},
+  {sym:'AC_35_P',    name:'AC 35 Put 3w',             kind:'vanilla_put',   expiry:'T + 21',  T:T_3W(),   strike:35, bid: 4.33, ask: 4.35,  max_vol:50, price:'+0.42',
+   desc:'<b>AC_35_P</b> is an Aether Crystal <b>PUT</b> Option contract with a Strike Price of 35 XIRECs and a Time To Expiry of 21 Solvenarian Days.'},
+  {sym:'AC_40_P',    name:'AC 40 Put 3w',             kind:'vanilla_put',   expiry:'T + 21',  T:T_3W(),   strike:40, bid: 6.50, ask: 6.55,  max_vol:50, price:'0.00',
+   desc:'<b>AC_40_P</b> is an Aether Crystal <b>PUT</b> Option contract with a Strike Price of 40 XIRECs and a Time To Expiry of 21 Solvenarian Days.'},
+  {sym:'AC_45_P',    name:'AC 45 Put 3w',             kind:'vanilla_put',   expiry:'T + 21',  T:T_3W(),   strike:45, bid: 9.05, ask: 9.10,  max_vol:50, price:'-0.48',
+   desc:'<b>AC_45_P</b> is an Aether Crystal <b>PUT</b> Option contract with a Strike Price of 45 XIRECs and a Time To Expiry of 21 Solvenarian Days.'},
+  {sym:'AC_60_C',    name:'AC 60 Call 3w',            kind:'vanilla_call',  expiry:'T + 21',  T:T_3W(),   strike:60, bid: 8.80, ask: 8.85,  max_vol:50, price:'+0.42',
+   desc:'<b>AC_60_C</b> is an Aether Crystal <b>CALL</b> Option contract with a Strike Price of 60 XIRECs and a Time To Expiry of 21 Solvenarian Days.'},
+  {sym:'AC_50_P_2',  name:'AC 50 Put 2w',             kind:'vanilla_put',   expiry:'T + 14',  T:T_2W(),   strike:50, bid: 9.70, ask: 9.75,  max_vol:50, price:'+0.71',
+   desc:'<b>AC_50_P_2</b> is an Aether Crystal <b>PUT</b> Option contract with a Strike Price of 50 XIRECs and a Time To Expiry of 14 Solvenarian Days.'},
+  {sym:'AC_50_C_2',  name:'AC 50 Call 2w',            kind:'vanilla_call',  expiry:'T + 14',  T:T_2W(),   strike:50, bid: 9.70, ask: 9.75,  max_vol:50, price:'+0.71',
+   desc:'<b>AC_50_C_2</b> is an Aether Crystal <b>CALL</b> Option contract with a Strike Price of 50 XIRECs and a Time To Expiry of 14 Solvenarian Days.'},
+  {sym:'AC_50_CO',   name:'AC 50 Chooser',            kind:'chooser',       expiry:'T + 14/21', T:T_3W(), t1:T_2W(), strike:50, bid:22.20, ask:22.30, max_vol:50, price:'+0.71',
+   desc:'<b>AC_50_CO</b> is an Aether Crystal <b>CHOOSER</b> Option with a Strike Price of 50 XIRECs and a Time To Expiry of 21 Solvenarian Days. After 14 days, the buyer chooses PUT or CALL — whichever is in the money. After the remaining 7 days, the contract expires like a standard PUT or CALL.'},
+  {sym:'AC_40_BP',   name:'AC 40 Binary Put',         kind:'binary_put',    expiry:'T + 21',  T:T_3W(),   strike:40, payout:10, bid: 5.00, ask: 5.10,  max_vol:50, price:'+0.71',
+   desc:'<b>AC_40_BP</b> is an Aether Crystal <b>BINARY PUT</b> Option with a Strike Price of 40 XIRECs and a Time To Expiry of 21 Solvenarian Days. If AC is below 40 XIRECs at expiry, the contract pays a fixed amount of <b>10 XIRECs</b>. Otherwise it expires worthless.'},
+  {sym:'AC_45_KO',   name:'AC 45 KO Put',             kind:'knockout_put',  expiry:'T + 21',  T:T_3W(),   strike:45, barrier:35, bid:0.150, ask:0.175, max_vol:500, price:'+0.71',
+   desc:'<b>AC_45_KO</b> is an Aether Crystal <b>KNOCK-OUT PUT</b> with a Strike Price of 45 XIRECs, a Barrier Price of <b>35 XIRECs</b>, and a Time To Expiry of 21 Solvenarian Days. If AC <b>ever falls below 35 XIRECs</b>, the contract is knocked out and expires worthless.'},
+];
+
+/* ────────────────────────────────────────────────────────────
+   Fair-value computation per instrument.
+   KO put uses MC; everything else is closed form.
+   ──────────────────────────────────────────────────────────── */
+let KO_FAIR_CACHE = null;
+function recomputeKOFair(){
+  const ko = INSTRS.find(i=>i.kind==='knockout_put');
+  const r = koPutMC(S0, ko.strike, ko.barrier, ko.T, SIGMA, STEPS_PER_DAY, 50000);
+  KO_FAIR_CACHE = r.mean;
+  document.getElementById('info-ko').textContent =
+    `${r.mean.toFixed(4)} ± ${(2*r.stderr).toFixed(4)}`;
+}
+function fairOf(inst){
+  switch(inst.kind){
+    case 'underlying':   return S0;
+    case 'vanilla_call': return bsCall(S0, inst.strike, inst.T, SIGMA);
+    case 'vanilla_put':  return bsPut(S0, inst.strike, inst.T, SIGMA);
+    case 'chooser':      return chooserFair(S0, inst.strike, inst.t1, inst.T, SIGMA);
+    case 'binary_put':   return binaryPutFair(S0, inst.strike, inst.payout, inst.T, SIGMA);
+    case 'knockout_put': return KO_FAIR_CACHE !== null ? KO_FAIR_CACHE : 0;
+  }
+  return 0;
+}
+function bestSide(inst, fair){
+  const eb = fair - inst.ask;     // buy at ask
+  const es = inst.bid - fair;     // sell at bid
+  if(es >= eb && es > 0) return {side:'SELL', edge:es, price:inst.bid};
+  if(eb > 0)             return {side:'BUY',  edge:eb, price:inst.ask};
+  return {side:'HOLD', edge:Math.max(eb,es), price:null};
+}
+
+/* ────────────────────────────────────────────────────────────
+   Render board, edges, recommended portfolio.
+   ──────────────────────────────────────────────────────────── */
+function fmtPrice(p){
+  if(p==null||p==='0.00')return {txt:p||'',cls:'zero'};
+  const n=parseFloat(p);
+  if(isNaN(n))return {txt:p,cls:'zero'};
+  return {txt:p, cls:n>0?'pos':n<0?'neg':'zero'};
+}
+function renderBoard(){
+  const board = document.getElementById('board');
+  // Strip everything except the head
+  while(board.children.length > 1) board.removeChild(board.lastChild);
+  INSTRS.forEach((inst, idx) => {
+    const row = document.createElement('div');
+    row.className = 'board-row';
+    row.dataset.idx = idx;
+    const p = fmtPrice(inst.price);
+    const symCls = inst.kind==='underlying'?'sym under':'sym';
+    row.innerHTML = `
+      <div class="${symCls}">${inst.sym}</div>
+      <div class="expiry">${inst.expiry}</div>
+      <div class="size">${inst.max_vol}</div>
+      <div class="bid">${inst.bid.toFixed(inst.bid<1?3:inst.bid<10?2:2)}</div>
+      <div class="ask">${inst.ask.toFixed(inst.ask<1?3:inst.ask<10?2:2)}</div>
+      <div class="size right">${inst.max_vol}</div>
+      <div>
+        <select data-field="side" data-idx="${idx}">
+          <option value="">Choose</option>
+          <option value="BUY">BUY</option>
+          <option value="SELL">SELL</option>
+        </select>
+      </div>
+      <div>
+        <input type="number" min="0" max="${inst.max_vol}" step="1" placeholder="Volume"
+               data-field="size" data-idx="${idx}">
+      </div>
+      <div class="price ${p.cls}">${p.txt}</div>`;
+    board.appendChild(row);
+    // Description row (hidden behind the input row, shown like screenshot)
+    const drow = document.createElement('div');
+    drow.className = 'board-row descrow';
+    drow.innerHTML = `<div class="desc">${inst.desc}</div>`;
+    board.appendChild(drow);
+  });
+  // Wire field changes
+  board.querySelectorAll('select,input').forEach(el => {
+    el.addEventListener('input', refreshTotals);
+    el.addEventListener('change', refreshTotals);
+  });
+}
+
+function readBoardOrders(){
+  const out = [];
+  INSTRS.forEach((inst, idx) => {
+    const sideEl = document.querySelector(`select[data-idx="${idx}"]`);
+    const sizeEl = document.querySelector(`input[data-idx="${idx}"]`);
+    const side = sideEl ? sideEl.value : '';
+    const size = sizeEl ? parseInt(sizeEl.value, 10) : 0;
+    if(!side || !size) return;
+    out.push({...inst, side, size:Math.min(size, inst.max_vol)});
+  });
+  return out;
+}
+
+function renderEdges(){
+  const tbody = document.querySelector('#edges-table tbody');
+  tbody.innerHTML = '';
+  INSTRS.forEach(inst => {
+    if(inst.kind==='underlying')return;
+    const fair = fairOf(inst);
+    const eb = fair - inst.ask, es = inst.bid - fair;
+    const best = bestSide(inst, fair);
+    const sideCls = best.side==='BUY'?'side-buy':best.side==='SELL'?'side-sell':'side-hold';
+    tbody.insertAdjacentHTML('beforeend', `
+      <tr>
+        <td>${inst.sym}</td>
+        <td class="r">${fair.toFixed(3)}</td>
+        <td class="r ${eb>0?'pos':eb<0?'neg':''}">${eb.toFixed(3)}</td>
+        <td class="r ${es>0?'pos':es<0?'neg':''}">${es.toFixed(3)}</td>
+        <td class="${sideCls}">${best.side}</td>
+      </tr>`);
+  });
+}
+
+function renderRecommended(){
+  const tbody = document.querySelector('#recommended-table tbody');
+  tbody.innerHTML = '';
+  let total = 0;
+  INSTRS.forEach(inst => {
+    if(inst.kind==='underlying')return;
+    const fair = fairOf(inst);
+    const best = bestSide(inst, fair);
+    if(best.side === 'HOLD') return;
+    // Skip near-zero edges (within 1 cent); model error dominates
+    if(best.edge < 0.01) return;
+    const exp = best.edge * inst.max_vol;
+    total += exp;
+    const sideCls = best.side==='BUY'?'side-buy':'side-sell';
+    tbody.insertAdjacentHTML('beforeend', `
+      <tr>
+        <td>${inst.sym}</td>
+        <td class="${sideCls}">${best.side}</td>
+        <td class="r">${inst.max_vol}</td>
+        <td class="r">${best.price.toFixed(3)}</td>
+        <td class="r">${fair.toFixed(3)}</td>
+        <td class="r ${exp>=0?'pos':'neg'}">${exp>=0?'+':''}${exp.toFixed(2)}</td>
+      </tr>`);
+  });
+  const tot = document.getElementById('total-analytic');
+  tot.textContent = (total>=0?'+':'')+total.toFixed(2);
+  tot.className = 'value '+(total>=0?'pos':'neg');
+}
+
+function refreshTotals(){
+  const orders = readBoardOrders();
+  let long=0, short=0;
+  for(const o of orders){
+    const px = o.side==='BUY'?o.ask:o.bid;
+    const notional = o.size * px;
+    if(o.side==='BUY')long+=notional; else short+=notional;
+  }
+  document.getElementById('total-long').textContent = long.toFixed(2);
+  document.getElementById('total-short').textContent = short.toFixed(2);
+}
+
+function applyOptimal(){
+  INSTRS.forEach((inst, idx) => {
+    if(inst.kind==='underlying')return;
+    const fair = fairOf(inst);
+    const best = bestSide(inst, fair);
+    const sideEl = document.querySelector(`select[data-idx="${idx}"]`);
+    const sizeEl = document.querySelector(`input[data-idx="${idx}"]`);
+    if(best.side==='HOLD' || best.edge < 0.01){
+      sideEl.value = ''; sizeEl.value = '';
+    } else {
+      sideEl.value = best.side; sizeEl.value = inst.max_vol;
+    }
+  });
+  refreshTotals();
+}
+
+function clearBoard(){
+  document.querySelectorAll('select[data-field="side"]').forEach(s => s.value = '');
+  document.querySelectorAll('input[data-field="size"]').forEach(i => i.value = '');
+  refreshTotals();
+}
+
+/* ────────────────────────────────────────────────────────────
+   Monte Carlo simulator + histogram.
+   ──────────────────────────────────────────────────────────── */
+let mcChart = null;
+function runMC(){
+  const orders = readBoardOrders();
+  if(orders.length === 0){
+    document.getElementById('mc-progress').textContent = 'No orders on the board.';
+    setTimeout(()=>document.getElementById('mc-progress').textContent='', 2200);
+    return;
+  }
+  const n = Math.max(20, Math.min(5000, parseInt(document.getElementById('mc-n').value, 10) || 100));
+  const btn = document.getElementById('btn-run-mc');
+  btn.disabled = true;
+  document.getElementById('mc-progress').textContent = `running ${n} sims…`;
+  // run async so the UI can repaint
+  setTimeout(() => {
+    const t0 = performance.now();
+    const pnls = portfolioMC(orders, n, SIGMA, STEPS_PER_DAY);
+    const ms = (performance.now() - t0).toFixed(0);
+    const sorted = [...pnls].sort((a,b)=>a-b);
+    const sum = pnls.reduce((s,v)=>s+v, 0);
+    const mean = sum / n;
+    const variance = pnls.reduce((s,v)=>s+(v-mean)*(v-mean), 0) / Math.max(1, n-1);
+    const std = Math.sqrt(variance);
+    const q = p => sorted[Math.min(n-1, Math.floor(p*n))];
+    const ppos = pnls.filter(v=>v>0).length / n;
+
+    const fmt = v => (v>=0?'+':'') + v.toLocaleString(undefined,{minimumFractionDigits:1,maximumFractionDigits:1});
+    document.getElementById('mc-mean').textContent = fmt(mean);
+    document.getElementById('mc-std').textContent  = std.toFixed(1);
+    document.getElementById('mc-p5').textContent   = fmt(q(0.05));
+    document.getElementById('mc-p50').textContent  = fmt(q(0.50));
+    document.getElementById('mc-p95').textContent  = fmt(q(0.95));
+    document.getElementById('mc-ppos').textContent = (ppos*100).toFixed(0) + '%';
+    document.getElementById('mc-progress').textContent = `${n} sims · ${ms}ms`;
+
+    // Histogram
+    const lo = sorted[0], hi = sorted[n-1];
+    const nb = Math.min(40, Math.max(8, Math.round(Math.sqrt(n))));
+    const w = (hi - lo) / nb || 1;
+    const bins = new Array(nb).fill(0);
+    pnls.forEach(v => {
+      let i = Math.floor((v - lo) / w);
+      if(i >= nb) i = nb-1; if(i < 0) i = 0;
+      bins[i]++;
+    });
+    const labels = bins.map((_,i)=>(lo + (i+0.5)*w).toFixed(0));
+    const colors = bins.map((_,i)=> (lo + (i+0.5)*w) >= 0 ? 'rgba(16,185,129,.7)' : 'rgba(239,68,68,.7)');
+
+    if(mcChart) mcChart.destroy();
+    const ctx = document.getElementById('mc-chart').getContext('2d');
+    mcChart = new Chart(ctx, {
+      type:'bar',
+      data:{labels, datasets:[{label:'Frequency', data:bins, backgroundColor:colors, borderWidth:0}]},
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false}, tooltip:{callbacks:{title:items=>'PnL bin: '+items[0].label}}},
+        scales:{
+          x:{ticks:{font:{size:10},color:'#64748b'}, grid:{display:false}, title:{display:true,text:'PnL (SeaShells)',font:{size:11}}},
+          y:{ticks:{font:{size:10},color:'#64748b'}, grid:{color:'rgba(0,0,0,.04)'}, title:{display:true,text:'Count',font:{size:11}}}
+        }
+      }
+    });
+    btn.disabled = false;
+  }, 30);
+}
+
+/* ────────────────────────────────────────────────────────────
+   Wire-up: round tabs, parameter inputs, buttons, init.
+   ──────────────────────────────────────────────────────────── */
+function wireRoundTabs(){
+  document.querySelectorAll('.round-tab').forEach(t => {
+    t.onclick = () => {
+      document.querySelectorAll('.round-tab').forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+      const r = t.dataset.round;
+      document.querySelectorAll('.round-panel').forEach(p => {
+        p.classList.toggle('active', p.dataset.round === r);
+      });
+    };
+  });
+}
+function wireParamInputs(){
+  const sEl = document.getElementById('param-S');
+  const sigEl = document.getElementById('param-sigma');
+  const stepEl = document.getElementById('param-steps');
+  const update = () => {
+    const newS = parseFloat(sEl.value), newSig = parseFloat(sigEl.value), newSteps = parseInt(stepEl.value, 10);
+    if(isFinite(newS) && newS > 0) S0 = newS;
+    if(isFinite(newSig) && newSig > 0) SIGMA = newSig;
+    if(isFinite(newSteps) && newSteps > 0) STEPS_PER_DAY = newSteps;
+    document.getElementById('info-T2w').textContent = T_2W().toFixed(6);
+    document.getElementById('info-T3w').textContent = T_3W().toFixed(6);
+    document.getElementById('info-vol3w').textContent = (SIGMA*Math.sqrt(T_3W())).toFixed(3);
+    document.getElementById('info-vol2w').textContent = (SIGMA*Math.sqrt(T_2W())).toFixed(3);
+    recomputeKOFair();
+    renderEdges();
+    renderRecommended();
+  };
+  [sEl, sigEl, stepEl].forEach(e => e.addEventListener('change', update));
+}
+
+function init(){
+  wireRoundTabs();
+  renderBoard();
+  document.getElementById('info-T2w').textContent = T_2W().toFixed(6);
+  document.getElementById('info-T3w').textContent = T_3W().toFixed(6);
+  document.getElementById('info-vol3w').textContent = (SIGMA*Math.sqrt(T_3W())).toFixed(3);
+  document.getElementById('info-vol2w').textContent = (SIGMA*Math.sqrt(T_2W())).toFixed(3);
+  recomputeKOFair();
+  renderEdges();
+  renderRecommended();
+  wireParamInputs();
+  document.getElementById('btn-apply-optimal').onclick = applyOptimal;
+  document.getElementById('btn-clear').onclick = clearBoard;
+  document.getElementById('btn-run-mc').onclick = runMC;
+}
+init();
+</script>
+</body>
+</html>

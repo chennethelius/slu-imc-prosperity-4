@@ -8,6 +8,7 @@ on:
       - 'scripts/imcbt_wrapper.py'
       - '.github/dashboard.html'
       - '.github/discord-intel.html'
+      - '.github/manual-trading.html'
       - '.github/run.html'
       - '.github/shared.css'
       - '.github/shared.js'
@@ -158,6 +159,7 @@ jobs:
           # Copy dashboard
           cp .github/dashboard.html "$DEPLOY_DIR/index.html"
           cp .github/discord-intel.html "$DEPLOY_DIR/discord-intel.html"
+          cp .github/manual-trading.html "$DEPLOY_DIR/manual-trading.html"
           cp .github/run.html "$DEPLOY_DIR/run.html"
           cp .github/shared.css "$DEPLOY_DIR/shared.css"
           cp .github/shared.js "$DEPLOY_DIR/shared.js"
