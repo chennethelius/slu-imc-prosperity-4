@@ -190,7 +190,12 @@ def main():
     run_id = args.run_id or f"backtest-{int(time.time() * 1000)}"
     run_dir = args.output_root / run_id
     run_dir.mkdir(parents=True, exist_ok=True)
-    log_path = run_dir / "submission.log"
+    # Write the imc-p4-bt log into a temp dir, not the run dir, so the dashboard
+    # only ships activity.csv / trades.csv / pnl_by_product.csv / metrics.json
+    # to gh-pages. Full-day .log files are ~47MB each and were pushing the
+    # Pages site over its 10GB limit; the dashboard never reads them anyway.
+    tmp_log_dir = Path(tempfile.mkdtemp(prefix=f"imcbt-log-{run_id}-"))
+    log_path = tmp_log_dir / "submission.log"
 
     # Run imc-p4-bt
     cmd = [
@@ -274,6 +279,15 @@ def main():
     }
     (run_dir / "metrics.json").write_text(json.dumps(metrics, indent=2))
 
+    # Stub submission.log so collect_results.py's existence check passes.
+    # The real log went to tmp_log_dir; full content is reconstructible from
+    # activity.csv + trades.csv if anyone needs it.
+    (run_dir / "submission.log").write_text(
+        f"# imcbt_wrapper stub for run {run_id}\n"
+        f"# Full imc-p4-bt log was {log_path.stat().st_size if log_path.exists() else 0} bytes\n"
+        f"# (omitted from artifact to keep gh-pages under 10GB).\n"
+    )
+
     # Print summary in rust_backtester format
     print(f"trader: {args.trader.name}")
     print(f"dataset: {args.dataset}")
@@ -287,8 +301,9 @@ def main():
     for sym, pnl in sorted(final_pnl_by_product.items(), key=lambda x: -abs(x[1])):
         print(f"{sym:<22} {pnl:>10.2f}")
 
-    # Cleanup staged data
+    # Cleanup staged data + tmp log dir
     shutil.rmtree(data_root, ignore_errors=True)
+    shutil.rmtree(tmp_log_dir, ignore_errors=True)
 
 
 if __name__ == "__main__":
