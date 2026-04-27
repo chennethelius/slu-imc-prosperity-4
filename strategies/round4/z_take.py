@@ -94,19 +94,20 @@ logger = Logger()
 # ============================================================================
 
 # mean / sd are the empirical mean and stdev of mid_price across all
-# three round-4 days (30,000 ticks per product). VEV_6000 / VEV_6500
-# have sd=0 (mid pinned at 0.5) so they're excluded.
+# four observed days (round-3 day 0 + round-4 days 1-3, 40,000 ticks per
+# product). VEV_6000 / VEV_6500 have sd=0 (mid pinned at 0.5) so they're
+# excluded.
 CFGS = [
-    {"symbol": "HYDROGEL_PACK",       "mean": 9995, "sd": 34.623, "z_thresh": 2.0, "take_size": 50, "limit": 200},
-    {"symbol": "VELVETFRUIT_EXTRACT", "mean": 5248, "sd": 18.077, "z_thresh": 2.0, "take_size": 50, "limit": 200},
-    {"symbol": "VEV_4000",            "mean": 1248, "sd": 18.101, "z_thresh": 2.0, "take_size": 50, "limit": 300},
-    {"symbol": "VEV_4500",            "mean":  748, "sd": 18.092, "z_thresh": 2.0, "take_size": 50, "limit": 300},
-    {"symbol": "VEV_5000",            "mean":  251, "sd": 17.456, "z_thresh": 2.0, "take_size": 50, "limit": 300},
-    {"symbol": "VEV_5100",            "mean":  161, "sd": 16.127, "z_thresh": 2.0, "take_size": 50, "limit": 300},
-    {"symbol": "VEV_5200",            "mean":   89, "sd": 13.347, "z_thresh": 2.0, "take_size": 50, "limit": 300},
-    {"symbol": "VEV_5300",            "mean":   41, "sd":  9.143, "z_thresh": 2.0, "take_size": 50, "limit": 300},
-    {"symbol": "VEV_5400",            "mean":   13, "sd":  4.149, "z_thresh": 2.0, "take_size": 50, "limit": 300},
-    {"symbol": "VEV_5500",            "mean":    5, "sd":  2.205, "z_thresh": 2.0, "take_size": 50, "limit": 300},
+    {"symbol": "HYDROGEL_PACK",       "mean": 9994, "sd": 32.588, "z_thresh": 1.0, "take_size": 50, "limit": 200},
+    {"symbol": "VELVETFRUIT_EXTRACT", "mean": 5247, "sd": 17.091, "z_thresh": 1.0, "take_size": 50, "limit": 200},
+    {"symbol": "VEV_4000",            "mean": 1247, "sd": 17.114, "z_thresh": 1.0, "take_size": 50, "limit": 300},
+    {"symbol": "VEV_4500",            "mean":  747, "sd": 17.105, "z_thresh": 1.0, "take_size": 50, "limit": 300},
+    {"symbol": "VEV_5000",            "mean":  252, "sd": 16.381, "z_thresh": 1.0, "take_size": 50, "limit": 300},
+    {"symbol": "VEV_5100",            "mean":  163, "sd": 15.327, "z_thresh": 1.0, "take_size": 50, "limit": 300},
+    {"symbol": "VEV_5200",            "mean":   91, "sd": 12.796, "z_thresh": 1.0, "take_size": 50, "limit": 300},
+    {"symbol": "VEV_5300",            "mean":   43, "sd":  8.976, "z_thresh": 1.0, "take_size": 50, "limit": 300},
+    {"symbol": "VEV_5400",            "mean":   14, "sd":  4.608, "z_thresh": 1.0, "take_size": 50, "limit": 300},
+    {"symbol": "VEV_5500",            "mean":    6, "sd":  2.477, "z_thresh": 1.0, "take_size": 50, "limit": 300},
 ]
 
 
