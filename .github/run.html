@@ -80,6 +80,16 @@
 
   .loading{color:var(--text-muted);padding:60px 20px;text-align:center}
 
+  /* === price chart with trade markers === */
+  .pchart{background:var(--surf-trades);border:1px solid var(--surf-trades-border);border-radius:8px;padding:14px;margin-bottom:16px}
+  .pchart-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+  .pchart-head h3{color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.6px;font-weight:600;margin:0}
+  .pchart-legend{display:flex;gap:14px;font-size:10.5px;color:var(--text-muted)}
+  .pchart-legend span{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono)}
+  .pchart-legend .swatch{display:inline-block;width:10px;height:10px;border-radius:50%}
+  .pchart-canvas-wrap{position:relative;height:280px}
+  .pchart-canvas-wrap canvas{width:100%!important;height:100%!important}
+
   /* === tick-navigator (book viewer) === */
   .obnav{background:var(--surf-trades);border:1px solid var(--surf-trades-border);border-radius:8px;padding:14px;margin-bottom:16px}
   .obnav-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap}
@@ -91,15 +101,19 @@
   .obnav-tick{font-family:var(--mono);font-size:13px;font-weight:700;min-width:120px}
   .obnav-step{background:var(--bg-surface);border:1px solid var(--border);color:var(--text-secondary);font-family:var(--mono);font-size:13px;padding:4px 10px;border-radius:6px;cursor:pointer;min-width:32px}
   .obnav-step:hover{background:var(--bg-hover);color:var(--text-primary)}
+  .obnav-mark{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;font-weight:900;font-size:13px;color:#fff;margin-right:4px;line-height:1}
+  .obnav-mark.buy{background:#059669}
+  .obnav-mark.sell{background:#dc2626}
+  .obnav-row{display:grid;grid-template-columns:24px 60px 1fr 60px;gap:6px;align-items:center;padding:3px 6px;border-radius:4px}
   .obnav-grid{display:grid;grid-template-columns:1fr 1.2fr;gap:14px}
   @media(max-width:900px){.obnav-grid{grid-template-columns:1fr}}
   .obnav-book{display:flex;flex-direction:column;gap:2px;padding:10px;background:var(--bg-surface);border-radius:6px;border:1px solid var(--border-subtle);font-family:var(--mono);font-size:12px}
-  .obnav-row{display:grid;grid-template-columns:60px 1fr 60px;gap:8px;align-items:center;padding:3px 6px;border-radius:4px}
   .obnav-row.ask{color:#dc2626}
   .obnav-row.bid{color:#059669}
-  .obnav-row.mid{background:#fef3c7;color:#78350f;font-weight:700;padding:6px 8px;margin:4px 0;border-radius:5px;text-align:center;display:block}
+  .obnav-row.mid{background:#fef3c7;color:#78350f;font-weight:700;padding:6px 8px;margin:4px 0;border-radius:5px;text-align:center;grid-template-columns:1fr}
   .obnav-row.empty{color:var(--text-muted);opacity:.5}
-  .obnav-row.own{background:#dbeafe;border-left:3px solid #2563eb;font-weight:700;padding-left:3px}
+  .obnav-row.own.buy{background:#d1fae5;border-left:3px solid #059669;font-weight:700}
+  .obnav-row.own.sell{background:#fee2e2;border-left:3px solid #dc2626;font-weight:700}
   .obnav-bar{height:14px;border-radius:3px;position:relative}
   .obnav-bar.ask{background:linear-gradient(90deg,#fecaca 0%,#fee2e2 100%)}
   .obnav-bar.bid{background:linear-gradient(90deg,#bbf7d0 0%,#dcfce7 100%)}
@@ -149,6 +163,127 @@ const BASE='./runs';
 function mkChart(t,w){const b=document.createElement('div');b.className='chart-box'+(w?' wide':'');b.innerHTML=`<h3>${t}</h3><canvas></canvas>`;return b}
 function co(){return{responsive:true,animation:false,plugins:{legend:{labels:{color:'#6b7280',font:{size:10,family:'Inter'}}}},scales:{x:{type:'linear',grid:{color:'#e5e7eb'},ticks:{color:'#9ca3af',maxTicksLimit:8,font:{size:10}}},y:{grid:{color:'#e5e7eb'},ticks:{color:'#9ca3af',font:{size:10}}}},interaction:{intersect:false,mode:'index'}}}
 function ds(d,m){if(d.length<=m)return d;const s=Math.floor(d.length/m);return d.filter((_,i)=>i%s===0||i===d.length-1)}
+
+// === Price chart with trade markers (jmerle-style) ==========================
+function renderPriceChart(parent, actCsv, tradesCsv, initialSym){
+  const symbols=[...new Set((actCsv||[]).map(r=>r.product))].sort();
+  if(!symbols.length) return null;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'pchart';
+  wrap.innerHTML = `
+    <div class="pchart-head">
+      <h3>Price &amp; trades</h3>
+      <div class="pchart-legend">
+        <span><span class="swatch" style="background:#111827"></span>mid</span>
+        <span><span class="swatch" style="background:#94a3b8"></span>best bid / ask</span>
+        <span><span class="swatch" style="background:#059669"></span>our buy</span>
+        <span><span class="swatch" style="background:#dc2626"></span>our sell</span>
+      </div>
+    </div>
+    <div class="pchart-canvas-wrap"><canvas></canvas></div>
+  `;
+  parent.appendChild(wrap);
+  const canvas = wrap.querySelector('canvas');
+
+  let chart = null;
+  let curSym = initialSym || symbols[0];
+
+  function rebuild(sym){
+    curSym = sym;
+    // Build series for this symbol
+    const series = (actCsv||[]).filter(r=>r.product===sym).map(r=>({
+      x:+r.timestamp,
+      mid: r.mid_price ? +r.mid_price : null,
+      bid: r.bid_price_1 ? +r.bid_price_1 : null,
+      ask: r.ask_price_1 ? +r.ask_price_1 : null,
+    })).sort((a,b)=>a.x-b.x);
+    // Decimate for performance: keep ~600 points max
+    const stride = Math.max(1, Math.floor(series.length/600));
+    const sampled = series.filter((_,i)=>i%stride===0||i===series.length-1);
+
+    // Our trades
+    const buys=[], sells=[];
+    for(const t of (tradesCsv||[])){
+      if(t.symbol!==sym) continue;
+      const isBuy = t.buyer==='SUBMISSION';
+      const isSell = t.seller==='SUBMISSION';
+      if(!isBuy && !isSell) continue;
+      const pt = {x:+t.timestamp, y:+t.price, qty:+t.quantity};
+      (isBuy ? buys : sells).push(pt);
+    }
+
+    if(chart) chart.destroy();
+    chart = new Chart(canvas, {
+      type:'line',
+      data:{datasets:[
+        {label:'mid', data:sampled.filter(s=>s.mid!=null).map(s=>({x:s.x,y:s.mid})),
+         borderColor:'#111827', borderWidth:1.5, pointRadius:0, tension:.05, fill:false, order:1},
+        {label:'best bid', data:sampled.filter(s=>s.bid!=null).map(s=>({x:s.x,y:s.bid})),
+         borderColor:'#94a3b8', borderWidth:1, pointRadius:0, tension:.05, fill:false, borderDash:[2,3], order:2},
+        {label:'best ask', data:sampled.filter(s=>s.ask!=null).map(s=>({x:s.x,y:s.ask})),
+         borderColor:'#cbd5e1', borderWidth:1, pointRadius:0, tension:.05, fill:false, borderDash:[2,3], order:3},
+        {label:'buy', type:'scatter', data:buys, backgroundColor:'#059669', borderColor:'#059669',
+         pointStyle:'triangle', pointRadius:5, pointHoverRadius:8, rotation:0, order:0,
+         showLine:false},
+        {label:'sell', type:'scatter', data:sells, backgroundColor:'#dc2626', borderColor:'#dc2626',
+         pointStyle:'triangle', pointRadius:5, pointHoverRadius:8, rotation:180, order:0,
+         showLine:false},
+      ]},
+      options:{
+        responsive:true, maintainAspectRatio:false, animation:false,
+        plugins:{
+          legend:{display:false},
+          tooltip:{
+            mode:'nearest', intersect:false,
+            callbacks:{
+              label(ctx){
+                if(ctx.dataset.label==='buy' || ctx.dataset.label==='sell'){
+                  const r = ctx.raw;
+                  return `${ctx.dataset.label.toUpperCase()} ${r.qty} @ ${r.y.toLocaleString()}`;
+                }
+                return `${ctx.dataset.label}: ${ctx.parsed.y?.toLocaleString()}`;
+              }
+            }
+          },
+        },
+        scales:{
+          x:{type:'linear', grid:{color:'#e5e7eb'}, ticks:{color:'#9ca3af', maxTicksLimit:10, font:{size:10}}},
+          y:{grid:{color:'#e5e7eb'}, ticks:{color:'#9ca3af', font:{size:10}}, title:{display:true, text:`${sym} price`, color:'#6b7280', font:{size:10}}},
+        },
+        interaction:{intersect:false, mode:'nearest'},
+      },
+      plugins:[{
+        id:'tickMarker',
+        afterDraw(c){
+          const ts = c.$markerTs;
+          if(ts == null) return;
+          const xs = c.scales.x, ys = c.scales.y;
+          const x = xs.getPixelForValue(ts);
+          if(x < xs.left || x > xs.right) return;
+          c.ctx.save();
+          c.ctx.strokeStyle = '#2563eb';
+          c.ctx.lineWidth = 1.5;
+          c.ctx.setLineDash([5,4]);
+          c.ctx.beginPath();
+          c.ctx.moveTo(x, ys.top);
+          c.ctx.lineTo(x, ys.bottom);
+          c.ctx.stroke();
+          c.ctx.restore();
+        }
+      }]
+    });
+    if(pendingTs != null){ chart.$markerTs = pendingTs; chart.update('none'); }
+  }
+
+  let pendingTs = null;
+  rebuild(curSym);
+
+  return {
+    setTick(ts){ pendingTs = ts; if(chart){ chart.$markerTs = ts; chart.update('none'); } },
+    setSymbol(s){ if(symbols.includes(s) && s !== curSym) rebuild(s); },
+  };
+}
 
 // === Order book tick navigator ============================================
 function buildSymbolBookSeries(actCsv, sym){
@@ -305,13 +440,26 @@ function renderObnav(parent, runId, actCsv, tradesCsv, onTick){
     const vols = [...book.bids.map(b=>b.v), ...book.asks.map(a=>a.v)];
     const vmax = vols.length ? Math.max(...vols) : 1;
     const fillsHere = (fillIdx.get(ts)||[]);
-    const ownPrices = new Set(fillsHere.map(f=>f.price));
+    // Per-price aggregate trade size & direction at this tick
+    const ownAtPrice = new Map();
+    for(const f of fillsHere){
+      const cur = ownAtPrice.get(f.price);
+      if(!cur) ownAtPrice.set(f.price, {side:f.side, qty:f.qty});
+      else { cur.qty += f.qty; if(cur.side !== f.side) cur.side = 'MIXED'; }
+    }
 
     const mkRow=(side, lvl)=>{
-      if(!lvl) return `<div class="obnav-row ${side} empty"><span class="obnav-px">—</span><span class="obnav-bar empty"></span><span class="obnav-vol">—</span></div>`;
-      const own = ownPrices.has(lvl.p) ? ' own' : '';
+      if(!lvl) return `<div class="obnav-row ${side} empty"><span></span><span class="obnav-px">—</span><span class="obnav-bar empty"></span><span class="obnav-vol">—</span></div>`;
+      const own = ownAtPrice.get(lvl.p);
+      let ownClass = '', mark = '<span></span>';
+      if(own){
+        ownClass = ' own ' + (own.side === 'BUY' ? 'buy' : own.side === 'SELL' ? 'sell' : 'buy');
+        const arrow = own.side === 'BUY' ? '↑' : own.side === 'SELL' ? '↓' : '⇅';
+        const cls = own.side === 'BUY' ? 'buy' : 'sell';
+        mark = `<span class="obnav-mark ${cls}" title="our ${own.side} ${own.qty} @ ${lvl.p}">${arrow}</span>`;
+      }
       const w = (lvl.v/vmax*100).toFixed(1);
-      return `<div class="obnav-row ${side}${own}"><span class="obnav-px">${lvl.p.toLocaleString()}</span><span class="obnav-bar ${side}" style="width:${w}%"></span><span class="obnav-vol">×${lvl.v}</span></div>`;
+      return `<div class="obnav-row ${side}${ownClass}">${mark}<span class="obnav-px">${lvl.p.toLocaleString()}</span><span class="obnav-bar ${side}" style="width:${w}%"></span><span class="obnav-vol">×${lvl.v}</span></div>`;
     };
     // Asks shown high → low (so lowest ask sits next to mid), then mid, then bids high → low
     const asksDesc = [book.asks[2],book.asks[1],book.asks[0]];
@@ -446,15 +594,43 @@ function renderInventory(parent, tradesCsv){
       plugins:[{
         id:'tickMarker',
         afterDraw(c){
+          const xs = c.scales.x, ys = c.scales.y;
+          // Per-symbol position-limit reference lines (max & min pos)
+          c.ctx.save();
+          c.ctx.strokeStyle = '#fca5a5';
+          c.ctx.setLineDash([2,3]);
+          c.ctx.lineWidth = 1;
+          // The largest limit among visible symbols sets the reference
+          let maxLim = 0;
+          for(const s of symbols){
+            const lim = POS_LIMITS[s] || 200;
+            if(lim > maxLim) maxLim = lim;
+          }
+          if(maxLim > 0){
+            for(const v of [maxLim, -maxLim]){
+              const y = ys.getPixelForValue(v);
+              if(y >= ys.top && y <= ys.bottom){
+                c.ctx.beginPath();
+                c.ctx.moveTo(xs.left, y); c.ctx.lineTo(xs.right, y);
+                c.ctx.stroke();
+                c.ctx.fillStyle = '#dc2626';
+                c.ctx.font = '10px Inter, sans-serif';
+                c.ctx.textAlign = 'right';
+                c.ctx.fillText(`limit ${v > 0 ? '+' : ''}${v}`, xs.right - 4, y - 3);
+              }
+            }
+          }
+          c.ctx.restore();
+
+          // Selected-tick vertical line
           const ts = c.$markerTs;
           if(ts == null) return;
-          const xs = c.scales.x, ys = c.scales.y;
           const x = xs.getPixelForValue(ts);
           if(x < xs.left || x > xs.right) return;
           c.ctx.save();
-          c.ctx.strokeStyle = '#111827';
+          c.ctx.strokeStyle = '#2563eb';
           c.ctx.lineWidth = 1.5;
-          c.ctx.setLineDash([4,3]);
+          c.ctx.setLineDash([5,4]);
           c.ctx.beginPath();
           c.ctx.moveTo(x, ys.top);
           c.ctx.lineTo(x, ys.bottom);
@@ -577,16 +753,19 @@ async function init(){
         options:co()}))},50);
     }
 
-    // === Order book navigator + Inventory visualizer (synced to obnav slider) ===
-    let invViz = null;
+    // === Price chart + Order book + Inventory (all synced to obnav slider) ===
+    let priceViz = null, invViz = null;
     if(r.actCsv && r.actCsv.length > 0){
+      // Initial symbol is whatever the obnav defaults to (alphabetically first product)
+      const firstSym = [...new Set(r.actCsv.map(x=>x.product))].sort()[0];
+      priceViz = renderPriceChart(p, r.actCsv, r.tradesCsv, firstSym);
       renderObnav(p, r.id, r.actCsv, r.tradesCsv, (ts, sym)=>{
+        if(priceViz){ priceViz.setSymbol(sym); priceViz.setTick(ts); }
         if(invViz){ invViz.setSymbol(sym); invViz.setTick(ts); }
       });
     }
     if(r.tradesCsv && r.tradesCsv.length > 0){
       invViz = renderInventory(p, r.tradesCsv);
-      // Initial sync — paint inventory at the obnav's first tick
       if(r.actCsv && r.actCsv.length > 0){
         invViz.setTick(+r.actCsv[0].timestamp);
       }
