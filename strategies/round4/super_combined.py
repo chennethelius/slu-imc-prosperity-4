@@ -17,7 +17,11 @@ result, each owning a disjoint subset of the products:
 
 Backtest (QP=1.0):
                        D1       D2       D3      mean      min   mean+min
-  super_combined    241,564  151,040  157,376  183,327  151,040    334,367
+  super_combined    241,402  151,417  176,210  189,676  151,417    341,093
+
+IMC sandbox 500163 = D3 first 1000 ticks: real PnL $2,504. Per-asset
+matches BT-D3-1k within $100/asset across all products — backtester
+calibrated correctly.
 
 Pipeline 1 — Conviction MR
   Composite of three strengths in [0,1]:
@@ -314,7 +318,12 @@ def _vev_5000_flatten(state):
 # ============================================================================
 
 TAKE_WIDTH = 1
-ANCHOR_WARMUP = 100
+ANCHOR_WARMUP = 500  # raised from 100 — wait for anchor to stabilize before
+                     # trading. Cumulative-mean anchor lags directional moves
+                     # in early ticks; 100-tick warmup let the anchor pipeline
+                     # accumulate wrong-way positions during D3's down-leg.
+                     # Sweep at 200/500/1000/1500 found 500 optimal: +$7k full
+                     # mean+min, +$5k 1k mean+min, no D2/min sacrifice.
 DIVERGE_TAKE_SIZE = 30
 MAX_DIVERGE_POS = 295  # near hard limit; gated by regime_scale when defensive
 
