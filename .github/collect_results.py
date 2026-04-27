@@ -12,13 +12,23 @@ from pathlib import Path
 
 
 def resolve_target_datasets(strategy_path: Path, datasets: list[str]) -> list[str]:
-    """Match a strategy file to its round's dataset(s)."""
+    """Match a strategy file to its round's dataset(s).
+
+    Prefers the staged `<round>_data` variant from datasets_extra when present,
+    since it contains current-round data. Falls back to the submodule-bundled
+    `<round>` directory only if the staged version isn't available.
+    """
     parent = strategy_path.parent.name
     if parent.startswith("round"):
         round_num = parent.replace("round", "")
         if round_num == "0":
             return [d for d in datasets if "tutorial" in d]
-        return [d for d in datasets if d == parent or d.startswith(f"{parent}_")]
+        suffixed = f"{parent}_data"
+        if suffixed in datasets:
+            return [suffixed]
+        if parent in datasets:
+            return [parent]
+        return [d for d in datasets if d.startswith(f"{parent}_")]
     if parent == "tutorial":
         return [d for d in datasets if "tutorial" in d]
     return datasets
@@ -36,7 +46,13 @@ def run_pair(strategy_path: Path, ds: str, backtester_bin: Path, backtester_dir:
             # IMC submission backtester's whole-day PnL). See scripts/imcbt_wrapper.py.
             # We loop per day to populate one backtest- subdir per day.
             result_strs = []
-            for day in (1, 2, 3) if ds == "round4" else (0, 1, 2) if ds == "round3" else (0,):
+            if ds.startswith("round4"):
+                days = (1, 2, 3)
+            elif ds.startswith("round3"):
+                days = (0, 1, 2)
+            else:
+                days = (0,)
+            for day in days:
                 r = subprocess.run(
                     [
                         sys.executable, str(backtester_bin),
