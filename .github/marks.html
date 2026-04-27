@@ -106,8 +106,16 @@ const COLORS = {
 let DATA=null, dayIdx=0, product=null, side="buy", offMarks=new Set(), chart=null;
 
 async function init(){
-  const r = await fetch("./marks_data.json", {cache:"no-cache"});
-  DATA = await r.json();
+  try {
+    const r = await fetch("./marks_data.json", {cache:"no-cache"});
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    DATA = await r.json();
+  } catch (e) {
+    console.error("Failed to load marks_data.json:", e);
+    document.querySelector('.container').innerHTML =
+      `<div class="empty">Failed to load <code>marks_data.json</code> (${e.message}). Run <code>python3 .github/build_marks_data.py</code> to generate it.</div>`;
+    return;
+  }
   if(!DATA || !DATA.days?.length){
     document.querySelector('.container').innerHTML = '<div class="empty">No data found. Run <code>python3 .github/build_marks_data.py</code> to generate marks_data.json.</div>';
     return;
@@ -232,9 +240,10 @@ function render(){
   const cvs = document.getElementById('main-chart');
   if(chart) chart.destroy();
   chart = new Chart(cvs, {
+    type:'scatter',
     data:{datasets},
     options:{
-      responsive:true, maintainAspectRatio:false, animation:false, parsing:false,
+      responsive:true, maintainAspectRatio:false, animation:false,
       plugins:{
         legend:{position:'bottom', labels:{font:{size:10, family:'Inter'}, boxWidth:10, padding:8, usePointStyle:true}},
         tooltip:{intersect:false, mode:'nearest',
