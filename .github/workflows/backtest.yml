@@ -42,7 +42,7 @@ jobs:
           # strategies since behavior may have shifted.
           # Manual workflow_dispatch: run ALL strategies.
           STRAT_DIFF=$(git diff --name-only HEAD~1 HEAD -- 'strategies/**/*.py' 2>/dev/null || true)
-          BEHAVIOR_DIFF=$(git diff --name-only HEAD~1 HEAD -- 'datasets_extra/' 'scripts/imcbt_wrapper.py' '.github/collect_results.py' 2>/dev/null || true)
+          BEHAVIOR_DIFF=$(git diff --name-only HEAD~1 HEAD -- 'datasets_extra/' 'scripts/imcbt_wrapper.py' '.github/collect_results.py' '.github/workflows/backtest.yml' 2>/dev/null || true)
 
           if [ -n "$STRAT_DIFF" ]; then
             CHANGED="$STRAT_DIFF"
