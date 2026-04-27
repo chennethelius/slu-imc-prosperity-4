@@ -110,6 +110,24 @@
   .total-block .label{font-size:9.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;font-weight:700}
   .total-block .value{font-family:var(--mono);font-size:18px;font-weight:700;letter-spacing:-.3px}
 
+  /* GBM path visualizer */
+  .sim-panel{background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;box-shadow:var(--shadow-sm);margin-bottom:18px}
+  .sim-panel h3{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px}
+  .sim-explainer{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:14px;padding:12px 14px;background:var(--bg-base);border:1px solid var(--border-subtle);border-radius:8px}
+  .sim-explainer .item{display:flex;flex-direction:column;gap:2px}
+  .sim-explainer .label{font-size:9.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700}
+  .sim-explainer .value{font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:-.2px}
+  .sim-controls{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:14px}
+  .sim-controls label{display:flex;flex-direction:column;gap:3px;font-size:10.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+  .sim-controls input{background:var(--bg-base);border:1px solid var(--border);color:var(--text-primary);font-family:var(--mono);font-size:13px;padding:6px 10px;border-radius:6px;width:100px;font-weight:600}
+  .sim-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:14px}
+  .sim-stats .stat{background:var(--bg-base);border:1px solid var(--border-subtle);padding:8px 12px;border-radius:6px}
+  .sim-stats .label{font-size:9.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;font-weight:700;margin-bottom:2px}
+  .sim-stats .value{font-family:var(--mono);font-size:14px;font-weight:700;letter-spacing:-.2px}
+  .sim-charts{display:grid;grid-template-columns:2fr 1fr;gap:14px}
+  @media(max-width:900px){.sim-charts{grid-template-columns:1fr}}
+  .sim-chart-box{height:300px;background:var(--bg-base);border:1px solid var(--border-subtle);border-radius:8px;padding:10px;position:relative}
+
   /* MC simulator */
   .mc-panel{background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;box-shadow:var(--shadow-sm);margin-bottom:18px}
   .mc-controls{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:14px}
@@ -194,6 +212,36 @@
         <span class="param-chip">4 steps / trading day</span>
         <span class="param-chip">252 trading days / yr</span>
         <span class="param-chip">2w = 10 td, 3w = 15 td</span>
+      </div>
+    </div>
+
+    <!-- GBM simulation explainer + path visualizer -->
+    <div class="sim-panel">
+      <h3>How the simulation works · path visualizer</h3>
+      <div class="sim-explainer">
+        <div class="item"><span class="label">Model</span><span class="value">d ln S = -½σ² dt + σ dW</span></div>
+        <div class="item"><span class="label">Steps in 3w (15 td)</span><span class="value" id="sim-nsteps">60</span></div>
+        <div class="item"><span class="label">dt (yr)</span><span class="value" id="sim-dt">9.92e-4</span></div>
+        <div class="item"><span class="label">σ √dt per step</span><span class="value" id="sim-stepvol">7.9%</span></div>
+        <div class="item"><span class="label">σ √T (3w horizon)</span><span class="value" id="sim-totalvol">61.2%</span></div>
+        <div class="item"><span class="label">1σ S(T) range</span><span class="value" id="sim-1sig">22 – 76</span></div>
+      </div>
+      <div class="sim-controls">
+        <label>Paths<input id="sim-n" type="number" min="10" max="2000" step="10" value="200"></label>
+        <button class="btn" id="btn-draw">Draw paths</button>
+        <span id="sim-progress" style="font-size:12px;color:var(--text-muted);margin-left:auto"></span>
+      </div>
+      <div class="sim-stats">
+        <div class="stat"><span class="label">% knocked out (S < 35)</span><div class="value" id="sim-ko">—</div></div>
+        <div class="stat"><span class="label">% S(T) < 40</span><div class="value" id="sim-bp">—</div></div>
+        <div class="stat"><span class="label">% S(T) < 50</span><div class="value" id="sim-50">—</div></div>
+        <div class="stat"><span class="label">P5 S(T)</span><div class="value" id="sim-p5">—</div></div>
+        <div class="stat"><span class="label">Median S(T)</span><div class="value" id="sim-p50">—</div></div>
+        <div class="stat"><span class="label">P95 S(T)</span><div class="value" id="sim-p95">—</div></div>
+      </div>
+      <div class="sim-charts">
+        <div class="sim-chart-box"><canvas id="paths-chart"></canvas></div>
+        <div class="sim-chart-box"><canvas id="final-chart"></canvas></div>
       </div>
     </div>
 
@@ -570,6 +618,155 @@ function clearBoard(){
 }
 
 /* ────────────────────────────────────────────────────────────
+   GBM path visualizer (educational).
+   ──────────────────────────────────────────────────────────── */
+let pathsChart = null, finalChart = null;
+function updateSimExplainer(){
+  const T = T_3W();
+  const nSteps = Math.round(T*TD_YR*STEPS_PER_DAY);
+  const dt = T/nSteps;
+  const stepvol = SIGMA*Math.sqrt(dt);
+  const totalvol = SIGMA*Math.sqrt(T);
+  // 1σ band of S(T) under risk-neutral lognormal: median = S0 exp(-½σ²T)
+  const med = S0*Math.exp(-0.5*SIGMA*SIGMA*T);
+  const lo = med*Math.exp(-totalvol);
+  const hi = med*Math.exp(totalvol);
+  const set = (id, v) => { const e = document.getElementById(id); if(e) e.textContent = v; };
+  set('sim-nsteps', nSteps);
+  set('sim-dt', dt.toExponential(2));
+  set('sim-stepvol', (stepvol*100).toFixed(1) + '%');
+  set('sim-totalvol', (totalvol*100).toFixed(1) + '%');
+  set('sim-1sig', `${lo.toFixed(1)} – ${hi.toFixed(1)}`);
+}
+function drawPaths(){
+  const n = Math.max(10, Math.min(2000, parseInt(document.getElementById('sim-n').value, 10) || 200));
+  const btn = document.getElementById('btn-draw');
+  btn.disabled = true;
+  document.getElementById('sim-progress').textContent = `drawing ${n} paths…`;
+  setTimeout(() => {
+    const t0 = performance.now();
+    const T = T_3W(), nSteps = Math.round(T*TD_YR*STEPS_PER_DAY);
+    const dt = T/nSteps, drift = -0.5*SIGMA*SIGMA*dt, vol = SIGMA*Math.sqrt(dt);
+    const paths = new Array(n), finals = new Array(n);
+    let ko=0, bp=0, b50=0;
+    for (let p=0; p<n; p++) {
+      let lnS = Math.log(S0), minS = S0;
+      const path = new Array(nSteps+1); path[0] = S0;
+      for (let s=0; s<nSteps; s++) {
+        lnS += drift + vol*randn();
+        const S = Math.exp(lnS);
+        if (S < minS) minS = S;
+        path[s+1] = S;
+      }
+      paths[p] = {data: path, knocked: minS < 35};
+      finals[p] = path[nSteps];
+      if (minS < 35) ko++;
+      if (path[nSteps] < 40) bp++;
+      if (path[nSteps] < 50) b50++;
+    }
+    const sorted = [...finals].sort((a,b)=>a-b);
+    const q = pp => sorted[Math.min(n-1, Math.floor(pp*n))];
+    const set = (id, v) => document.getElementById(id).textContent = v;
+    set('sim-ko',  (ko*100/n).toFixed(0) + '%');
+    set('sim-bp',  (bp*100/n).toFixed(0) + '%');
+    set('sim-50',  (b50*100/n).toFixed(0) + '%');
+    set('sim-p5',  q(0.05).toFixed(2));
+    set('sim-p50', q(0.50).toFixed(2));
+    set('sim-p95', q(0.95).toFixed(2));
+
+    // Path chart: cap displayed paths at 200 for perf, sample evenly
+    const labels = Array.from({length: nSteps+1}, (_, i) => i);
+    const showN = Math.min(n, 200);
+    const stride = Math.max(1, Math.floor(n / showN));
+    const refs = [
+      {y: 35, color: '#dc2626', label: 'Barrier 35 (KO)', dash: [6,4]},
+      {y: 40, color: '#f59e0b', label: 'BP strike 40',    dash: [3,3]},
+      {y: 45, color: '#a16207', label: 'KO strike 45',    dash: [3,3]},
+      {y: 50, color: '#6366f1', label: 'ATM 50',          dash: [2,4]},
+      {y: 60, color: '#0d9488', label: 'Strike 60',       dash: [3,3]},
+    ];
+    const datasets = refs.map(r => ({
+      label: r.label, data: labels.map(()=>r.y),
+      borderColor: r.color, borderWidth: 1.5, borderDash: r.dash,
+      pointRadius: 0, fill: false, tension: 0
+    }));
+    for (let i=0; i<n; i+=stride) {
+      datasets.push({
+        data: paths[i].data, label: '_',
+        borderColor: paths[i].knocked ? 'rgba(239,68,68,.18)' : 'rgba(99,102,241,.16)',
+        borderWidth: 0.7, pointRadius: 0, fill: false, tension: 0
+      });
+    }
+    if (pathsChart) pathsChart.destroy();
+    pathsChart = new Chart(document.getElementById('paths-chart').getContext('2d'), {
+      type: 'line',
+      data: {labels, datasets},
+      options: {
+        responsive: true, maintainAspectRatio: false, animation: false,
+        plugins: {
+          legend: { display: true, position: 'top',
+            labels: { font: {size: 9}, boxWidth: 18, filter: it => it.text && it.text !== '_' } },
+          tooltip: { enabled: false },
+          title: { display: true, text: `${n} GBM paths · 60 steps · ${ko}/${n} knocked (red)`, font: {size: 11, weight: '600'} }
+        },
+        scales: {
+          x: {
+            ticks: { font: {size: 9}, color: '#64748b', maxTicksLimit: 8,
+                     callback: v => `${(v/4).toFixed(0)}d` },
+            title: { display: true, text: 'trading day (4 steps each)', font: {size: 10} },
+            grid: { display: false }
+          },
+          y: {
+            ticks: { font: {size: 9}, color: '#64748b' },
+            title: { display: true, text: 'S(t)', font: {size: 10} },
+            grid: { color: 'rgba(0,0,0,.04)' }
+          }
+        }
+      }
+    });
+
+    // Terminal histogram
+    const flo = sorted[0], fhi = sorted[n-1];
+    const nb = Math.min(40, Math.max(8, Math.round(Math.sqrt(n))));
+    const w = (fhi - flo) / nb || 1;
+    const bins = new Array(nb).fill(0);
+    finals.forEach(v => {
+      let i = Math.floor((v - flo) / w);
+      if (i >= nb) i = nb-1; if (i < 0) i = 0;
+      bins[i]++;
+    });
+    const flabels = bins.map((_, i) => (flo + (i+0.5)*w).toFixed(1));
+    const colors = bins.map((_, i) => {
+      const v = flo + (i+0.5)*w;
+      if (v < 35) return 'rgba(220,38,38,.7)';
+      if (v < 50) return 'rgba(245,158,11,.7)';
+      return 'rgba(16,185,129,.7)';
+    });
+    if (finalChart) finalChart.destroy();
+    finalChart = new Chart(document.getElementById('final-chart').getContext('2d'), {
+      type: 'bar',
+      data: { labels: flabels, datasets: [{ data: bins, backgroundColor: colors, borderWidth: 0 }] },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          title: { display: true, text: 'S(T) at expiry', font: {size: 11, weight: '600'} },
+          tooltip: { callbacks: { title: items => 'S(T) ≈ ' + items[0].label } }
+        },
+        scales: {
+          x: { ticks: { font: {size: 9}, maxTicksLimit: 6, color: '#64748b' }, grid: { display: false } },
+          y: { ticks: { font: {size: 9}, color: '#64748b' }, title: { display: true, text: 'count', font: {size: 10} }, grid: { color: 'rgba(0,0,0,.04)' } }
+        }
+      }
+    });
+
+    document.getElementById('sim-progress').textContent =
+      `${n} paths · ${(performance.now() - t0).toFixed(0)}ms`;
+    btn.disabled = false;
+  }, 30);
+}
+
+/* ────────────────────────────────────────────────────────────
    Monte Carlo simulator + histogram.
    ──────────────────────────────────────────────────────────── */
 let mcChart = null;
@@ -668,6 +865,7 @@ function wireParamInputs(){
     recomputeKOFair();
     renderEdges();
     renderRecommended();
+    updateSimExplainer();
   };
   [sEl, sigEl, stepEl].forEach(e => e.addEventListener('change', update));
 }
@@ -686,6 +884,9 @@ function init(){
   document.getElementById('btn-apply-optimal').onclick = applyOptimal;
   document.getElementById('btn-clear').onclick = clearBoard;
   document.getElementById('btn-run-mc').onclick = runMC;
+  document.getElementById('btn-draw').onclick = drawPaths;
+  updateSimExplainer();
+  drawPaths();   // first-load preview
 }
 init();
 </script>
