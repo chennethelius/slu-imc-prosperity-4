@@ -32,25 +32,28 @@ def run_pair(strategy_path: Path, ds: str, backtester_bin: Path, backtester_dir:
     try:
         print(f"=== {strat_name} vs {ds} ===", flush=True)
         try:
-            # Backtester flags pinned to the IMC-sandbox calibration (see
-            # scripts/calibrate_backtester.py). These match the Rust defaults
-            # today, but pinning them here prevents silent drift if the
-            # backtester defaults ever change.
-            result = subprocess.run(
-                [
-                    str(backtester_bin),
-                    "--trader", str(strategy_path),
-                    "--dataset", ds,
-                    "--queue-penetration", "1.0",
-                    "--book-fill", "true",
-                    "--price-slippage-bps", "0",
-                    "--persist",
-                    "--artifact-mode", "full",
-                    "--output-root", str(out_root),
-                ],
-                cwd=str(backtester_dir),
-                capture_output=True, text=True, timeout=240,
-            )
+            # Wrapper invokes imc-p4-bt under the hood (calibrated to match
+            # IMC submission backtester's whole-day PnL). See scripts/imcbt_wrapper.py.
+            # We loop per day to populate one backtest- subdir per day.
+            result_strs = []
+            for day in (1, 2, 3) if ds == "round4" else (0, 1, 2) if ds == "round3" else (0,):
+                r = subprocess.run(
+                    [
+                        sys.executable, str(backtester_bin),
+                        "--trader", str(strategy_path),
+                        "--dataset", ds,
+                        f"--day={day}",
+                        "--persist",
+                        "--artifact-mode", "full",
+                        "--output-root", str(out_root),
+                    ],
+                    capture_output=True, text=True, timeout=240,
+                )
+                if r.returncode != 0:
+                    print(f"[{strat_name}/{ds} day-{day}] FAIL rc={r.returncode}\n{r.stderr[-500:]}", flush=True)
+                else:
+                    result_strs.append(r.stdout)
+            result = type("R", (), {"stdout": "\n".join(result_strs), "stderr": ""})()
             tail = result.stdout[-400:] if len(result.stdout) > 400 else result.stdout
             print(f"[{strat_name}/{ds}]\n{tail}", flush=True)
             if result.stderr:
@@ -106,7 +109,12 @@ def main():
     timestamp = os.environ.get("TIMESTAMP", "")
     repo_root = Path(os.environ.get("REPO_ROOT", ".")).resolve()
     backtester_dir = repo_root / "backtester"
-    backtester_bin = backtester_dir / "target" / "release" / "rust_backtester"
+    # CALIBRATION: use imcbt_wrapper.py (calls imc-p4-bt) instead of rust_backtester.
+    # rust_backtester's matching mechanics under-report PnL by ~7x vs the IMC
+    # submission backtester. The wrapper produces the same output file format
+    # (metrics.json, pnl_by_product.csv, trades.csv, activity.csv, submission.log)
+    # but with imc-p4-bt's whole-day-accurate PnL numbers.
+    backtester_bin = repo_root / "scripts" / "imcbt_wrapper.py"
     results_dir = repo_root / "backtest-results"
     results_dir.mkdir(exist_ok=True)
     (backtester_dir / "runs").mkdir(exist_ok=True)
