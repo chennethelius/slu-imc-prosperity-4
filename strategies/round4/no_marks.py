@@ -84,6 +84,30 @@ HP_CFG = {
     "w_z": 0.625, "w_ema": 0.375,
     "take_max": 80, "take_offset": 4,
     "base_cap_pct": 0.50, "full_cap_pct": 1.00, "hard_cap_pct": 0.95,
+    # Time-decayed risk caps. Linear interp from start to end across
+    # within_day ∈ [0, decay_end_tick]. Defaults preserve current behavior
+    # (start == end → no decay).
+    "hard_cap_end_pct": 0.95, "decay_end_tick": 800000,
+    # Aggressive MR layer. mean_mode: "static" = cfg["fair"] (no warmup,
+    # reuses _conviction's variance); "ema" = slow rolling EMA; "off"
+    # disables the layer entirely (for ablation tests).
+    "aggr_mean_mode": "static",
+    "aggr_sd_source": "static",
+    "aggr_alpha": 0.002, "aggr_z_thresh": 2.5,
+    "aggr_warmup": 300, "aggr_max_take": 90, "aggr_max_take_end": 90,
+    # Position-aware trigger: skip aggressive when |pos| > this. Defaults
+    # to limit (= no extra gating; only the existing |pos|<hard_cap caller-
+    # gate applies).
+    "aggr_max_pos_for_fire": 200,
+    # Tiered z-thresholds: list of (z_thresh, take_size). When non-empty,
+    # OVERRIDES aggr_z_thresh/aggr_max_take. Take is the SUM of sizes for
+    # all tiers whose z_thresh is crossed.
+    "aggr_tiers": [],
+    # Harvest pairing: after an aggressive fill, boost the exit-side MM
+    # quote for harvest_window_ticks ticks once |z| drops below
+    # harvest_z_thresh.
+    "enable_harvest": False, "harvest_window_ticks": 200,
+    "harvest_z_thresh": 1.0, "harvest_take_size": 30,
 }
 
 VFE_CFG = {
@@ -95,6 +119,15 @@ VFE_CFG = {
     "w_z": 0.625, "w_ema": 0.375,
     "take_max": 70, "take_offset": 3,
     "base_cap_pct": 0.50, "full_cap_pct": 1.00, "hard_cap_pct": 0.95,
+    "hard_cap_end_pct": 0.95, "decay_end_tick": 800000,
+    "aggr_mean_mode": "static",
+    "aggr_sd_source": "static",
+    "aggr_alpha": 0.002, "aggr_z_thresh": 2.5,
+    "aggr_warmup": 300, "aggr_max_take": 90, "aggr_max_take_end": 90,
+    "aggr_max_pos_for_fire": 200,
+    "aggr_tiers": [],
+    "enable_harvest": False, "harvest_window_ticks": 200,
+    "harvest_z_thresh": 1.0, "harvest_take_size": 30,
 }
 
 VFE_DELTA_VEV_5000 = {
@@ -140,6 +173,81 @@ def _conviction(depth, td, cfg):
     return bb, ba, mid, direction, conv
 
 
+def _aggressive_mr_take(depth, sym, cfg, td, pos, bv_in, sv_in, max_take):
+    """Aggressive mean-reversion layer: when |z| ≥ aggr_z_thresh, walk the
+    offending side of the book up to max_take, only crossing prices on the
+    correct side of the mean. Caller gates on |pos| < hard_cap and supplies
+    the (possibly time-decayed) max_take.
+
+    Mean source depends on cfg["aggr_mean_mode"]:
+      "static" — cfg["fair"]. No warmup; sd reuses _conviction's variance
+                 (already updated for this tick), so we trade immediately.
+      "ema"    — slow EMA of mid, with its own variance and aggr_warmup.
+      "off"    — layer disabled (for ablation).
+    """
+    if cfg["aggr_mean_mode"] == "off" or max_take <= 0:
+        return [], 0, 0
+
+    bb = max(depth.buy_orders)
+    ba = min(depth.sell_orders)
+    mid = (bb + ba) / 2.0
+    p = cfg["prefix"]
+
+    if cfg["aggr_mean_mode"] == "static":
+        mean = cfg["fair"]
+        if cfg.get("aggr_sd_source", "ewma") == "static":
+            sd = cfg["stdev_init"]
+        else:
+            var = td.get(f"_{p}_var", cfg["stdev_init"] ** 2)
+            sd = max(cfg["stdev_init"] * 0.15, var ** 0.5)
+    else:
+        n = td.get(f"_{p}_an", 0) + 1
+        td[f"_{p}_an"] = n
+        mean = (cfg["aggr_alpha"] * mid
+                + (1 - cfg["aggr_alpha"]) * td.get(f"_{p}_arm", mid))
+        td[f"_{p}_arm"] = mean
+        dev_e = mid - mean
+        rvar = ((1 - cfg["var_alpha"]) * td.get(f"_{p}_arv", cfg["stdev_init"] ** 2)
+                + cfg["var_alpha"] * dev_e * dev_e)
+        td[f"_{p}_arv"] = rvar
+        sd = max(cfg["stdev_init"] * 0.15, rvar ** 0.5)
+        if n < cfg["aggr_warmup"]:
+            return [], 0, 0
+
+    z = (mid - mean) / sd
+
+    # Tiered sizing: cumulative sum of all tier sizes whose threshold is
+    # crossed. Falls back to single (aggr_z_thresh, max_take) if no tiers.
+    tiers = cfg.get("aggr_tiers") or [(cfg["aggr_z_thresh"], max_take)]
+    abs_z = abs(z)
+    cap = sum(sz for zt, sz in tiers if abs_z >= zt)
+    if cap <= 0:
+        return [], 0, 0
+
+    # Position-aware trigger: skip if we're already heavily loaded.
+    if abs(pos) > cfg.get("aggr_max_pos_for_fire", cfg["limit"]):
+        return [], 0, 0
+
+    limit = cfg["limit"]
+    if z < 0:
+        room = max(0, min(cap, limit - pos - bv_in))
+        if room <= 0:
+            return [], 0, 0
+        takes, filled = _walk_book(depth, +1, sym, lambda px: px <= mean, room)
+        if filled > 0:
+            td[f"_{p}_aggr_dir"] = +1
+            td[f"_{p}_harvest_ttl"] = cfg.get("harvest_window_ticks", 0)
+        return takes, filled, 0
+    room = max(0, min(cap, limit + pos - sv_in))
+    if room <= 0:
+        return [], 0, 0
+    takes, filled = _walk_book(depth, -1, sym, lambda px: px >= mean, room)
+    if filled > 0:
+        td[f"_{p}_aggr_dir"] = -1
+        td[f"_{p}_harvest_ttl"] = cfg.get("harvest_window_ticks", 0)
+    return takes, 0, filled
+
+
 def _conviction_orders(state, cfg, all_orders, td):
     sym = cfg["symbol"]
     depth = state.order_depths.get(sym)
@@ -151,22 +259,29 @@ def _conviction_orders(state, cfg, all_orders, td):
     bb, ba, mid, direction, conv = sig
     pos = state.position.get(sym, 0)
     limit, fair = cfg["limit"], cfg["fair"]
-    hard_cap = cfg["hard_cap_pct"] * limit
+    within_day = state.timestamp % 1_000_000
+    decay_t = min(1.0, max(0.0, within_day / cfg["decay_end_tick"]))
+    hc_pct_now = (cfg["hard_cap_pct"]
+                  + (cfg["hard_cap_end_pct"] - cfg["hard_cap_pct"]) * decay_t)
+    hard_cap = hc_pct_now * limit
+    aggr_max_now = int(round(cfg["aggr_max_take"]
+                             + (cfg["aggr_max_take_end"] - cfg["aggr_max_take"]) * decay_t))
 
     out, bv, sv = [], 0, 0
 
-    if pos > hard_cap:
-        target = pos - int(hard_cap * 0.5)
-        unw, filled = _walk_book(depth, -1, sym, lambda px: px >= fair - 2, target)
-        out.extend(unw); sv += filled
-    elif pos < -hard_cap:
-        target = -pos - int(hard_cap * 0.5)
-        unw, filled = _walk_book(depth, +1, sym, lambda px: px <= fair + 2, target)
-        out.extend(unw); bv += filled
+    if cfg.get("enable_unwind", True):
+        if pos > hard_cap:
+            target = pos - int(hard_cap * 0.5)
+            unw, filled = _walk_book(depth, -1, sym, lambda px: px >= fair - 2, target)
+            out.extend(unw); sv += filled
+        elif pos < -hard_cap:
+            target = -pos - int(hard_cap * 0.5)
+            unw, filled = _walk_book(depth, +1, sym, lambda px: px <= fair + 2, target)
+            out.extend(unw); bv += filled
 
     primary_target = int(round(cfg["take_max"] * conv)) if conv > 0 else 0
     primary_taken = 0
-    if conv > 0 and direction != 0:
+    if cfg.get("enable_primary", True) and conv > 0 and direction != 0:
         soft_cap = (cfg["base_cap_pct"]
                     + (cfg["full_cap_pct"] - cfg["base_cap_pct"]) * conv) * limit
         pos_after = pos + bv - sv
@@ -185,7 +300,8 @@ def _conviction_orders(state, cfg, all_orders, td):
             out.extend(takes); sv += filled; primary_taken = filled
 
     overflow = primary_target - primary_taken
-    if cfg["prefix"] == "vfe" and conv > 0 and overflow > 0 and direction != 0:
+    if (cfg.get("enable_vfe_spillover", True)
+            and cfg["prefix"] == "vfe" and conv > 0 and overflow > 0 and direction != 0):
         v = VFE_DELTA_VEV_5000
         v_depth = state.order_depths.get(v["symbol"])
         if v_depth and v_depth.buy_orders and v_depth.sell_orders:
@@ -210,30 +326,65 @@ def _conviction_orders(state, cfg, all_orders, td):
             if v_orders:
                 all_orders[v["symbol"]] = v_orders
 
-    pos_after = pos + bv - sv
-    mr_dir = (+1 if mid < fair - cfg["mr_thresh"]
-              else -1 if mid > fair + cfg["mr_thresh"] else 0)
-    bid_px = min(bb + 1, fair - 1)
-    ask_px = max(ba - 1, fair + 1)
-    ratio = pos_after / limit
-    bm = max(0.0, 1.0 - cfg["flat_pull"] * ratio)
-    sm = max(0.0, 1.0 + cfg["flat_pull"] * ratio)
-    if mr_dir > 0:
-        bm *= cfg["mr_boost"]
-    elif mr_dir < 0:
-        sm *= cfg["mr_boost"]
-    if conv > 0:
-        if direction > 0:
-            bm *= 1.0 + MM_BOOST * conv
-        elif direction < 0:
-            sm *= 1.0 + MM_BOOST * conv
-    bq = max(0, min(int(round(cfg["qsize"] * bm)), limit - pos - bv))
-    sq = max(0, min(int(round(cfg["qsize"] * sm)), limit + pos - sv))
-    if bid_px < ask_px:
-        if bq > 0:
-            out.append(Order(sym, int(bid_px), bq))
-        if sq > 0:
-            out.append(Order(sym, int(ask_px), -sq))
+    if abs(pos) < hard_cap:
+        aggr_orders, abv, asv = _aggressive_mr_take(
+            depth, sym, cfg, td, pos, bv, sv, aggr_max_now,
+        )
+        if aggr_orders:
+            out.extend(aggr_orders); bv += abv; sv += asv
+
+    p = cfg["prefix"]
+    ttl = td.get(f"_{p}_harvest_ttl", 0)
+    if ttl > 0:
+        td[f"_{p}_harvest_ttl"] = ttl - 1
+
+    # Active harvest: cross the spread to flatten position acquired by the
+    # aggressive layer once price has reverted past harvest_z_thresh. This
+    # is a TAKE (not a quote boost) because under QP=1.0 fills are capped
+    # by counterparty flow, not our quote size.
+    if cfg.get("enable_harvest", False) and ttl > 0:
+        sd_h = cfg["stdev_init"]
+        if abs((mid - fair) / sd_h) < cfg["harvest_z_thresh"]:
+            aggr_dir = td.get(f"_{p}_aggr_dir", 0)
+            pos_now = pos + bv - sv
+            harv_size = int(cfg.get("harvest_take_size", 30))
+            if aggr_dir > 0 and pos_now > 0:
+                qty = min(pos_now, harv_size, limit + pos - sv)
+                if qty > 0:
+                    takes, filled = _walk_book(depth, -1, sym, lambda px: True, qty)
+                    out.extend(takes); sv += filled
+            elif aggr_dir < 0 and pos_now < 0:
+                qty = min(-pos_now, harv_size, limit - pos - bv)
+                if qty > 0:
+                    takes, filled = _walk_book(depth, +1, sym, lambda px: True, qty)
+                    out.extend(takes); bv += filled
+
+    if cfg.get("enable_mm", True):
+        pos_after = pos + bv - sv
+        mr_dir = (+1 if mid < fair - cfg["mr_thresh"]
+                  else -1 if mid > fair + cfg["mr_thresh"] else 0)
+        bid_px = min(bb + 1, fair - 1)
+        ask_px = max(ba - 1, fair + 1)
+        ratio = pos_after / limit
+        bm = max(0.0, 1.0 - cfg["flat_pull"] * ratio)
+        sm = max(0.0, 1.0 + cfg["flat_pull"] * ratio)
+        if mr_dir > 0:
+            bm *= cfg["mr_boost"]
+        elif mr_dir < 0:
+            sm *= cfg["mr_boost"]
+        if conv > 0:
+            if direction > 0:
+                bm *= 1.0 + MM_BOOST * conv
+            elif direction < 0:
+                sm *= 1.0 + MM_BOOST * conv
+
+        bq = max(0, min(int(round(cfg["qsize"] * bm)), limit - pos - bv))
+        sq = max(0, min(int(round(cfg["qsize"] * sm)), limit + pos - sv))
+        if bid_px < ask_px:
+            if bq > 0:
+                out.append(Order(sym, int(bid_px), bq))
+            if sq > 0:
+                out.append(Order(sym, int(ask_px), -sq))
     return out
 
 
