@@ -15,8 +15,6 @@ DAY_KEYS = [("round3", 0), ("round4", 1), ("round4", 2), ("round4", 3)]
 
 STRATS = [
     ("baseline    (z_take.py)",         REPO / "strategies" / "round4" / "z_take.py"),
-    ("hybrid      (current best)",      REPO / "strategies" / "round4" / "z_take_hybrid.py"),
-    ("no_marks    (alone)",             REPO / "strategies" / "round4" / "no_marks.py"),
     ("mix tuned   (z-take + HP-only)",  REPO / "strategies" / "round4" / "z_take_per_asset_mix.py"),
 ]
 

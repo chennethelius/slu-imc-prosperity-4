@@ -1,11 +1,11 @@
 """
 MC overfit check for the final tuned mix.
 
-Compares three strategies under identical Gaussian price perturbation:
-  - baseline   (z_take.py:               uniform z=1.0, t=17, static mean)
-  - hybrid     (z_take_hybrid.py:        previous best non-tmp trader)
-  - mix_tuned  (tmp/z_take_per_asset_mix.py: tuned z-take + HP from no_marks
-                                         + buy-and-hold VEV_6000/6500)
+Compares two strategies under identical Gaussian price perturbation:
+  - baseline   (z_take.py:                uniform z=1.0, t=17, static mean)
+  - mix_tuned  (z_take_per_asset_mix.py:  tuned z-take + HP from no_marks-
+                                          derived logic + buy-and-hold
+                                          VEV_6000/6500)
 
 Same seed across strategies and noise levels so deltas are directly
 comparable. The tuned mix stacks several layers of in-sample tuning
@@ -32,7 +32,6 @@ MC_R4 = BT_DIR / "datasets" / "round4_mc_mix"
 
 STRATS = {
     "baseline":  REPO / "strategies" / "round4" / "z_take.py",
-    "hybrid":    REPO / "strategies" / "round4" / "z_take_hybrid.py",
     "mix_tuned": REPO / "strategies" / "round4" / "z_take_per_asset_mix.py",
 }
 
@@ -148,10 +147,8 @@ def main() -> None:
                     row.append((tag, mn, mi, mn + mi))
                 by_tag = {r[0]: r for r in row}
                 bt = by_tag["baseline"]
-                hy = by_tag["hybrid"]
                 mx = by_tag["mix_tuned"]
                 print(f"  seed {seed}:  base={fmt(bt[3])}  "
-                      f"hybrid={fmt(hy[3])} (Δ={hy[3]-bt[3]:>+9,.0f})  "
                       f"mix_tuned={fmt(mx[3])} (Δ={mx[3]-bt[3]:>+9,.0f})",
                       flush=True)
             print()
