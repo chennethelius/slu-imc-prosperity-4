@@ -151,7 +151,7 @@ HP_CFG = {
     "stdev_init": 33.0, "var_alpha": 0.005,
     "qsize": 35, "flat_pull": 1.0, "mr_thresh": 4, "mr_boost": 1.5,
     "z_min": 0.7, "z_max": 2.0,
-    "ema_fast": 0.30, "ema_slow": 0.05, "ema_vslow": 0.02, "ema_full": 1.5,
+    "ema_fast": 0.20, "ema_slow": 0.08, "ema_vslow": 0.02, "ema_full": 1.5,
     "w_z": 0.625, "w_ema": 0.375,
     "take_max": 25, "take_offset": 4,
     "base_cap_pct": 0.50, "full_cap_pct": 1.00, "hard_cap_pct": 0.95,
