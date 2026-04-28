@@ -64,10 +64,12 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Setup Python
-        if: steps.changes.outputs.files != ''
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+
+      - name: Install build deps (always)
+        run: pip install pandas
 
       - name: Install imc-p4-bt
         if: steps.changes.outputs.files != ''
@@ -204,11 +206,11 @@ jobs:
           cp .github/round5.html "$DEPLOY_DIR/round5.html"
           cp .github/billiken-logo.jpg "$DEPLOY_DIR/billiken-logo.jpg" 2>/dev/null || true
           # Build counterparty marks data (small JSON) from current trade CSVs
-          python3 .github/build_marks_data.py || true
-          cp .github/marks_data.json "$DEPLOY_DIR/marks_data.json" 2>/dev/null || true
+          python3 .github/build_marks_data.py
+          cp .github/marks_data.json "$DEPLOY_DIR/marks_data.json"
           # Build round 5 explorer data (per-product mid/spread/vol + trades)
-          python3 .github/build_round5_data.py || true
-          cp .github/round5_data.json "$DEPLOY_DIR/round5_data.json" 2>/dev/null || true
+          python3 .github/build_round5_data.py
+          cp .github/round5_data.json "$DEPLOY_DIR/round5_data.json"
           cp .github/shared.css "$DEPLOY_DIR/shared.css"
           cp .github/shared.js "$DEPLOY_DIR/shared.js"
 
