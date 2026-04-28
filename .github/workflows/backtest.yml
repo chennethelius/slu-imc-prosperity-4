@@ -10,9 +10,7 @@ on:
       - '.github/discord-intel.html'
       - '.github/manual-trading.html'
       - '.github/run.html'
-      - '.github/marks.html'
       - '.github/round5.html'
-      - '.github/build_marks_data.py'
       - '.github/build_round5_data.py'
       - '.github/shared.css'
       - '.github/shared.js'
@@ -202,17 +200,9 @@ jobs:
           cp .github/discord-intel.html "$DEPLOY_DIR/discord-intel.html"
           cp .github/manual-trading.html "$DEPLOY_DIR/manual-trading.html"
           cp .github/run.html "$DEPLOY_DIR/run.html"
-          cp .github/marks.html "$DEPLOY_DIR/marks.html"
           cp .github/round5.html "$DEPLOY_DIR/round5.html"
           cp .github/billiken-logo.jpg "$DEPLOY_DIR/billiken-logo.jpg" 2>/dev/null || true
-          # Build counterparty marks data (round 4). Tolerant: round 4 CSVs
-          # live under datasets_extra/ and only get staged into
-          # backtester/datasets/round4/ when strategies run, so on a
-          # no-strategy push the build errors out. Tracked .github/marks_data.json
-          # acts as the fallback in that case.
-          python3 .github/build_marks_data.py || true
-          cp .github/marks_data.json "$DEPLOY_DIR/marks_data.json" 2>/dev/null || true
-          # Build round 5 explorer data — strict (no tracked fallback).
+          # Build round 5 explorer data
           python3 .github/build_round5_data.py
           cp .github/round5_data.json "$DEPLOY_DIR/round5_data.json"
           cp .github/shared.css "$DEPLOY_DIR/shared.css"
