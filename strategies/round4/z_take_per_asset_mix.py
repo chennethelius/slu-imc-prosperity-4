@@ -117,6 +117,17 @@ CFGS = [
     {"symbol": "VEV_5500",            "mean":    6, "sd":  2.477, "z_thresh": 1.0,  "take_size": 25, "limit": 300, "prior":   200},
 ]
 
+# Optional VFE-derivative override. Any symbol listed here is REMOVED
+# from the z-take CFGS loop and instead trades by mirroring VFE's z-take
+# signal direction (only when |VFE_z| >= mirror_z_thresh). Empty list =
+# pure z-take for all CFGS products.
+VFE_DERIVATIVES: list = []  # e.g. [{"symbol": "VEV_5500", "limit": 300, "take_size": 25, "mirror_z_thresh": 1.5}]
+# VFE z-take params used to compute the mirror signal. Must match the
+# VFE row in CFGS so the z value matches what VFE itself sees.
+_VFE_MEAN = 5247
+_VFE_SD = 17.091
+_VFE_PRIOR = 10**9
+
 # Deep-OTM vouchers — mid pinned around 0.5, sd ≈ 0 so z-take can't trade
 # them. Just buy-and-hold up to the position limit and let the lottery
 # ticket sit. Fills against any asks; never sells.
@@ -139,6 +150,50 @@ def _buy_and_hold_orders(state, cfg):
     return orders
 
 
+def _vfe_derivative_orders(state, cfg, store):
+    """Mirror VFE's z-take direction on a derivative voucher.
+
+    Reads VFE's running (n, sum) from the same `store["_zt"]` slot the
+    z-take loop updates, recomputes VFE's effective mean and z, and trades
+    the derivative voucher in the same direction (sell if VFE z > 0, buy
+    if VFE z < 0) when |VFE_z| >= cfg["mirror_z_thresh"].
+    """
+    sym_v = cfg["symbol"]
+    depth_v = state.order_depths.get(sym_v)
+    if not depth_v or not depth_v.buy_orders or not depth_v.sell_orders:
+        return []
+
+    depth_u = state.order_depths.get("VELVETFRUIT_EXTRACT")
+    if not depth_u or not depth_u.buy_orders or not depth_u.sell_orders:
+        return []
+    mid_u = (max(depth_u.buy_orders) + min(depth_u.sell_orders)) / 2.0
+
+    s_u = store.get("_zt", {}).get("VELVETFRUIT_EXTRACT")
+    if not s_u or s_u[0] == 0:
+        return []
+    n_u, total_u = s_u
+    eff_mean_u = (_VFE_PRIOR * _VFE_MEAN + total_u) / (_VFE_PRIOR + n_u)
+    z_u = (mid_u - eff_mean_u) / _VFE_SD
+    if abs(z_u) < cfg["mirror_z_thresh"]:
+        return []
+
+    pos_v = state.position.get(sym_v, 0)
+    take_size = cfg["take_size"]
+    limit_v = cfg["limit"]
+    if z_u > 0:  # VFE above mean → sell derivative
+        room = max(0, min(take_size, limit_v + pos_v))
+        if room <= 0:
+            return []
+        orders, _ = _walk_book(depth_v, -1, sym_v, lambda px: True, room)
+        return orders
+    # VFE below mean → buy derivative
+    room = max(0, min(take_size, limit_v - pos_v))
+    if room <= 0:
+        return []
+    orders, _ = _walk_book(depth_v, +1, sym_v, lambda px: True, room)
+    return orders
+
+
 # ============================================================================
 # no_marks-derived layers — used ONLY for HYDROGEL_PACK and VEV_5200
 # (per-asset audit showed +25k and +15k gains over z_take on these two)
@@ -150,7 +205,7 @@ HP_CFG = {
     "prefix": "hp", "symbol": "HYDROGEL_PACK", "limit": 200, "fair": 10002,
     "stdev_init": 33.0, "var_alpha": 0.005,
     "qsize": 35, "flat_pull": 1.0, "mr_thresh": 4, "mr_boost": 1.5,
-    "z_min": 0.7, "z_max": 2.0,
+    "z_min": 0.9, "z_max": 2.5,
     "ema_fast": 0.20, "ema_slow": 0.08, "ema_vslow": 0.02, "ema_full": 1.5,
     "w_z": 0.625, "w_ema": 0.375,
     "take_max": 25, "take_offset": 4,
@@ -461,10 +516,19 @@ class Trader:
             store = {}
         orders: dict[str, list[Order]] = {}
 
-        # z-take with per-asset (z, t, prior) for VFE / VEV_4000-5500
-        # (VEV_5200 is now in this list — tuned z-take beats no_marks anchor).
+        # z-take with per-asset (z, t, prior). Symbols routed through
+        # VFE_DERIVATIVES (mirror logic) skip the z-take here.
+        mirror_syms = {c["symbol"] for c in VFE_DERIVATIVES}
         for cfg in CFGS:
+            if cfg["symbol"] in mirror_syms:
+                continue
             ors = _z_take_orders(state, cfg, store)
+            if ors:
+                orders[cfg["symbol"]] = ors
+
+        # VFE-derivative voucher trades (mirror VFE z direction).
+        for cfg in VFE_DERIVATIVES:
+            ors = _vfe_derivative_orders(state, cfg, store)
             if ors:
                 orders[cfg["symbol"]] = ors
 
