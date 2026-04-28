@@ -128,6 +128,13 @@ _VFE_MEAN = 5247
 _VFE_SD = 17.091
 _VFE_PRIOR = 10**9
 
+# Wide-spread products that use a 3-layer strategy instead of plain z-take:
+#   1. z-take on big dislocations (|z| >= z_thresh)
+#   2. zero-cross harvest — flatten current position when z changes sign
+#   3. market-making — passive quotes inside the spread, capturing it on fills
+# Symbols listed here are SKIPPED in the z-take CFGS loop. Empty = disabled.
+ZCROSS_MM_CFGS: list = []
+
 # Deep-OTM vouchers — mid pinned around 0.5, sd ≈ 0 so z-take can't trade
 # them. Just buy-and-hold up to the position limit and let the lottery
 # ticket sit. Fills against any asks; never sells.
@@ -194,18 +201,100 @@ def _vfe_derivative_orders(state, cfg, store):
     return orders
 
 
-# ============================================================================
-# no_marks-derived layers — used ONLY for HYDROGEL_PACK and VEV_5200
-# (per-asset audit showed +25k and +15k gains over z_take on these two)
-# ============================================================================
-
 import math
+
+
+def _zcross_mm_orders(state, cfg, store):
+    """Three-layer strategy for wide-spread products:
+      1. z-take when |z| >= cfg["z_thresh"]
+      2. zero-cross harvest — flatten when z changes sign (with inventory)
+      3. passive MM quotes placed inside the spread
+
+    Effective mean is the same Bayesian blend as plain z-take. Quote prices
+    use math.floor((fair+bb)/2) for bid and math.ceil((fair+ba)/2) for ask,
+    capped to (ba-1, bb+1) so quotes stay inside the spread.
+    """
+    sym = cfg["symbol"]
+    depth = state.order_depths.get(sym)
+    if not depth or not depth.buy_orders or not depth.sell_orders:
+        return []
+    bb = max(depth.buy_orders)
+    ba = min(depth.sell_orders)
+    mid = (bb + ba) / 2.0
+
+    zt = store.setdefault("_zt", {})
+    s = zt.setdefault(sym, [0, 0.0])
+    s[0] += 1
+    s[1] += mid
+    n, total = s
+
+    static_mean = float(cfg["mean"])
+    sd = float(cfg["sd"])
+    if sd <= 0:
+        return []
+    prior = cfg["prior"]
+    fair = (prior * static_mean + total) / (prior + n)
+    z = (mid - fair) / sd
+
+    pos = state.position.get(sym, 0)
+    limit = cfg["limit"]
+    take_size = cfg["take_size"]
+    qsize = cfg.get("qsize", 30)
+
+    out, bv, sv = [], 0, 0
+
+    # Layer 1: z-take on big dislocations
+    if abs(z) >= cfg["z_thresh"]:
+        if z > 0:
+            room = max(0, min(take_size, limit + pos))
+            if room > 0:
+                takes, filled = _walk_book(depth, -1, sym, lambda px: px >= fair, room)
+                out.extend(takes); sv += filled
+        else:
+            room = max(0, min(take_size, limit - pos))
+            if room > 0:
+                takes, filled = _walk_book(depth, +1, sym, lambda px: px <= fair, room)
+                out.extend(takes); bv += filled
+
+    # Layer 2: zero-cross harvest — flatten on sign flip with inventory
+    pz_key = f"_{sym}_pz"
+    prev_z = store.get(pz_key, 0.0)
+    store[pz_key] = z
+    pos_eff = pos + bv - sv
+    if prev_z * z < 0 and pos_eff != 0:
+        if pos_eff > 0:
+            qty = min(abs(pos_eff), take_size)
+            takes, filled = _walk_book(depth, -1, sym, lambda px: px >= fair, qty)
+            out.extend(takes); sv += filled
+        else:
+            qty = min(abs(pos_eff), take_size)
+            takes, filled = _walk_book(depth, +1, sym, lambda px: px <= fair, qty)
+            out.extend(takes); bv += filled
+
+    # Layer 3: market-making passive quotes inside the spread
+    bid_px = min(int(math.floor((fair + bb) / 2)), ba - 1)
+    ask_px = max(int(math.ceil((fair + ba) / 2)), bb + 1)
+    if bid_px < ask_px:
+        bq = max(0, min(qsize, limit - pos - bv))
+        sq = max(0, min(qsize, limit + pos - sv))
+        if bq > 0:
+            out.append(Order(sym, bid_px, bq))
+        if sq > 0:
+            out.append(Order(sym, ask_px, -sq))
+
+    return out
+
+
+# ============================================================================
+# no_marks-derived layers — used ONLY for HYDROGEL_PACK
+# (per-asset audit showed +12.6k m+m gain over tuned z-take on HP)
+# ============================================================================
 
 HP_CFG = {
     "prefix": "hp", "symbol": "HYDROGEL_PACK", "limit": 200, "fair": 10002,
     "stdev_init": 33.0, "var_alpha": 0.005,
     "qsize": 35, "flat_pull": 1.0, "mr_thresh": 4, "mr_boost": 1.5,
-    "z_min": 0.9, "z_max": 2.5,
+    "z_min": 0.7, "z_max": 2.0,
     "ema_fast": 0.20, "ema_slow": 0.08, "ema_vslow": 0.02, "ema_full": 1.5,
     "w_z": 0.625, "w_ema": 0.375,
     "take_max": 25, "take_offset": 4,
@@ -517,10 +606,12 @@ class Trader:
         orders: dict[str, list[Order]] = {}
 
         # z-take with per-asset (z, t, prior). Symbols routed through
-        # VFE_DERIVATIVES (mirror logic) skip the z-take here.
+        # VFE_DERIVATIVES or ZCROSS_MM_CFGS skip the plain z-take here.
         mirror_syms = {c["symbol"] for c in VFE_DERIVATIVES}
+        zcross_syms = {c["symbol"] for c in ZCROSS_MM_CFGS}
+        skip_syms = mirror_syms | zcross_syms
         for cfg in CFGS:
-            if cfg["symbol"] in mirror_syms:
+            if cfg["symbol"] in skip_syms:
                 continue
             ors = _z_take_orders(state, cfg, store)
             if ors:
@@ -529,6 +620,12 @@ class Trader:
         # VFE-derivative voucher trades (mirror VFE z direction).
         for cfg in VFE_DERIVATIVES:
             ors = _vfe_derivative_orders(state, cfg, store)
+            if ors:
+                orders[cfg["symbol"]] = ors
+
+        # Wide-spread products: z-take + zero-cross harvest + MM passive quotes.
+        for cfg in ZCROSS_MM_CFGS:
+            ors = _zcross_mm_orders(state, cfg, store)
             if ors:
                 orders[cfg["symbol"]] = ors
 
