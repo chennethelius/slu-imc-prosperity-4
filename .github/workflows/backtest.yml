@@ -62,12 +62,10 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Setup Python
+        if: steps.changes.outputs.files != ''
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-
-      - name: Install build deps (always)
-        run: pip install pandas
 
       - name: Install imc-p4-bt
         if: steps.changes.outputs.files != ''
@@ -202,8 +200,9 @@ jobs:
           cp .github/run.html "$DEPLOY_DIR/run.html"
           cp .github/round5.html "$DEPLOY_DIR/round5.html"
           cp .github/billiken-logo.jpg "$DEPLOY_DIR/billiken-logo.jpg" 2>/dev/null || true
-          # Build round 5 explorer data
-          python3 .github/build_round5_data.py
+          # Round 5 explorer data is precomputed and tracked in git
+          # (round 5 CSVs are 38MB each, too large for the repo). Re-run
+          # build_round5_data.py locally and commit if CSVs change.
           cp .github/round5_data.json "$DEPLOY_DIR/round5_data.json"
           cp .github/shared.css "$DEPLOY_DIR/shared.css"
           cp .github/shared.js "$DEPLOY_DIR/shared.js"
