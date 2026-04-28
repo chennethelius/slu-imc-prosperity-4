@@ -11,7 +11,9 @@ on:
       - '.github/manual-trading.html'
       - '.github/run.html'
       - '.github/marks.html'
+      - '.github/round5.html'
       - '.github/build_marks_data.py'
+      - '.github/build_round5_data.py'
       - '.github/shared.css'
       - '.github/shared.js'
       - '.github/collect_results.py'
@@ -199,10 +201,14 @@ jobs:
           cp .github/manual-trading.html "$DEPLOY_DIR/manual-trading.html"
           cp .github/run.html "$DEPLOY_DIR/run.html"
           cp .github/marks.html "$DEPLOY_DIR/marks.html"
+          cp .github/round5.html "$DEPLOY_DIR/round5.html"
           cp .github/billiken-logo.jpg "$DEPLOY_DIR/billiken-logo.jpg" 2>/dev/null || true
           # Build counterparty marks data (small JSON) from current trade CSVs
           python3 .github/build_marks_data.py || true
           cp .github/marks_data.json "$DEPLOY_DIR/marks_data.json" 2>/dev/null || true
+          # Build round 5 explorer data (per-product mid/spread/vol + trades)
+          python3 .github/build_round5_data.py || true
+          cp .github/round5_data.json "$DEPLOY_DIR/round5_data.json" 2>/dev/null || true
           cp .github/shared.css "$DEPLOY_DIR/shared.css"
           cp .github/shared.js "$DEPLOY_DIR/shared.js"
 

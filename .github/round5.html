@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Round 5 Explorer — Prosperity</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./shared.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+  body{background:var(--bg-base);color:var(--text-primary);font-family:Inter,sans-serif}
+  .container{max-width:1400px;margin:0 auto;padding:18px 22px}
+  .controls{background:var(--bg-raised);border:1px solid var(--border-subtle);border-radius:10px;padding:14px;margin-bottom:14px;display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+  .control-group{display:flex;align-items:center;gap:8px}
+  .control-label{color:var(--text-muted);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px}
+  .day-tabs,.metric-tabs,.norm-tabs{display:flex;gap:2px}
+  .tab-btn{background:transparent;border:1px solid var(--border-subtle);padding:6px 14px;font-size:12px;font-weight:500;color:var(--text-secondary);cursor:pointer;font-family:inherit;border-radius:6px;transition:all .15s}
+  .tab-btn:hover{background:var(--bg-hover)}
+  .tab-btn.active{background:#0891b2;color:#fff;border-color:#0891b2}
+  select.sel{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:6px;padding:6px 10px;font-size:12px;font-family:var(--mono);color:var(--text-primary);cursor:pointer}
+  .product-chips{display:flex;flex-wrap:wrap;gap:5px}
+  .product-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:99px;border:1.5px solid transparent;background:var(--bg-surface);font-size:11px;font-family:var(--mono);font-weight:600;cursor:pointer;transition:all .15s;user-select:none;color:var(--text-secondary)}
+  .product-chip .swatch{display:inline-block;width:9px;height:9px;border-radius:50%;background:transparent}
+  .product-chip.on{color:var(--text-primary)}
+  .product-chip.on .swatch{background:currentColor}
+  .product-chip.disabled{opacity:.3;cursor:not-allowed}
+  .chart-card{background:#fff;border:1px solid var(--border-subtle);border-radius:10px;padding:18px;margin-bottom:14px}
+  .chart-card h3{color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:.6px;font-weight:600;margin:0}
+  .chart-canvas-wrap{position:relative;height:480px}
+  .chart-canvas-wrap canvas{width:100%!important;height:100%!important}
+  .stats{background:var(--bg-raised);border:1px solid var(--border-subtle);border-radius:10px;padding:14px}
+  .stats h3{color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;font-weight:600}
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;font-family:var(--mono);font-size:11px}
+  .stat-row{display:flex;justify-content:space-between;align-items:center;padding:7px 11px;background:var(--bg-surface);border-radius:6px}
+  .stat-row .name{display:flex;align-items:center;gap:6px;color:var(--text-secondary)}
+  .stat-row .name .swatch{display:inline-block;width:9px;height:9px;border-radius:50%}
+  .stat-row .v{font-weight:700;color:var(--text-primary)}
+  .stat-row small{color:var(--text-muted);font-size:10px;font-weight:500}
+  .empty{padding:40px;text-align:center;color:var(--text-muted);font-size:13px}
+  .hint{color:var(--text-muted);font-size:11px;font-family:var(--mono)}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <a class="logo" href="#">
+      <img src="./billiken-logo.jpg" alt="SLU" class="logo-img">
+      <h1><span>Prosperity</span></h1>
+    </a>
+    <nav class="nav">
+      <a class="nav-link" href="./index.html">Traders</a>
+      <a class="nav-link" href="./manual-trading.html">Manual Trading</a>
+      <a class="nav-link" href="./discord-intel.html">Discord Bot</a>
+      <a class="nav-link" href="./marks.html">Counterparties</a>
+      <a class="nav-link active" href="./round5.html">Round 5 Explorer</a>
+    </nav>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="controls">
+    <div class="control-group">
+      <span class="control-label">Day</span>
+      <div class="day-tabs" id="day-tabs"></div>
+    </div>
+    <div class="control-group">
+      <span class="control-label">Group</span>
+      <select class="sel" id="group-select"></select>
+    </div>
+    <div class="control-group">
+      <span class="control-label">Metric</span>
+      <div class="metric-tabs">
+        <button class="tab-btn active" data-metric="mids">Price</button>
+        <button class="tab-btn" data-metric="spreads">Spread</button>
+        <button class="tab-btn" data-metric="vols">Top vol</button>
+      </div>
+    </div>
+    <div class="control-group">
+      <span class="control-label">Scale</span>
+      <div class="norm-tabs">
+        <button class="tab-btn active" data-norm="raw">Raw</button>
+        <button class="tab-btn" data-norm="pct">% change</button>
+        <button class="tab-btn" data-norm="z">Z-score</button>
+      </div>
+    </div>
+    <div class="control-group" style="flex:1;min-width:300px">
+      <span class="control-label">Products</span>
+      <div id="product-chips" class="product-chips"></div>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;flex-wrap:wrap;gap:10px">
+      <h3 id="chart-title">—</h3>
+      <div class="hint" id="chart-hint">trades shown as dots; size = qty</div>
+    </div>
+    <div class="chart-canvas-wrap"><canvas id="main-chart"></canvas></div>
+  </div>
+
+  <div class="stats">
+    <h3 id="stats-title">— Per-product summary —</h3>
+    <div class="stat-grid" id="stat-grid"></div>
+  </div>
+
+</div>
+
+<script>
+const PALETTE = ["#2563eb","#dc2626","#059669","#d97706","#7c3aed"];
+const MAX_SELECTED = 5;
+
+let DATA=null, dayKey="2", group=null, selected=[], metric="mids", norm="raw", chart=null;
+
+async function init(){
+  try {
+    const r = await fetch("./round5_data.json", {cache:"no-cache"});
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    DATA = await r.json();
+  } catch (e) {
+    document.querySelector('.container').innerHTML =
+      `<div class="empty">Failed to load <code>round5_data.json</code> (${e.message}). Run <code>python3 .github/build_round5_data.py</code> to generate it.</div>`;
+    return;
+  }
+
+  group = Object.keys(DATA.groups)[0];
+  selected = [`${group}_${DATA.groups[group][0]}`];
+  dayKey = String(DATA.days[0]);
+
+  buildDayTabs();
+  buildGroupSelect();
+  buildProductChips();
+  bindMetric();
+  bindNorm();
+  render();
+}
+
+function buildDayTabs(){
+  const wrap = document.getElementById('day-tabs');
+  wrap.innerHTML = DATA.days.map(d=>
+    `<button class="tab-btn${String(d)===dayKey?' active':''}" data-d="${d}">Day ${d}</button>`
+  ).join('');
+  wrap.querySelectorAll('.tab-btn').forEach(b=>b.onclick=()=>{
+    dayKey = b.dataset.d;
+    wrap.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    render();
+  });
+}
+
+function buildGroupSelect(){
+  const sel = document.getElementById('group-select');
+  sel.innerHTML = Object.keys(DATA.groups).map(g=>
+    `<option value="${g}"${g===group?' selected':''}>${g}</option>`
+  ).join('');
+  sel.onchange = ()=>{
+    group = sel.value;
+    selected = [`${group}_${DATA.groups[group][0]}`];
+    buildProductChips();
+    render();
+  };
+}
+
+function buildProductChips(){
+  const wrap = document.getElementById('product-chips');
+  const variants = DATA.groups[group];
+  wrap.innerHTML = variants.map((v, i)=>{
+    const sym = `${group}_${v}`;
+    const idx = selected.indexOf(sym);
+    const on = idx >= 0;
+    const color = on ? PALETTE[idx] : '#9ca3af';
+    return `<span class="product-chip${on?' on':''}" data-sym="${sym}" style="${on?`color:${color};border-color:${color}`:''}">
+      <span class="swatch"></span>${v}
+    </span>`;
+  }).join('');
+  wrap.querySelectorAll('.product-chip').forEach(chip=>{
+    chip.onclick = ()=>{
+      const sym = chip.dataset.sym;
+      const idx = selected.indexOf(sym);
+      if(idx >= 0){
+        if(selected.length === 1) return;  // keep at least one
+        selected.splice(idx, 1);
+      } else {
+        if(selected.length >= MAX_SELECTED) return;
+        selected.push(sym);
+      }
+      buildProductChips();
+      render();
+    };
+  });
+}
+
+function bindMetric(){
+  document.querySelectorAll('[data-metric]').forEach(b=>b.onclick=()=>{
+    document.querySelectorAll('[data-metric]').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    metric = b.dataset.metric;
+    render();
+  });
+}
+
+function bindNorm(){
+  document.querySelectorAll('[data-norm]').forEach(b=>b.onclick=()=>{
+    document.querySelectorAll('[data-norm]').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    norm = b.dataset.norm;
+    render();
+  });
+}
+
+function normalize(series){
+  if(!series.length) return series;
+  const ys = series.map(p=>p[1]);
+  if(norm === 'pct'){
+    const base = ys.find(v=>v!==0) || 1;
+    return series.map(([t,y])=>[t, ((y - base)/base) * 100]);
+  }
+  if(norm === 'z'){
+    const m = ys.reduce((s,v)=>s+v,0)/ys.length;
+    const sd = Math.sqrt(ys.reduce((s,v)=>s+(v-m)**2,0)/ys.length) || 1;
+    return series.map(([t,y])=>[t, (y - m)/sd]);
+  }
+  return series;
+}
+
+function render(){
+  const datasets = [];
+  const summary = [];
+  let yLabel = metric === 'mids' ? 'mid price' : metric === 'spreads' ? 'spread' : 'top-of-book vol';
+  if(norm === 'pct')  yLabel += ' (% chg from start)';
+  if(norm === 'z')    yLabel += ' (z-score)';
+
+  selected.forEach((sym, i)=>{
+    const color = PALETTE[i];
+    const pdata = DATA.products[sym]?.[dayKey];
+    if(!pdata) return;
+    const series = normalize(pdata[metric] || []);
+    datasets.push({
+      type:'line', label: sym,
+      data: series.map(([t,y])=>({x:t, y})),
+      borderColor:color, backgroundColor:color,
+      borderWidth:1.4, pointRadius:0, tension:.05, fill:false, order:1,
+    });
+
+    if(metric === 'mids'){
+      const trades = pdata.trades || [];
+      datasets.push({
+        type:'scatter', label:`${sym} trades`,
+        data: trades.map(([t,p,q])=>({x:t, y:p, qty:q})),
+        backgroundColor:color+'66', borderColor:color, borderWidth:0.6,
+        pointRadius: ctx=> Math.max(2, Math.min(10, Math.sqrt(ctx.raw.qty)*1.6)),
+        showLine:false, order:0, hidden: norm !== 'raw',  // trades only meaningful on raw price
+      });
+    }
+
+    const mids = pdata.mids || [];
+    const trades = pdata.trades || [];
+    const tradeVol = trades.reduce((s,[,,q])=>s+q, 0);
+    const spreads = pdata.spreads || [];
+    const avgSpread = spreads.length
+      ? (spreads.reduce((s,[,v])=>s+v, 0) / spreads.length) : 0;
+    const px0 = mids[0]?.[1] ?? 0;
+    const pxN = mids[mids.length-1]?.[1] ?? 0;
+    const ret = px0 ? ((pxN - px0) / px0) * 100 : 0;
+    summary.push({sym, color, px0, pxN, ret, tradeVol, tradeCt: trades.length, avgSpread});
+  });
+
+  document.getElementById('chart-title').textContent =
+    `${group}  —  Day ${dayKey}  —  ${yLabel}`;
+  document.getElementById('chart-hint').textContent =
+    metric === 'mids'
+      ? (norm === 'raw' ? 'trades shown as dots; size = qty' : 'trade markers hidden in normalized view')
+      : 'trade markers only shown on price view';
+
+  const cvs = document.getElementById('main-chart');
+  if(chart) chart.destroy();
+  chart = new Chart(cvs, {
+    type:'line',
+    data:{datasets},
+    options:{
+      responsive:true, maintainAspectRatio:false, animation:false,
+      plugins:{
+        legend:{position:'bottom', labels:{
+          font:{size:10, family:'Inter'}, boxWidth:10, padding:8, usePointStyle:true,
+          filter:(item)=> !item.text.endsWith(' trades'),
+        }},
+        tooltip:{intersect:false, mode:'nearest',
+          callbacks:{
+            label(ctx){
+              const r = ctx.raw;
+              if(ctx.dataset.label.endsWith(' trades')){
+                return `${ctx.dataset.label.replace(' trades','')}: trade ${r.qty} @ ${r.y}`;
+              }
+              const v = typeof r.y === 'number' ? r.y.toLocaleString(undefined, {maximumFractionDigits: 3}) : r.y;
+              return `${ctx.dataset.label}: ${v}`;
+            }
+          }
+        },
+      },
+      scales:{
+        x:{type:'linear', title:{display:true, text:'timestamp', font:{size:10}, color:'#6b7280'},
+           grid:{color:'#e5e7eb'}, ticks:{font:{size:10}, color:'#9ca3af', maxTicksLimit:10}},
+        y:{title:{display:true, text:yLabel, font:{size:10}, color:'#6b7280'},
+           grid:{color:'#e5e7eb'}, ticks:{font:{size:10}, color:'#9ca3af'}},
+      },
+      interaction:{intersect:false, mode:'nearest'},
+    }
+  });
+
+  // summary cards
+  const grid = document.getElementById('stat-grid');
+  if(!summary.length){
+    grid.innerHTML = '<div class="hint">No data for this selection.</div>';
+    return;
+  }
+  document.getElementById('stats-title').textContent =
+    `Day ${dayKey} summary — ${selected.length} product${selected.length>1?'s':''}`;
+  grid.innerHTML = summary.map(s=>{
+    const sign = s.ret >= 0 ? '+' : '';
+    const retCol = s.ret >= 0 ? '#059669' : '#dc2626';
+    return `<div class="stat-row">
+      <span class="name"><span class="swatch" style="background:${s.color}"></span>${s.sym}</span>
+      <span style="text-align:right">
+        <span class="v">${s.px0.toLocaleString()} → ${s.pxN.toLocaleString()}</span>
+        <small style="color:${retCol}"> ${sign}${s.ret.toFixed(2)}%</small><br>
+        <small>${s.tradeCt.toLocaleString()} trades · ${s.tradeVol.toLocaleString()} qty · spread ${s.avgSpread.toFixed(2)}</small>
+      </span>
+    </div>`;
+  }).join('');
+}
+
+init();
+</script>
+</body>
+</html>

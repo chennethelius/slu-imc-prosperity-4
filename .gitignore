@@ -52,3 +52,6 @@ strategies/round1/ref.md
 
 # Per-run extracted CSVs (regenerable via scripts/extract_run_csv.py)
 analytics/
+
+# Round 5 explorer data (~6.7MB, rebuilt by CI from datasets/round5/*.csv)
+.github/round5_data.json
