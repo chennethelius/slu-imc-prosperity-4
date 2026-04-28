@@ -280,14 +280,16 @@ def main():
     }
     (run_dir / "metrics.json").write_text(json.dumps(metrics, indent=2))
 
-    # Stub submission.log so collect_results.py's existence check passes.
-    # The real log went to tmp_log_dir; full content is reconstructible from
-    # activity.csv + trades.csv if anyone needs it.
-    (run_dir / "submission.log").write_text(
-        f"# imcbt_wrapper stub for run {run_id}\n"
-        f"# Full imc-p4-bt log was {log_path.stat().st_size if log_path.exists() else 0} bytes\n"
-        f"# (omitted from artifact to keep gh-pages under 10GB).\n"
-    )
+    # Copy the real imc-p4-bt log so the dashboard's "Open in visualizer"
+    # link can fetch it. The deploy step in backtest.yml prunes to keep
+    # real logs only for the N most recent runs per author; older runs
+    # get stubbed there to bound gh-pages size.
+    if log_path.exists():
+        shutil.copy2(log_path, run_dir / "submission.log")
+    else:
+        (run_dir / "submission.log").write_text(
+            f"# imcbt_wrapper: imc-p4-bt produced no log for run {run_id}\n"
+        )
 
     # Print summary in rust_backtester format
     print(f"trader: {args.trader.name}")

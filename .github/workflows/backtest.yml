@@ -143,6 +143,22 @@ jobs:
               if key not in seen:
                   seen.add(key)
                   deduped.append(r)
+          # Determine which submission.log files to retain: N most recent
+          # runs per author. Older runs get stubbed so gh-pages stays
+          # bounded. The 'Open in visualizer' link in run.html only renders
+          # for entries flagged has_log=true.
+          N_PER_AUTHOR = 10
+          runs_by_author = {}
+          for r in deduped:
+              runs_by_author.setdefault(r.get('author',''), []).append(r)
+          keep_ids = set()
+          for author, rs in runs_by_author.items():
+              rs.sort(key=lambda r: r.get('timestamp',''), reverse=True)
+              for r in rs[:N_PER_AUTHOR]:
+                  if r.get('id'):
+                      keep_ids.add(r['id'])
+          for r in deduped:
+              r['has_log'] = r.get('id','') in keep_ids
           with open(manifest_path, 'w') as f:
               json.dump(deduped, f, indent=2)
           # Prune orphan run directories
@@ -155,7 +171,26 @@ jobs:
                   if os.path.isdir(p) and name not in live_ids:
                       shutil.rmtree(p, ignore_errors=True)
                       pruned += 1
-          print(f'Manifest: {len(deduped)} submissions ({len(existing) - len(deduped)} duplicates removed, {pruned} orphan run dirs pruned)')
+          # Stub older logs (anything not in keep_ids whose log is real-sized)
+          stubbed = 0
+          if os.path.isdir(runs_root):
+              for name in os.listdir(runs_root):
+                  if name in keep_ids:
+                      continue
+                  log_file = os.path.join(runs_root, name, 'submission.log')
+                  if not os.path.isfile(log_file):
+                      continue
+                  try:
+                      size = os.path.getsize(log_file)
+                  except OSError:
+                      continue
+                  if size <= 4096:
+                      continue  # already a stub
+                  with open(log_file, 'w') as f:
+                      f.write(f'# stub: real log retained only for {N_PER_AUTHOR} most recent runs per author\\n')
+                      f.write(f'# original size was {size} bytes\\n')
+                  stubbed += 1
+          print(f'Manifest: {len(deduped)} submissions ({len(existing) - len(deduped)} duplicates removed, {pruned} orphan run dirs pruned, {stubbed} older logs stubbed; {len(keep_ids)} retained)')
           "
 
           # Copy dashboard

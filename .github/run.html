@@ -161,6 +161,7 @@
 <script src="./shared.js"></script>
 <script>
 const BASE='./runs';
+const VIS='https://kevin-fu1.github.io/imc-prosperity-4-visualizer/';
 
 function mkChart(t,w){const b=document.createElement('div');b.className='chart-box'+(w?' wide':'');b.innerHTML=`<h3>${t}</h3><canvas></canvas>`;return b}
 function co(){return{responsive:true,animation:false,plugins:{legend:{labels:{color:'#6b7280',font:{size:10,family:'Inter'}}}},scales:{x:{type:'linear',grid:{color:'#e5e7eb'},ticks:{color:'#9ca3af',maxTicksLimit:8,font:{size:10}}},y:{grid:{color:'#e5e7eb'},ticks:{color:'#9ca3af',font:{size:10}}}},interaction:{intersect:false,mode:'index'}}}
@@ -794,7 +795,15 @@ async function init(){
 
     const p=document.createElement('div');p.className='day-panel'+(ri===0?' active':'');p.id=`p-${ri}`;
     const prods=Object.entries(r.pnl_by_product||{}).map(([k,v])=>`<div><span class="stat-label">${k}</span><div class="stat-value ${pc(v)}">${fp(v)}</div></div>`).join('');
-    p.innerHTML=`<div class="stats"><div><span class="stat-label">PnL</span><div class="stat-value ${pc(r.pnl)}">${fp(r.pnl)}</div></div><div><span class="stat-label">Trades</span><div class="stat-value">${r.trades||'?'}</div></div><div><span class="stat-label">Ticks</span><div class="stat-value">${(r.ticks||0).toLocaleString()}</div></div>${prods}</div>`;
+    let visBtn='';
+    if(r.has_log){
+      const logAbs=new URL(`${BASE}/${r.id}/submission.log`,location.href).href;
+      const visUrl=`${VIS}?open=${encodeURIComponent(logAbs)}`;
+      visBtn=`<a href="${visUrl}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;padding:5px 11px;font-size:11.5px;font-weight:600;font-family:var(--mono);color:var(--accent);background:var(--accent-soft);border:1px solid var(--accent);border-radius:6px;text-decoration:none">Open in visualizer ↗</a>`;
+    }else{
+      visBtn=`<span title="Log retained only for the 10 most recent runs per author; this one was rotated out." style="display:inline-flex;align-items:center;gap:5px;padding:5px 11px;font-size:11.5px;font-weight:600;font-family:var(--mono);color:var(--text-muted);background:var(--bg-raised);border:1px solid var(--border);border-radius:6px;cursor:help">Log expired</span>`;
+    }
+    p.innerHTML=`<div class="stats"><div><span class="stat-label">PnL</span><div class="stat-value ${pc(r.pnl)}">${fp(r.pnl)}</div></div><div><span class="stat-label">Trades</span><div class="stat-value">${r.trades||'?'}</div></div><div><span class="stat-label">Ticks</span><div class="stat-value">${(r.ticks||0).toLocaleString()}</div></div>${prods}</div><div style="margin:-8px 0 14px;text-align:right">${visBtn}</div>`;
 
     if(r.pnlCsv.length>0){
       const cd=document.createElement('div');cd.className='charts';
