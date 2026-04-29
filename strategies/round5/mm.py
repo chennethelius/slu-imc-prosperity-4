@@ -42,6 +42,19 @@ from datamodel import (
 # Round 5 position limit per the brief: 10 for ALL 50 products.
 POS_LIMIT = 10
 
+# EWMA-based mean-reversion overlay. Each tick, deviation z = (mid - ewma)/sd.
+# Adjust the target_pos by MR_K * (-z), so:
+#   z > 0 (mid above ewma, "expensive")  → push target DOWN (favor selling)
+#   z < 0 (mid below ewma, "cheap")      → push target UP   (favor buying)
+# Capture is bounded by MR_CAP so the adjustment can't completely flip the
+# directional bias (we still want to eat the per-day drift, just time entries
+# and exits around local peaks/troughs).
+EWMA_ALPHA = 0.93   # span ≈ 30 ticks. Fast enough to track trend, slow enough
+                    # for local oscillations to create meaningful z.
+MR_K = 1.5          # target shift per stddev of deviation
+MR_CAP = 4          # max |mr_adj| in position units (don't flip base direction)
+MR_MIN_VAR = 4.0    # require enough variance to compute z (avoid div-by-zero)
+
 # Rolling mid-price window (ticks) used for local volatility + drift estimation.
 # 50 ticks ≈ 5000 timestamp units — short enough to react to regime shifts,
 # long enough to be a stable stddev estimate.
@@ -128,12 +141,13 @@ class Trader:
     def run(self, state: TradingState) -> tuple[dict[str, list[Order]], int, str]:
         orders: dict[str, list[Order]] = {}
 
-        # Persisted state: rolling mid history per product for vol estimation.
+        # Persisted state: per-product EWMA of mid + EWMA of squared deviation
+        # for online mean and variance estimates.
         try:
             ts_state = json.loads(state.traderData) if state.traderData else {}
         except (json.JSONDecodeError, ValueError):
             ts_state = {}
-        mid_buf: dict[str, list[float]] = ts_state.get("mid_buf", {})
+        ewma_state: dict[str, dict] = ts_state.get("ewma", {})
 
         for sym, cfg in CFG.items():
             od = state.order_depths.get(sym)
@@ -149,11 +163,28 @@ class Trader:
                 continue
 
             position = state.position.get(sym, 0)
-            target_pos = cfg.get("target_pos", 0)
+            base_target = cfg.get("target_pos", 0)
 
-            # Inventory skew anchored at target_pos. inv_skew is higher for
-            # directional products so the bias actually accumulates toward
-            # target instead of MMing around 0.
+            # Update EWMA of mid + EWMA of squared deviation (for online std).
+            prev = ewma_state.get(sym)
+            if prev is None:
+                ewma_mid = fair
+                ewma_var = 0.0
+            else:
+                ewma_mid = EWMA_ALPHA * prev["m"] + (1 - EWMA_ALPHA) * fair
+                ewma_var = EWMA_ALPHA * prev["v"] + (1 - EWMA_ALPHA) * (fair - ewma_mid) ** 2
+            ewma_state[sym] = {"m": ewma_mid, "v": ewma_var}
+
+            # Mean-reversion target adjustment: lean target against deviation
+            # from EWMA. Bounded by MR_CAP so we never flip the directional bias.
+            if ewma_var > MR_MIN_VAR:
+                z = (fair - ewma_mid) / math.sqrt(ewma_var)
+                mr_adj = max(-MR_CAP, min(MR_CAP, -MR_K * z))
+            else:
+                mr_adj = 0.0
+            target_pos = max(-POS_LIMIT, min(POS_LIMIT, base_target + mr_adj))
+
+            # Inventory skew anchored at the dynamic target_pos.
             deviation = position - target_pos
             inv_shift = cfg["inv_skew"] * deviation / POS_LIMIT
             skewed_fair = fair - inv_shift
@@ -210,7 +241,7 @@ class Trader:
             if ords:
                 orders[sym] = ords
 
-        new_trader_data = json.dumps({"mid_buf": mid_buf}, separators=(",", ":"))
+        new_trader_data = json.dumps({"ewma": ewma_state}, separators=(",", ":"))
         logger.flush(state, orders, 0, new_trader_data)
         return orders, 0, new_trader_data
 
