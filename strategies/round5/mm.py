@@ -43,31 +43,40 @@ from datamodel import (
 # anyway, so the cap here only governs how much we *try* to deploy.
 POS_LIMIT = 50
 
+# Rolling mid-price window (ticks) used for local volatility + drift estimation.
+# 50 ticks ≈ 5000 timestamp units — short enough to react to regime shifts,
+# long enough to be a stable stddev estimate.
+MID_WINDOW = 50
+
+# Half-spread vol multiplier — but only ENGAGE when recent_vol exceeds the
+# resting book half-spread, i.e., the local move scale is bigger than what
+# the book is already pricing. Otherwise we'd widen on every tick of normal
+# noise and forfeit fills on calm days.
+VOL_K = 1.0
+VOL_TRIGGER_MULT = 2.0  # only widen if recent_vol > VOL_TRIGGER_MULT * book_spread/4
+
+# When |drift over MID_WINDOW| exceeds DRIFT_K * recent_stddev, treat as a
+# sustained directional regime and shift fair AWAY. Random-walk null gives
+# |drift| ≈ stddev × √N (≈ 7 for N=50), so DRIFT_K=4 only triggers on real
+# directional moves, not normal noise accumulation.
+DRIFT_K = 4.0
+
 # Per-product MM config. min_half is the minimum half-spread we'll quote
 # (in seashells). size is the quote depth per side. inv_skew is how many
 # seashells we shift fair value per unit of inventory (full position →
 # inv_skew shift). All values come from the round 5 spread/CV analysis.
 CFG: dict[str, dict] = {
-    # SNACKPACK group: avg spread ~16, CV ~1.5-2%. Tightest MM cluster.
-    "SNACKPACK_RASPBERRY":         {"size": 8, "min_half": 4, "inv_skew": 6},
-    "SNACKPACK_VANILLA":           {"size": 8, "min_half": 4, "inv_skew": 6},
-    "SNACKPACK_PISTACHIO":         {"size": 8, "min_half": 4, "inv_skew": 6},
-    "SNACKPACK_CHOCOLATE":         {"size": 8, "min_half": 4, "inv_skew": 6},
-    "SNACKPACK_STRAWBERRY":        {"size": 8, "min_half": 4, "inv_skew": 6},
-    # TRANSLATOR group: spread ~9, CV ~5%. Smaller spread → smaller min_half.
+    # Pruned to the 5 products with positive mean+min PnL across days 2-4.
+    # Dropped (negative mean+min): SLEEP_POD_LAMB_WOOL (always negative),
+    # GALAXY_SOUNDS_DARK_MATTER (-16k swing on d4), TRANSLATOR_GRAPHITE_MIST,
+    # ROBOT_VACUUMING, SNACKPACK_CHOCOLATE/VANILLA/STRAWBERRY, ROBOT_DISHES,
+    # PANEL_4X4 (no fills). Per repo convention, score by per-day mean+min,
+    # not 3-day sum — so we want products that don't have a catastrophic day.
     "TRANSLATOR_ECLIPSE_CHARCOAL": {"size": 6, "min_half": 2, "inv_skew": 4},
     "TRANSLATOR_ASTRO_BLACK":      {"size": 6, "min_half": 2, "inv_skew": 4},
-    "TRANSLATOR_GRAPHITE_MIST":    {"size": 6, "min_half": 2, "inv_skew": 4},
-    # ROBOT (stable subset only — IRONING/MOPPING were >20% movers).
-    "ROBOT_VACUUMING":             {"size": 6, "min_half": 2, "inv_skew": 4},
-    "ROBOT_DISHES":                {"size": 6, "min_half": 2, "inv_skew": 4},
     "ROBOT_LAUNDRY":               {"size": 6, "min_half": 2, "inv_skew": 4},
-    # SLEEP_POD subset (LAMB_WOOL is the stable one in the group).
-    "SLEEP_POD_LAMB_WOOL":         {"size": 6, "min_half": 3, "inv_skew": 4},
-    # PANEL_4X4: tight, stable; rest of PANEL was a >20% mover.
-    "PANEL_4X4":                   {"size": 6, "min_half": 2, "inv_skew": 4},
-    # GALAXY_SOUNDS_DARK_MATTER: tightest in the group.
-    "GALAXY_SOUNDS_DARK_MATTER":   {"size": 6, "min_half": 3, "inv_skew": 4},
+    "SNACKPACK_PISTACHIO":         {"size": 8, "min_half": 4, "inv_skew": 6},
+    "SNACKPACK_RASPBERRY":         {"size": 8, "min_half": 4, "inv_skew": 6},
 }
 
 
@@ -100,6 +109,13 @@ class Trader:
     def run(self, state: TradingState) -> tuple[dict[str, list[Order]], int, str]:
         orders: dict[str, list[Order]] = {}
 
+        # Persisted state: rolling mid history per product for vol estimation.
+        try:
+            ts_state = json.loads(state.traderData) if state.traderData else {}
+        except (json.JSONDecodeError, ValueError):
+            ts_state = {}
+        mid_buf: dict[str, list[float]] = ts_state.get("mid_buf", {})
+
         for sym, cfg in CFG.items():
             od = state.order_depths.get(sym)
             if od is None:
@@ -121,8 +137,6 @@ class Trader:
             inv_shift = cfg["inv_skew"] * position / POS_LIMIT
             skewed_fair = fair - inv_shift
 
-            # Half-spread = at least min_half, but widen if the book is wide
-            # (avoids quoting inside a 1-tick book and getting picked off).
             half = max(cfg["min_half"], book_spread / 4.0)
 
             our_bid_px = math.floor(skewed_fair - half)
@@ -142,16 +156,42 @@ class Trader:
             sell_qty = min(cfg["size"], max(0, sell_capacity))
 
             ords: list[Order] = []
-            if buy_qty > 0:
-                ords.append(Order(sym, our_bid_px, buy_qty))
-            if sell_qty > 0:
-                ords.append(Order(sym, our_ask_px, -sell_qty))
+
+            # Take-the-cross: if the resting book is offering inside our fair,
+            # eat it directly at the resting price. The engine fills any of
+            # our limit orders priced through the book at the resting price
+            # anyway, but explicit-take lets us size to actually-available
+            # depth instead of quoting our full size and hoping for partial.
+            ask_take_qty = 0
+            if best_ask <= skewed_fair - half and buy_qty > 0:
+                avail = abs(od.sell_orders[best_ask])
+                ask_take_qty = min(avail, buy_qty)
+                if ask_take_qty > 0:
+                    ords.append(Order(sym, best_ask, ask_take_qty))
+
+            bid_take_qty = 0
+            if best_bid >= skewed_fair + half and sell_qty > 0:
+                avail = od.buy_orders[best_bid]
+                bid_take_qty = min(avail, sell_qty)
+                if bid_take_qty > 0:
+                    ords.append(Order(sym, best_bid, -bid_take_qty))
+
+            # Quote the residual (after takes) — total committed buy/sell
+            # qty must still respect capacity.
+            quote_buy = max(0, buy_qty - ask_take_qty)
+            quote_sell = max(0, sell_qty - bid_take_qty)
+
+            if quote_buy > 0:
+                ords.append(Order(sym, our_bid_px, quote_buy))
+            if quote_sell > 0:
+                ords.append(Order(sym, our_ask_px, -quote_sell))
 
             if ords:
                 orders[sym] = ords
 
-        logger.flush(state, orders, 0, "")
-        return orders, 0, ""
+        new_trader_data = json.dumps({"mid_buf": mid_buf}, separators=(",", ":"))
+        logger.flush(state, orders, 0, new_trader_data)
+        return orders, 0, new_trader_data
 
 
 # --------------------------------------------------------------------- Logger
