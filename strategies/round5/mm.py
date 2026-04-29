@@ -39,9 +39,8 @@ from datamodel import (
 )
 
 
-# Position limit assumed conservative; the engine rejects over-limit orders
-# anyway, so the cap here only governs how much we *try* to deploy.
-POS_LIMIT = 50
+# Round 5 position limit per the brief: 10 for ALL 50 products.
+POS_LIMIT = 10
 
 # Rolling mid-price window (ticks) used for local volatility + drift estimation.
 # 50 ticks ≈ 5000 timestamp units — short enough to react to regime shifts,
@@ -66,17 +65,15 @@ DRIFT_K = 4.0
 # seashells we shift fair value per unit of inventory (full position →
 # inv_skew shift). All values come from the round 5 spread/CV analysis.
 CFG: dict[str, dict] = {
-    # Pruned to the 5 products with positive mean+min PnL across days 2-4.
-    # Dropped (negative mean+min): SLEEP_POD_LAMB_WOOL (always negative),
-    # GALAXY_SOUNDS_DARK_MATTER (-16k swing on d4), TRANSLATOR_GRAPHITE_MIST,
-    # ROBOT_VACUUMING, SNACKPACK_CHOCOLATE/VANILLA/STRAWBERRY, ROBOT_DISHES,
-    # PANEL_4X4 (no fills). Per repo convention, score by per-day mean+min,
-    # not 3-day sum — so we want products that don't have a catastrophic day.
-    "TRANSLATOR_ECLIPSE_CHARCOAL": {"size": 6, "min_half": 2, "inv_skew": 4},
-    "TRANSLATOR_ASTRO_BLACK":      {"size": 6, "min_half": 2, "inv_skew": 4},
-    "ROBOT_LAUNDRY":               {"size": 6, "min_half": 2, "inv_skew": 4},
-    "SNACKPACK_PISTACHIO":         {"size": 8, "min_half": 4, "inv_skew": 6},
-    "SNACKPACK_RASPBERRY":         {"size": 8, "min_half": 4, "inv_skew": 6},
+    # Trade list: 5 products that tested positive on real submission day 4.
+    # ofi_k > 0 enables order-book-imbalance-based fair-value shift, scaled
+    # by the empirical (imbalance, fwd-return) correlation per product.
+    # SNACKPACK group has corr ~+0.12 across all 3 days — strongest signal.
+    "TRANSLATOR_ECLIPSE_CHARCOAL": {"size": 6, "min_half": 2, "inv_skew": 4, "ofi_k": 0},
+    "TRANSLATOR_ASTRO_BLACK":      {"size": 6, "min_half": 2, "inv_skew": 4, "ofi_k": 0},
+    "ROBOT_LAUNDRY":               {"size": 6, "min_half": 2, "inv_skew": 4, "ofi_k": 0},
+    "SNACKPACK_PISTACHIO":         {"size": 6, "min_half": 4, "inv_skew": 6, "ofi_k": 0},
+    "SNACKPACK_RASPBERRY":         {"size": 6, "min_half": 4, "inv_skew": 6, "ofi_k": 0},
 }
 
 
@@ -131,11 +128,21 @@ class Trader:
 
             position = state.position.get(sym, 0)
 
+            # Order-flow imbalance signal: corr(top-of-book imbalance,
+            # next-tick return) is +0.12 on SNACKPACK group across all 3
+            # days. Push fair toward the side with more depth — quoting
+            # tighter on the side that's more likely to be the next print.
+            bid_v = od.buy_orders[best_bid]
+            ask_v = abs(od.sell_orders[best_ask])
+            denom = bid_v + ask_v
+            ofi = (bid_v - ask_v) / denom if denom > 0 else 0.0
+            ofi_shift = cfg.get("ofi_k", 0) * ofi
+
             # Inventory skew: shift fair toward the side we want to fill on.
             # Positive position → push fair down → our ask gets more aggressive,
             # our bid pulls back. Symmetric for shorts.
             inv_shift = cfg["inv_skew"] * position / POS_LIMIT
-            skewed_fair = fair - inv_shift
+            skewed_fair = fair - inv_shift + ofi_shift
 
             half = max(cfg["min_half"], book_spread / 4.0)
 
