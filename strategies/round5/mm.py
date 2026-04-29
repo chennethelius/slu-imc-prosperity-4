@@ -65,15 +65,37 @@ DRIFT_K = 4.0
 # seashells we shift fair value per unit of inventory (full position →
 # inv_skew shift). All values come from the round 5 spread/CV analysis.
 CFG: dict[str, dict] = {
-    # Trade list: 5 products that tested positive on real submission day 4.
-    # ofi_k > 0 enables order-book-imbalance-based fair-value shift, scaled
-    # by the empirical (imbalance, fwd-return) correlation per product.
-    # SNACKPACK group has corr ~+0.12 across all 3 days — strongest signal.
-    "TRANSLATOR_ECLIPSE_CHARCOAL": {"size": 6, "min_half": 2, "inv_skew": 4, "ofi_k": 0},
-    "TRANSLATOR_ASTRO_BLACK":      {"size": 6, "min_half": 2, "inv_skew": 4, "ofi_k": 0},
-    "ROBOT_LAUNDRY":               {"size": 6, "min_half": 2, "inv_skew": 4, "ofi_k": 0},
-    "SNACKPACK_PISTACHIO":         {"size": 6, "min_half": 4, "inv_skew": 6, "ofi_k": 0},
-    "SNACKPACK_RASPBERRY":         {"size": 6, "min_half": 4, "inv_skew": 6, "ofi_k": 0},
+    # ----- MM-only (target_pos=0) — validated by real submission 564609 -----
+    "TRANSLATOR_ECLIPSE_CHARCOAL": {"size": 6, "min_half": 2, "inv_skew": 4, "target_pos":  0},
+    "TRANSLATOR_ASTRO_BLACK":      {"size": 6, "min_half": 2, "inv_skew": 4, "target_pos":  0},
+    "ROBOT_LAUNDRY":               {"size": 6, "min_half": 2, "inv_skew": 4, "target_pos":  0},
+    "SNACKPACK_PISTACHIO":         {"size": 6, "min_half": 4, "inv_skew": 6, "target_pos":  0},
+    "SNACKPACK_RASPBERRY":         {"size": 6, "min_half": 4, "inv_skew": 6, "target_pos":  0},
+
+    # ----- Directional bias (target_pos=±5) — half-limit so MM still works -----
+    # Selected from per-product 1k-tick LOO sweep (3/3 wins, sorted by worst
+    # held-out PnL so the floor is positive). target_pos is the SIGNED bias
+    # we accumulate toward; inv_skew anchors fair around it.
+    "PANEL_1X2":                   {"size": 4, "min_half": 2, "inv_skew": 15, "target_pos": +5},
+    "UV_VISOR_AMBER":              {"size": 4, "min_half": 2, "inv_skew": 15, "target_pos": -5},
+    "PEBBLES_M":                   {"size": 4, "min_half": 3, "inv_skew": 15, "target_pos": -5},
+    "SLEEP_POD_SUEDE":             {"size": 4, "min_half": 3, "inv_skew": 15, "target_pos": +5},
+    "MICROCHIP_RECTANGLE":         {"size": 4, "min_half": 3, "inv_skew": 15, "target_pos": -5},
+    "GALAXY_SOUNDS_SOLAR_FLAMES":  {"size": 4, "min_half": 3, "inv_skew": 15, "target_pos": +5},
+    "TRANSLATOR_GRAPHITE_MIST":    {"size": 4, "min_half": 2, "inv_skew": 15, "target_pos": +5},
+
+    # ----- Spread legs (target=±5 each, paired) — captures within-group spread edge.
+    # PANEL_4X4 - PANEL_1X2: PANEL_1X2 already at +5 directional; 4X4 paired at +5
+    # PEBBLES_XL - PEBBLES_M: PEBBLES_M already at -5 directional; XL paired at +5
+    # GALAXY_SOUNDS_SOLAR_FLAMES - DARK_MATTER: SF already at +5; DM paired at -5
+    # PANEL_4X4 - PANEL_2X2: 2X2 paired at -5 (4X4 already at +5)
+    # ROBOT_IRONING - ROBOT_VACUUMING: pair both at ±5
+    "PANEL_4X4":                   {"size": 4, "min_half": 2, "inv_skew": 15, "target_pos": +5},
+    "PEBBLES_XL":                  {"size": 4, "min_half": 4, "inv_skew": 15, "target_pos": +5},
+    "GALAXY_SOUNDS_DARK_MATTER":   {"size": 4, "min_half": 3, "inv_skew": 15, "target_pos": -5},
+    "PANEL_2X2":                   {"size": 4, "min_half": 2, "inv_skew": 15, "target_pos": -5},
+    "ROBOT_IRONING":               {"size": 4, "min_half": 3, "inv_skew": 15, "target_pos": +5},
+    "ROBOT_VACUUMING":             {"size": 4, "min_half": 2, "inv_skew": 15, "target_pos": -5},
 }
 
 
@@ -127,22 +149,14 @@ class Trader:
                 continue
 
             position = state.position.get(sym, 0)
+            target_pos = cfg.get("target_pos", 0)
 
-            # Order-flow imbalance signal: corr(top-of-book imbalance,
-            # next-tick return) is +0.12 on SNACKPACK group across all 3
-            # days. Push fair toward the side with more depth — quoting
-            # tighter on the side that's more likely to be the next print.
-            bid_v = od.buy_orders[best_bid]
-            ask_v = abs(od.sell_orders[best_ask])
-            denom = bid_v + ask_v
-            ofi = (bid_v - ask_v) / denom if denom > 0 else 0.0
-            ofi_shift = cfg.get("ofi_k", 0) * ofi
-
-            # Inventory skew: shift fair toward the side we want to fill on.
-            # Positive position → push fair down → our ask gets more aggressive,
-            # our bid pulls back. Symmetric for shorts.
-            inv_shift = cfg["inv_skew"] * position / POS_LIMIT
-            skewed_fair = fair - inv_shift + ofi_shift
+            # Inventory skew anchored at target_pos. inv_skew is higher for
+            # directional products so the bias actually accumulates toward
+            # target instead of MMing around 0.
+            deviation = position - target_pos
+            inv_shift = cfg["inv_skew"] * deviation / POS_LIMIT
+            skewed_fair = fair - inv_shift
 
             half = max(cfg["min_half"], book_spread / 4.0)
 
