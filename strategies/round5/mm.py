@@ -111,15 +111,15 @@ CFG: dict[str, dict] = {
     "ROBOT_VACUUMING":             {"size": 4, "min_half": 2, "inv_skew": 15, "target_pos": -5},
 
     # ----- Diversification tier (target_pos=±3) — additional LOO-validated
-    # spread legs at smaller size to spread per-bet risk.
+    # spread legs that survived per-product flip stress test (>$2k flip cost).
+    # YELLOW flipped to -3 (orig +3 was misdirected, flip improved by +$1,966
+    # across all 3 days). OXYGEN_SHAKE pair + SLEEP_POD_POLYESTER dropped
+    # (flip impact <$1.5k = signal indistinguishable from noise).
     "UV_VISOR_RED":                  {"size": 3, "min_half": 2, "inv_skew": 12, "target_pos": +3},
     "UV_VISOR_ORANGE":               {"size": 3, "min_half": 2, "inv_skew": 12, "target_pos": +3},
-    "UV_VISOR_YELLOW":               {"size": 3, "min_half": 2, "inv_skew": 12, "target_pos": +3},
+    "UV_VISOR_YELLOW":               {"size": 3, "min_half": 2, "inv_skew": 12, "target_pos": -3},
     "GALAXY_SOUNDS_PLANETARY_RINGS": {"size": 3, "min_half": 3, "inv_skew": 12, "target_pos": -3},
     "PANEL_1X4":                     {"size": 3, "min_half": 2, "inv_skew": 12, "target_pos": -3},
-    "OXYGEN_SHAKE_EVENING_BREATH":   {"size": 3, "min_half": 3, "inv_skew": 12, "target_pos": +3},
-    "OXYGEN_SHAKE_MINT":             {"size": 3, "min_half": 3, "inv_skew": 12, "target_pos": -3},
-    "SLEEP_POD_POLYESTER":           {"size": 3, "min_half": 3, "inv_skew": 12, "target_pos": -3},
 }
 
 
