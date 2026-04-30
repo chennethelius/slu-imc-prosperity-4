@@ -70,7 +70,13 @@ def main():
     ap.add_argument("--author", required=True)
     ap.add_argument("--commit", required=True)
     ap.add_argument("--results-dir", type=Path, default=Path("backtest-results"))
+    ap.add_argument("--round", type=int, default=None,
+                    help="Round number to tag the entry with (e.g. 5). Defaults to "
+                         "no round tagging — entry shows under the 'Submission' tab. "
+                         "If set, dataset becomes 'round<N>_submission.json' so the "
+                         "dashboard's normRound regex picks 'Round N' for tab routing.")
     args = ap.parse_args()
+    dataset_label = f"round{args.round}_submission.json" if args.round else "submission.json"
 
     sub_dir = args.submission_dir.resolve()
     log_files = list(sub_dir.glob("*.log"))
@@ -122,7 +128,7 @@ def main():
 
     # metrics.json — IMPORTANT: dataset_path drives the dashboard's dataset field
     metrics = {
-        "dataset_path": "submission.json",
+        "dataset_path": dataset_label,
         "day": "submission",
         "final_pnl_total": total_pnl,
         "final_pnl_by_product": last_pnl,
@@ -140,7 +146,7 @@ def main():
         "id": sub_id,
         "author": args.author,
         "strategy": args.strategy,
-        "dataset": "submission.json",
+        "dataset": dataset_label,
         "day": "submission",
         "pnl": total_pnl,
         "pnl_by_product": last_pnl,
