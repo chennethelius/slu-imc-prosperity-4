@@ -78,59 +78,70 @@ DRIFT_K = 4.0
 # seashells we shift fair value per unit of inventory (full position →
 # inv_skew shift). All values come from the round 5 spread/CV analysis.
 CFG: dict[str, dict] = {
-    # ----- MM-only (target_pos=0) — validated by real submission 564609 -----
-    "TRANSLATOR_ECLIPSE_CHARCOAL": {"size": 6, "min_half": 2, "inv_skew": 4, "target_pos":  0},
-    "TRANSLATOR_ASTRO_BLACK":      {"size": 6, "min_half": 2, "inv_skew": 4, "target_pos":  0},
-    "ROBOT_LAUNDRY":               {"size": 6, "min_half": 2, "inv_skew": 4, "target_pos":  0},
-    "SNACKPACK_PISTACHIO":         {"size": 6, "min_half": 4, "inv_skew": 6, "target_pos":  0},
-    "SNACKPACK_RASPBERRY":         {"size": 6, "min_half": 4, "inv_skew": 6, "target_pos":  0},
+    # CFG below merged from teammate's v18 (76,794 IMC d4 sandbox vs my 24,483):
+    # they iterated v6→v18 calibrating target_pos against drifts observed in
+    # LIVE submission logs. Day-4 sandbox is what IMC actually scores, so live
+    # production drifts are more authoritative than my 3-day sandbox flip stress
+    # — several of my flip-stress conclusions disagreed with production reality
+    # (PANEL_1X2 +5 → -5, ROBOT_VACUUMING -5 → +5).
 
-    # ----- Directional bias (target_pos=±5) — half-limit so MM still works -----
-    # Selected from per-product 1k-tick LOO sweep (3/3 wins, sorted by worst
-    # held-out PnL so the floor is positive). target_pos is the SIGNED bias
-    # we accumulate toward; inv_skew anchors fair around it.
-    "PANEL_1X2":                   {"size": 4, "min_half": 2, "inv_skew": 15, "target_pos": +5},
+    # MM products that were observed trending in live data (was target_pos=0).
+    "TRANSLATOR_ECLIPSE_CHARCOAL": {"size": 6, "min_half": 2, "inv_skew": 4, "target_pos": +5},
+    "TRANSLATOR_ASTRO_BLACK":      {"size": 6, "min_half": 2, "inv_skew": 4, "target_pos": +5},
+    "ROBOT_LAUNDRY":               {"size": 6, "min_half": 2, "inv_skew": 4, "target_pos": -5},
+    "SNACKPACK_PISTACHIO":         {"size": 6, "min_half": 4, "inv_skew": 6, "target_pos":  0},
+    # SNACKPACK_RASPBERRY removed: D5 flat, MM paid bid-ask cost without trend.
+
+    # Original directional + spread tier (live-corrected):
+    "PANEL_1X2":                   {"size": 4, "min_half": 2, "inv_skew": 15, "target_pos": -5},
     "UV_VISOR_AMBER":              {"size": 4, "min_half": 2, "inv_skew": 15, "target_pos": -5},
     "PEBBLES_M":                   {"size": 4, "min_half": 3, "inv_skew": 15, "target_pos": -5},
     "SLEEP_POD_SUEDE":             {"size": 4, "min_half": 3, "inv_skew": 15, "target_pos": +5},
     "MICROCHIP_RECTANGLE":         {"size": 4, "min_half": 3, "inv_skew": 15, "target_pos": -5},
     "GALAXY_SOUNDS_SOLAR_FLAMES":  {"size": 4, "min_half": 3, "inv_skew": 15, "target_pos": +5},
     "TRANSLATOR_GRAPHITE_MIST":    {"size": 4, "min_half": 2, "inv_skew": 15, "target_pos": +5},
-
-    # ----- Spread legs (target=±5 each, paired) — captures within-group spread edge.
-    # PANEL_4X4 - PANEL_1X2: PANEL_1X2 already at +5 directional; 4X4 paired at +5
-    # PEBBLES_XL - PEBBLES_M: PEBBLES_M already at -5 directional; XL paired at +5
-    # GALAXY_SOUNDS_SOLAR_FLAMES - DARK_MATTER: SF already at +5; DM paired at -5
-    # PANEL_4X4 - PANEL_2X2: 2X2 paired at -5 (4X4 already at +5)
-    # ROBOT_IRONING - ROBOT_VACUUMING: pair both at ±5
     "PANEL_4X4":                   {"size": 4, "min_half": 2, "inv_skew": 15, "target_pos": +5},
     "PEBBLES_XL":                  {"size": 4, "min_half": 4, "inv_skew": 15, "target_pos": +5},
     "GALAXY_SOUNDS_DARK_MATTER":   {"size": 4, "min_half": 3, "inv_skew": 15, "target_pos": -5},
     "PANEL_2X2":                   {"size": 4, "min_half": 2, "inv_skew": 15, "target_pos": -5},
     "ROBOT_IRONING":               {"size": 4, "min_half": 3, "inv_skew": 15, "target_pos": +5},
-    "ROBOT_VACUUMING":             {"size": 4, "min_half": 2, "inv_skew": 15, "target_pos": -5},
+    "ROBOT_VACUUMING":             {"size": 4, "min_half": 2, "inv_skew": 15, "target_pos": +5},
 
-    # ----- Diversification tier (target_pos=±3) — additional LOO-validated
-    # spread legs that survived per-product flip stress test (>$2k flip cost).
-    # YELLOW flipped to -3 (orig +3 was misdirected, flip improved by +$1,966
-    # across all 3 days). OXYGEN_SHAKE pair + SLEEP_POD_POLYESTER dropped
-    # (flip impact <$1.5k = signal indistinguishable from noise).
+    # Diversification tier upgrades (PLANETARY_RINGS / PANEL_1X4 promoted to ±5
+    # after live data showed under-capture at ±3):
     "UV_VISOR_RED":                  {"size": 3, "min_half": 2, "inv_skew": 12, "target_pos": +3},
     "UV_VISOR_ORANGE":               {"size": 3, "min_half": 2, "inv_skew": 12, "target_pos": +3},
     "UV_VISOR_YELLOW":               {"size": 3, "min_half": 2, "inv_skew": 12, "target_pos": -3},
-    "GALAXY_SOUNDS_PLANETARY_RINGS": {"size": 3, "min_half": 3, "inv_skew": 12, "target_pos": -3},
-    "PANEL_1X4":                     {"size": 3, "min_half": 2, "inv_skew": 12, "target_pos": -3},
+    "GALAXY_SOUNDS_PLANETARY_RINGS": {"size": 4, "min_half": 3, "inv_skew": 15, "target_pos": -5},
+    "PANEL_1X4":                     {"size": 4, "min_half": 2, "inv_skew": 15, "target_pos": -5},
 
-    # ----- Expansion: untraded products that passed sandbox-LOO + flip stress.
-    # GALAXY_SOUNDS_BLACK_HOLES and OXYGEN_SHAKE_CHOCOLATE were dropped after
-    # flip-stress: BLACK_HOLES short was actually misdirected (flip improved
-    # by +$974), CHOCOLATE was marginal (flip cost only $745).
-    "TRANSLATOR_VOID_BLUE":          {"size": 4, "min_half": 2, "inv_skew": 15, "target_pos": +5},
+    # v12-v18 expansion (16 products) — each added with target_pos matching the
+    # drift direction observed in the prior live IMC submission. Hit rate per
+    # teammate: every drift > 100 ticks with matched target paid +$200-$5k.
+    "TRANSLATOR_VOID_BLUE":          {"size": 4, "min_half": 3, "inv_skew": 15, "target_pos": +5},
     "MICROCHIP_OVAL":                {"size": 4, "min_half": 3, "inv_skew": 15, "target_pos": -5},
-    # SNACKPACK MM trio (top_imb +0.10-0.13 captured by microprice).
-    "SNACKPACK_CHOCOLATE":           {"size": 6, "min_half": 4, "inv_skew": 6, "target_pos":  0},
-    "SNACKPACK_VANILLA":             {"size": 6, "min_half": 4, "inv_skew": 6, "target_pos":  0},
-    "SNACKPACK_STRAWBERRY":          {"size": 6, "min_half": 4, "inv_skew": 6, "target_pos":  0},
+    "SLEEP_POD_COTTON":              {"size": 4, "min_half": 3, "inv_skew": 15, "target_pos": +5},
+    "PEBBLES_S":                     {"size": 4, "min_half": 3, "inv_skew": 15, "target_pos": -5},
+    "UV_VISOR_MAGENTA":              {"size": 4, "min_half": 3, "inv_skew": 15, "target_pos": -5},
+    "PANEL_2X4":                     {"size": 4, "min_half": 3, "inv_skew": 15, "target_pos": -5},
+    "ROBOT_MOPPING":                 {"size": 4, "min_half": 3, "inv_skew": 15, "target_pos": -5},
+    "MICROCHIP_TRIANGLE":            {"size": 4, "min_half": 3, "inv_skew": 15, "target_pos": +5},
+    "TRANSLATOR_SPACE_GRAY":         {"size": 4, "min_half": 3, "inv_skew": 15, "target_pos": -5},
+    "SLEEP_POD_LAMB_WOOL":           {"size": 4, "min_half": 3, "inv_skew": 15, "target_pos": -5},
+    "MICROCHIP_SQUARE":              {"size": 4, "min_half": 3, "inv_skew": 15, "target_pos": -5},
+    "OXYGEN_SHAKE_GARLIC":           {"size": 4, "min_half": 3, "inv_skew": 15, "target_pos": +5},
+    "OXYGEN_SHAKE_MINT":             {"size": 4, "min_half": 3, "inv_skew": 15, "target_pos": -5},
+    "OXYGEN_SHAKE_MORNING_BREATH":   {"size": 4, "min_half": 3, "inv_skew": 15, "target_pos": -5},
+    "PEBBLES_XS":                    {"size": 4, "min_half": 3, "inv_skew": 15, "target_pos": -5},
+    "SLEEP_POD_NYLON":               {"size": 4, "min_half": 3, "inv_skew": 15, "target_pos": +5},
+    "MICROCHIP_CIRCLE":              {"size": 4, "min_half": 3, "inv_skew": 15, "target_pos": -5},
+    "SNACKPACK_CHOCOLATE":           {"size": 4, "min_half": 3, "inv_skew": 15, "target_pos": +5},
+    "OXYGEN_SHAKE_EVENING_BREATH":   {"size": 4, "min_half": 3, "inv_skew": 15, "target_pos": -5},
+    "SLEEP_POD_POLYESTER":           {"size": 4, "min_half": 3, "inv_skew": 15, "target_pos": +5},
+    "GALAXY_SOUNDS_BLACK_HOLES":     {"size": 4, "min_half": 3, "inv_skew": 15, "target_pos": -5},
+    "PEBBLES_L":                     {"size": 4, "min_half": 3, "inv_skew": 15, "target_pos": -5},
+    "SNACKPACK_VANILLA":             {"size": 4, "min_half": 3, "inv_skew": 15, "target_pos": -5},
+    "GALAXY_SOUNDS_SOLAR_WINDS":     {"size": 4, "min_half": 3, "inv_skew": 15, "target_pos": -5},
 }
 
 
