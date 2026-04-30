@@ -109,6 +109,17 @@ CFG: dict[str, dict] = {
     "PANEL_2X2":                   {"size": 4, "min_half": 2, "inv_skew": 15, "target_pos": -5},
     "ROBOT_IRONING":               {"size": 4, "min_half": 3, "inv_skew": 15, "target_pos": +5},
     "ROBOT_VACUUMING":             {"size": 4, "min_half": 2, "inv_skew": 15, "target_pos": -5},
+
+    # ----- Diversification tier (target_pos=±3) — additional LOO-validated
+    # spread legs at smaller size to spread per-bet risk.
+    "UV_VISOR_RED":                  {"size": 3, "min_half": 2, "inv_skew": 12, "target_pos": +3},
+    "UV_VISOR_ORANGE":               {"size": 3, "min_half": 2, "inv_skew": 12, "target_pos": +3},
+    "UV_VISOR_YELLOW":               {"size": 3, "min_half": 2, "inv_skew": 12, "target_pos": +3},
+    "GALAXY_SOUNDS_PLANETARY_RINGS": {"size": 3, "min_half": 3, "inv_skew": 12, "target_pos": -3},
+    "PANEL_1X4":                     {"size": 3, "min_half": 2, "inv_skew": 12, "target_pos": -3},
+    "OXYGEN_SHAKE_EVENING_BREATH":   {"size": 3, "min_half": 3, "inv_skew": 12, "target_pos": +3},
+    "OXYGEN_SHAKE_MINT":             {"size": 3, "min_half": 3, "inv_skew": 12, "target_pos": -3},
+    "SLEEP_POD_POLYESTER":           {"size": 3, "min_half": 3, "inv_skew": 12, "target_pos": -3},
 }
 
 
@@ -142,7 +153,8 @@ class Trader:
         orders: dict[str, list[Order]] = {}
 
         # Persisted state: per-product EWMA of mid + EWMA of squared deviation
-        # for online mean and variance estimates.
+        # for online mean and variance estimates, plus cumulative cash flow
+        # for the adaptive-scaling stop-loss.
         try:
             ts_state = json.loads(state.traderData) if state.traderData else {}
         except (json.JSONDecodeError, ValueError):
@@ -182,6 +194,7 @@ class Trader:
                 mr_adj = max(-MR_CAP, min(MR_CAP, -MR_K * z))
             else:
                 mr_adj = 0.0
+
             target_pos = max(-POS_LIMIT, min(POS_LIMIT, base_target + mr_adj))
 
             # Inventory skew anchored at the dynamic target_pos.
