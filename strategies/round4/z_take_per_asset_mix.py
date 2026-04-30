@@ -102,7 +102,7 @@ logger = Logger()
 
 # Per-asset (z, t, prior) lifted from tmp/z_take_combined.py. Bayesian-
 # blended mean: eff_mean = (prior * mean + sum_obs) / (prior + n_obs).
-# prior=10**9 ≈ static. HP and VEV_5200 are NOT in this list — they're
+# prior=10**9 ≈ static. HP is NOT in this list — its
 # handled by no_marks-derived logic below.
 CFGS = [
     {"symbol": "VELVETFRUIT_EXTRACT", "mean": 5247, "sd": 17.091, "z_thresh": 1.0,  "take_size": 25, "limit": 200, "prior": 10**9},
@@ -110,7 +110,6 @@ CFGS = [
     {"symbol": "VEV_4500",            "mean":  747, "sd": 17.105, "z_thresh": 1.5,  "take_size": 10, "limit": 300, "prior": 10**9},
     {"symbol": "VEV_5000",            "mean":  252, "sd": 16.381, "z_thresh": 1.0,  "take_size": 10, "limit": 300, "prior": 10000},
     {"symbol": "VEV_5100",            "mean":  163, "sd": 15.327, "z_thresh": 1.0,  "take_size": 50, "limit": 300, "prior": 10000},
-    # VEV_5200: tuned z-take BEATS no_marks anchor by +$10.8k m+m at this config.
     {"symbol": "VEV_5200",            "mean":   91, "sd": 12.796, "z_thresh": 0.75, "take_size": 10, "limit": 300, "prior":  2000},
     {"symbol": "VEV_5300",            "mean":   43, "sd":  8.976, "z_thresh": 0.5,  "take_size": 10, "limit": 300, "prior":   200},
     {"symbol": "VEV_5400",            "mean":   14, "sd":  4.608, "z_thresh": 0.5,  "take_size": 25, "limit": 300, "prior":   500},
