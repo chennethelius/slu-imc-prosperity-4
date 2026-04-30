@@ -120,6 +120,17 @@ CFG: dict[str, dict] = {
     "UV_VISOR_YELLOW":               {"size": 3, "min_half": 2, "inv_skew": 12, "target_pos": -3},
     "GALAXY_SOUNDS_PLANETARY_RINGS": {"size": 3, "min_half": 3, "inv_skew": 12, "target_pos": -3},
     "PANEL_1X4":                     {"size": 3, "min_half": 2, "inv_skew": 12, "target_pos": -3},
+
+    # ----- Expansion: untraded products that passed sandbox-LOO + flip stress.
+    # GALAXY_SOUNDS_BLACK_HOLES and OXYGEN_SHAKE_CHOCOLATE were dropped after
+    # flip-stress: BLACK_HOLES short was actually misdirected (flip improved
+    # by +$974), CHOCOLATE was marginal (flip cost only $745).
+    "TRANSLATOR_VOID_BLUE":          {"size": 4, "min_half": 2, "inv_skew": 15, "target_pos": +5},
+    "MICROCHIP_OVAL":                {"size": 4, "min_half": 3, "inv_skew": 15, "target_pos": -5},
+    # SNACKPACK MM trio (top_imb +0.10-0.13 captured by microprice).
+    "SNACKPACK_CHOCOLATE":           {"size": 6, "min_half": 4, "inv_skew": 6, "target_pos":  0},
+    "SNACKPACK_VANILLA":             {"size": 6, "min_half": 4, "inv_skew": 6, "target_pos":  0},
+    "SNACKPACK_STRAWBERRY":          {"size": 6, "min_half": 4, "inv_skew": 6, "target_pos":  0},
 }
 
 
@@ -173,6 +184,7 @@ class Trader:
             book_spread = best_ask - best_bid
             if book_spread <= 0:
                 continue
+
 
             position = state.position.get(sym, 0)
             base_target = cfg.get("target_pos", 0)
