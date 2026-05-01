@@ -19,8 +19,9 @@ STEPS_PER_DAY = 4
 TD_YR = 252
 T_2W = 10 / TD_YR
 T_3W = 15 / TD_YR
+CONTRACT_SIZE = 3_000    # each contract = 3000 underlying-unit equivalents
 N_PATHS = 200_000
-N_SCORE_TRIALS = 5_000   # number of "100-sim averages" to compute
+N_SCORE_TRIALS = 5_000
 
 rng = np.random.default_rng(2026_04_27)
 
@@ -71,7 +72,7 @@ INSTRS = [
 
 # ── Per-option MC ────────────────────────────────────────────────────
 print("=" * 92)
-print("Per-option Monte Carlo (independent paths per instrument; N =", N_PATHS, "paths)")
+print(f"Per-option Monte Carlo  ·  N = {N_PATHS:,} paths  ·  contract size = {CONTRACT_SIZE:,}")
 print("=" * 92)
 rows = []
 for inst in INSTRS:
@@ -94,13 +95,12 @@ for inst in INSTRS:
     elif edge_buy  > 0:                            side, edge, px = "BUY",  edge_buy,  inst["ask"]
     else:                                          side, edge, px = "HOLD", max(edge_buy, edge_sell), None
     inst["side"], inst["edge"], inst["trade_px"] = side, edge, px
-    expected = edge * inst["max_vol"] if side != "HOLD" else 0.0
+    expected = edge * inst["max_vol"] * CONTRACT_SIZE if side != "HOLD" else 0.0
     rows.append({
         "symbol": inst["sym"], "fair": round(fair, 4), "MC_se": round(se, 4),
         "bid": inst["bid"], "ask": inst["ask"],
         "buy_edge": round(edge_buy, 4), "sell_edge": round(edge_sell, 4),
-        "side": side, "max_vol": inst["max_vol"], "E[PnL]": round(expected, 2),
-        "pay_p5": round(p5, 2), "pay_p50": round(p50, 2), "pay_p95": round(p95, 2),
+        "side": side, "max_vol": inst["max_vol"], "E[PnL]": round(expected, 0),
     })
 
 df = pd.DataFrame(rows)
@@ -146,8 +146,8 @@ def one_score(n_sims=100):
         elif o["kind"] == "bp": pay = np.where(S_T < o["K"], o["payout"], 0.0)
         elif o["kind"] == "ko": pay = np.where(min_S < o["H"], 0.0, np.maximum(o["K"] - S_T, 0))
         elif o["kind"] == "ch": pay = np.where(S_t1 > o["K"], np.maximum(S_T - o["K"], 0), np.maximum(o["K"] - S_T, 0))
-        pnls += o["qty"] * (pay - o["px"])
-    return pnls.mean(), pnls   # per-trial mean + the 100-sim distribution itself
+        pnls += o["qty"] * CONTRACT_SIZE * (pay - o["px"])
+    return pnls.mean(), pnls
 
 means = np.zeros(N_SCORE_TRIALS)
 last_pnls = None

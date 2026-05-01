@@ -213,6 +213,7 @@
         <span class="param-chip">4 steps / trading day</span>
         <span class="param-chip">252 trading days / yr</span>
         <span class="param-chip">2w = 10 td, 3w = 15 td</span>
+        <span class="param-chip" style="background:rgba(146,64,14,.18);font-weight:700">contract size = 3,000</span>
       </div>
     </div>
 
@@ -334,6 +335,7 @@
    discrete-monitoring KO put MC, portfolio MC).
    ──────────────────────────────────────────────────────────── */
 const TD_YR = 252;
+const CONTRACT_SIZE = 3000;   // each contract = 3000 underlying-unit equivalents
 let SIGMA = 2.51, S0 = 50;
 let STEPS_PER_DAY = 4;
 const T_2W = () => 10 / TD_YR;
@@ -402,7 +404,7 @@ function portfolioMC(orders,nSims,sigma,stepsPerDay){
         case 'binary_put':   payoff=ST<o.strike?o.payout:0; break;
         case 'knockout_put': payoff=(minS<o.barrier)?0:Math.max(o.strike-ST,0); break;
       }
-      pnl+=qty*(payoff-price);
+      pnl+=qty*CONTRACT_SIZE*(payoff-price);
     }
     out[sim]=pnl;
   }
@@ -566,9 +568,10 @@ function renderRecommended(){
     if(best.side === 'HOLD') return;
     // Skip near-zero edges (within 1 cent); model error dominates
     if(best.edge < 0.01) return;
-    const exp = best.edge * inst.max_vol;
+    const exp = best.edge * inst.max_vol * CONTRACT_SIZE;
     total += exp;
     const sideCls = best.side==='BUY'?'side-buy':'side-sell';
+    const fmt = v => (v>=0?'+':'') + Math.round(v).toLocaleString();
     tbody.insertAdjacentHTML('beforeend', `
       <tr>
         <td>${inst.sym}</td>
@@ -576,11 +579,11 @@ function renderRecommended(){
         <td class="r">${inst.max_vol}</td>
         <td class="r">${best.price.toFixed(3)}</td>
         <td class="r">${fair.toFixed(3)}</td>
-        <td class="r ${exp>=0?'pos':'neg'}">${exp>=0?'+':''}${exp.toFixed(2)}</td>
+        <td class="r ${exp>=0?'pos':'neg'}">${fmt(exp)}</td>
       </tr>`);
   });
   const tot = document.getElementById('total-analytic');
-  tot.textContent = (total>=0?'+':'')+total.toFixed(2);
+  tot.textContent = (total>=0?'+':'')+Math.round(total).toLocaleString();
   tot.className = 'value '+(total>=0?'pos':'neg');
 }
 
@@ -589,7 +592,7 @@ function refreshTotals(){
   let long=0, short=0;
   for(const o of orders){
     const px = o.side==='BUY'?o.ask:o.bid;
-    const notional = o.size * px;
+    const notional = o.size * px * CONTRACT_SIZE;
     if(o.side==='BUY')long+=notional; else short+=notional;
   }
   document.getElementById('total-long').textContent = long.toFixed(2);
@@ -795,9 +798,9 @@ function runMC(){
     const q = p => sorted[Math.min(n-1, Math.floor(p*n))];
     const ppos = pnls.filter(v=>v>0).length / n;
 
-    const fmt = v => (v>=0?'+':'') + v.toLocaleString(undefined,{minimumFractionDigits:1,maximumFractionDigits:1});
+    const fmt = v => (v>=0?'+':'') + Math.round(v).toLocaleString();
     document.getElementById('mc-mean').textContent = fmt(mean);
-    document.getElementById('mc-std').textContent  = std.toFixed(1);
+    document.getElementById('mc-std').textContent  = Math.round(std).toLocaleString();
     document.getElementById('mc-p5').textContent   = fmt(q(0.05));
     document.getElementById('mc-p50').textContent  = fmt(q(0.50));
     document.getElementById('mc-p95').textContent  = fmt(q(0.95));
