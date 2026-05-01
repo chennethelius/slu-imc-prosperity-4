@@ -1,0 +1,24 @@
+{
+  "dataset_path": "submission.json",
+  "day": "submission",
+  "final_pnl_total": 32456.452392578125,
+  "final_pnl_by_product": {
+    "VELVETFRUIT_EXTRACT": 8345.4375,
+    "VEV_4000": 950.451171875,
+    "VEV_5100": 6381.86328125,
+    "VEV_5200": 3789.0263671875,
+    "VEV_5000": 8912.49609375,
+    "VEV_6000": 0.0,
+    "VEV_5500": 0.0,
+    "HYDROGEL_PACK": 1399.75,
+    "VEV_4500": 907.1416015625,
+    "VEV_6500": 0.0,
+    "VEV_5300": 1770.286376953125,
+    "VEV_5400": 0.0
+  },
+  "own_trade_count": 157,
+  "tick_count": 1000,
+  "max_drawdown_abs": 0.0,
+  "sharpe_ratio": 0.0,
+  "imc_submission_id": "6cfdd56f-a9ce-427f-979f-2319558f47fc"
+}

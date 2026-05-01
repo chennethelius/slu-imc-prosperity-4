@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Counterparties — Prosperity</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./shared.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+  body{background:var(--bg-base);color:var(--text-primary);font-family:Inter,sans-serif}
+  .container{max-width:1400px;margin:0 auto;padding:18px 22px}
+  .controls{background:var(--bg-raised);border:1px solid var(--border-subtle);border-radius:10px;padding:14px;margin-bottom:14px;display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+  .control-group{display:flex;align-items:center;gap:8px}
+  .control-label{color:var(--text-muted);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px}
+  .day-tabs{display:flex;gap:2px}
+  .day-tab{background:transparent;border:1px solid var(--border-subtle);padding:6px 14px;font-size:12px;font-weight:500;color:var(--text-secondary);cursor:pointer;font-family:inherit;border-radius:6px;transition:all .15s}
+  .day-tab:hover{background:var(--bg-hover)}
+  .day-tab.active{background:#0891b2;color:#fff;border-color:#0891b2}
+  select.product-select{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:6px;padding:6px 10px;font-size:12px;font-family:var(--mono);color:var(--text-primary);cursor:pointer}
+  .mark-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:99px;border:1.5px solid transparent;background:var(--bg-surface);font-size:11px;font-family:var(--mono);font-weight:600;cursor:pointer;transition:all .15s;user-select:none}
+  .mark-chip .swatch{display:inline-block;width:9px;height:9px;border-radius:50%}
+  .mark-chip.off{opacity:.35}
+  .side-toggle{display:flex;gap:2px}
+  .side-btn{background:var(--bg-surface);border:1px solid var(--border-subtle);padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;color:var(--text-secondary)}
+  .side-btn:first-child{border-radius:6px 0 0 6px}
+  .side-btn:last-child{border-radius:0 6px 6px 0;border-left:none}
+  .side-btn.active{background:#0891b2;color:#fff;border-color:#0891b2}
+  .chart-card{background:#fff;border:1px solid var(--border-subtle);border-radius:10px;padding:18px;margin-bottom:14px}
+  .chart-card h3{color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:.6px;font-weight:600}
+  .chart-canvas-wrap{position:relative;height:520px}
+  .chart-canvas-wrap canvas{width:100%!important;height:100%!important}
+  .stats{background:var(--bg-raised);border:1px solid var(--border-subtle);border-radius:10px;padding:14px}
+  .stats h3{color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;font-weight:600}
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;font-family:var(--mono);font-size:11px}
+  .stat-row{display:flex;justify-content:space-between;padding:6px 10px;background:var(--bg-surface);border-radius:6px}
+  .stat-row .name{display:flex;align-items:center;gap:6px;color:var(--text-secondary)}
+  .stat-row .name .swatch{display:inline-block;width:9px;height:9px;border-radius:50%}
+  .stat-row .vol{font-weight:700;color:var(--text-primary)}
+  .stat-row .meta{color:var(--text-muted);font-size:10px}
+  .empty{padding:40px;text-align:center;color:var(--text-muted);font-size:13px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <a class="logo" href="#">
+      <img src="./billiken-logo.jpg" alt="SLU" class="logo-img">
+      <h1><span>Prosperity</span></h1>
+    </a>
+    <nav class="nav">
+      <a class="nav-link" href="./index.html">Traders</a>
+      <a class="nav-link" href="./manual-trading.html">Manual Trading</a>
+      <a class="nav-link" href="./discord-intel.html">Discord Bot</a>
+      <a class="nav-link active" href="./marks.html">Counterparties</a>
+    </nav>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="controls">
+    <div class="control-group">
+      <span class="control-label">Day</span>
+      <div class="day-tabs" id="day-tabs"></div>
+    </div>
+    <div class="control-group">
+      <span class="control-label">Product</span>
+      <select class="product-select" id="product-select"></select>
+    </div>
+    <div class="control-group">
+      <span class="control-label">Side</span>
+      <div class="side-toggle">
+        <button class="side-btn" data-side="buy">Buy</button>
+        <button class="side-btn" data-side="sell">Sell</button>
+        <button class="side-btn active" data-side="both">Both</button>
+      </div>
+    </div>
+    <div class="control-group" style="flex:1;min-width:300px">
+      <span class="control-label">Marks</span>
+      <div id="mark-chips" style="display:flex;flex-wrap:wrap;gap:5px"></div>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;flex-wrap:wrap;gap:10px">
+      <h3 id="chart-title" style="margin:0">—</h3>
+      <div style="font-size:11px;color:var(--text-muted);font-family:var(--mono)">
+        <span style="color:#374151">▲</span> buy &nbsp; <span style="color:#374151">▼</span> sell &nbsp;·&nbsp; marker size = trade qty
+      </div>
+    </div>
+    <div class="chart-canvas-wrap"><canvas id="main-chart"></canvas></div>
+  </div>
+
+  <div class="stats">
+    <h3 id="stats-title">— Volume by Mark (filtered to current side) —</h3>
+    <div class="stat-grid" id="stat-grid"></div>
+  </div>
+
+</div>
+
+<script>
+const COLORS = {
+  "Mark 01":"#2563eb","Mark 14":"#059669","Mark 22":"#d97706",
+  "Mark 38":"#dc2626","Mark 49":"#7c3aed","Mark 55":"#0891b2",
+  "Mark 67":"#db2777"
+};
+
+let DATA=null, dayIdx=0, product=null, side="both", offMarks=new Set(), chart=null;
+
+async function init(){
+  try {
+    const r = await fetch("./marks_data.json", {cache:"no-cache"});
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    DATA = await r.json();
+  } catch (e) {
+    console.error("Failed to load marks_data.json:", e);
+    document.querySelector('.container').innerHTML =
+      `<div class="empty">Failed to load <code>marks_data.json</code> (${e.message}). Run <code>python3 .github/build_marks_data.py</code> to generate it.</div>`;
+    return;
+  }
+  if(!DATA || !DATA.days?.length){
+    document.querySelector('.container').innerHTML = '<div class="empty">No data found. Run <code>python3 .github/build_marks_data.py</code> to generate marks_data.json.</div>';
+    return;
+  }
+  // default to a day with content; round4 d1 typically
+  dayIdx = DATA.days.findIndex(d=>d.key==='round4_d1'); if(dayIdx<0) dayIdx=0;
+  product = Object.keys(DATA.days[dayIdx].products)[0];
+
+  buildDayTabs();
+  buildProductSelect();
+  buildMarkChips();
+  bindSideToggle();
+  render();
+}
+
+function buildDayTabs(){
+  const wrap = document.getElementById('day-tabs');
+  wrap.innerHTML = DATA.days.map((d,i)=>
+    `<button class="day-tab${i===dayIdx?' active':''}" data-i="${i}">${d.label}</button>`
+  ).join('');
+  wrap.querySelectorAll('.day-tab').forEach(b=>b.onclick=()=>{
+    dayIdx = +b.dataset.i;
+    wrap.querySelectorAll('.day-tab').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    // refresh product list (in case different days have different products)
+    buildProductSelect();
+    render();
+  });
+}
+
+function buildProductSelect(){
+  const sel = document.getElementById('product-select');
+  const prods = Object.keys(DATA.days[dayIdx].products);
+  if(!prods.includes(product)) product = prods[0];
+  sel.innerHTML = prods.map(p=>`<option value="${p}"${p===product?' selected':''}>${p}</option>`).join('');
+  sel.onchange = ()=>{ product = sel.value; render(); };
+}
+
+function buildMarkChips(){
+  const wrap = document.getElementById('mark-chips');
+  wrap.innerHTML = DATA.marks.map(m=>{
+    const c = COLORS[m] || '#6b7280';
+    return `<span class="mark-chip" data-mark="${m}" style="border-color:${c}"><span class="swatch" style="background:${c}"></span>${m}</span>`;
+  }).join('');
+  wrap.querySelectorAll('.mark-chip').forEach(chip=>{
+    chip.onclick = ()=>{
+      const m = chip.dataset.mark;
+      if(offMarks.has(m)){ offMarks.delete(m); chip.classList.remove('off'); }
+      else { offMarks.add(m); chip.classList.add('off'); }
+      render();
+    };
+  });
+}
+
+function bindSideToggle(){
+  document.querySelectorAll('.side-btn').forEach(b=>b.onclick=()=>{
+    document.querySelectorAll('.side-btn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    side = b.dataset.side;
+    render();
+  });
+}
+
+function render(){
+  const day = DATA.days[dayIdx];
+  const prod = day.products[product];
+  if(!prod){ return; }
+
+  document.getElementById('chart-title').textContent =
+    `${product}  —  ${day.label}  —  side: ${side}`;
+  document.getElementById('stats-title').textContent =
+    `Volume by Mark (${side === 'both' ? 'buy + sell' : side + ' side'})`;
+
+  // Build datasets: mid line + per-Mark scatters
+  const datasets = [{
+    type:'line', label:'mid',
+    data: prod.mids.map(([t,p])=>({x:t, y:p})),
+    borderColor:'#111827', borderWidth:1.4, pointRadius:0, tension:.05,
+    fill:false, order:1, pointHoverRadius:0,
+  }];
+
+  // Group trades by (mark, side). For each mark, optionally add buy/sell
+  // scatter datasets if side filter allows.
+  const wantBuy  = (side==='buy'  || side==='both');
+  const wantSell = (side==='sell' || side==='both');
+  const stats = {};
+
+  for(const m of DATA.marks){
+    if(offMarks.has(m)) continue;
+    const c = COLORS[m] || '#6b7280';
+    const buys=[], sells=[];
+    for(const t of prod.trades){
+      if(t.b === m) buys.push({x:t.ts, y:t.p, qty:t.qty, c:t.s});
+      if(t.s === m) sells.push({x:t.ts, y:t.p, qty:t.qty, c:t.b});
+    }
+    if(wantBuy && buys.length){
+      datasets.push({
+        type:'scatter', label:`${m} buy`, data: buys,
+        backgroundColor:c, borderColor:c, pointStyle:'triangle', rotation:0,
+        pointRadius: ctx=> Math.max(4, Math.min(14, Math.sqrt(ctx.raw.qty)*2.4)),
+        pointHoverRadius: ctx=> Math.max(7, Math.min(18, Math.sqrt(ctx.raw.qty)*2.8)),
+        showLine:false, order:0, borderWidth:0.8,
+      });
+    }
+    if(wantSell && sells.length){
+      datasets.push({
+        type:'scatter', label:`${m} sell`, data: sells,
+        backgroundColor:c+'b3', borderColor:c, pointStyle:'triangle', rotation:180,
+        pointRadius: ctx=> Math.max(4, Math.min(14, Math.sqrt(ctx.raw.qty)*2.4)),
+        pointHoverRadius: ctx=> Math.max(7, Math.min(18, Math.sqrt(ctx.raw.qty)*2.8)),
+        showLine:false, order:0, borderWidth:0.8,
+      });
+    }
+    stats[m] = {
+      buyVol:  buys.reduce((s,t)=>s+t.qty, 0),
+      sellVol: sells.reduce((s,t)=>s+t.qty, 0),
+      buyCt:   buys.length,
+      sellCt:  sells.length,
+    };
+  }
+
+  const cvs = document.getElementById('main-chart');
+  if(chart) chart.destroy();
+  chart = new Chart(cvs, {
+    type:'scatter',
+    data:{datasets},
+    options:{
+      responsive:true, maintainAspectRatio:false, animation:false,
+      plugins:{
+        legend:{position:'bottom', labels:{font:{size:10, family:'Inter'}, boxWidth:10, padding:8, usePointStyle:true}},
+        tooltip:{intersect:false, mode:'nearest',
+          callbacks:{
+            label(ctx){
+              const r = ctx.raw;
+              if(ctx.dataset.label === 'mid'){
+                return `mid: ${r.y?.toLocaleString()}`;
+              }
+              const [m, s] = ctx.dataset.label.split(' ');
+              return `${m} ${s.toUpperCase()} ${r.qty} @ ${r.y.toLocaleString()}  (cpty: ${r.c})`;
+            }
+          }
+        },
+      },
+      scales:{
+        x:{type:'linear', title:{display:true, text:'timestamp', font:{size:10}, color:'#6b7280'},
+           grid:{color:'#e5e7eb'}, ticks:{font:{size:10}, color:'#9ca3af', maxTicksLimit:10}},
+        y:{title:{display:true, text:`${product} price`, font:{size:10}, color:'#6b7280'},
+           grid:{color:'#e5e7eb'}, ticks:{font:{size:10}, color:'#9ca3af'}},
+      },
+      interaction:{intersect:false, mode:'nearest'},
+    }
+  });
+
+  // Stats grid
+  const grid = document.getElementById('stat-grid');
+  const rows = DATA.marks
+    .filter(m => !offMarks.has(m))
+    .map(m=>{
+      const s = stats[m] || {buyVol:0, sellVol:0, buyCt:0, sellCt:0};
+      const showVol = side==='buy' ? s.buyVol : side==='sell' ? s.sellVol : s.buyVol + s.sellVol;
+      const showCt  = side==='buy' ? s.buyCt  : side==='sell' ? s.sellCt  : s.buyCt + s.sellCt;
+      return [m, showVol, showCt, s];
+    })
+    .filter(([_,v]) => v > 0)
+    .sort((a,b)=> b[1]-a[1]);
+
+  if(!rows.length){
+    grid.innerHTML = '<div style="color:#9ca3af;font-size:11px">No trades for current filter.</div>';
+  } else {
+    grid.innerHTML = rows.map(([m,vol,ct,s])=>{
+      const c = COLORS[m] || '#6b7280';
+      const breakdown = side==='both'
+        ? `${s.buyVol} buy / ${s.sellVol} sell`
+        : `${ct} fills`;
+      return `<div class="stat-row">
+        <span class="name"><span class="swatch" style="background:${c}"></span>${m}</span>
+        <span><span class="vol">${vol.toLocaleString()}</span> <span class="meta">${breakdown}</span></span>
+      </div>`;
+    }).join('');
+  }
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+{
+  "dataset_path": "/home/runner/work/slu-imc-prosperity-4/slu-imc-prosperity-4/datasets_extra/round4_data/prices_round_4_day_3.csv",
+  "day": 3,
+  "final_pnl_total": 266878,
+  "final_pnl_by_product": {
+    "HYDROGEL_PACK": 42993,
+    "VELVETFRUIT_EXTRACT": 51564,
+    "VEV_4000": 38843,
+    "VEV_4500": 45197,
+    "VEV_5000": 41648,
+    "VEV_5100": 31867,
+    "VEV_5200": 9391,
+    "VEV_5300": 4310,
+    "VEV_5400": 1829,
+    "VEV_5500": -764,
+    "VEV_6000": 0,
+    "VEV_6500": 0
+  },
+  "own_trade_count": 1682,
+  "tick_count": 10000,
+  "max_drawdown_abs": 0.0,
+  "sharpe_ratio": 0.0
+}

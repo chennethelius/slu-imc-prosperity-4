@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Run — Prosperity</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./shared.css">
+<style>
+  :root {
+    --surf-card:#ffffff;       --surf-card-border:#e5e7eb;
+    --surf-detail:#ffffff;
+    --surf-stats:#ffffff;      --surf-stats-border:#e5e7eb;
+    --surf-chart:#ffffff;      --surf-chart-border:#e5e7eb;
+    --surf-trades:#ffffff;     --surf-trades-border:#e5e7eb;
+    --surf-code:#ffffff;       --surf-code-border:#e5e7eb;
+    --surf-code-pre:#1e293b;   --surf-code-pre-text:#cbd5e1;
+  }
+
+  .content{padding:18px 24px 40px;max-width:1400px;margin:0 auto}
+
+  .run-head{background:var(--surf-card);border:1px solid var(--surf-card-border);border-radius:var(--radius-lg);padding:16px 20px;margin-bottom:14px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;box-shadow:var(--shadow-sm)}
+  .back-link{color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;padding:6px 10px;border:1px solid var(--border-subtle);border-radius:6px;transition:all .15s}
+  .back-link:hover{color:var(--text-primary);border-color:var(--border-strong);background:var(--bg-hover)}
+  .run-title{display:flex;flex-direction:column;gap:3px;flex:1;min-width:200px}
+  .run-strat{font-family:var(--mono);font-size:20px;font-weight:700;letter-spacing:-.3px}
+  .run-meta{color:var(--text-muted);font-size:12px;display:flex;gap:12px;flex-wrap:wrap}
+  .run-meta b{color:var(--text-secondary);font-weight:500}
+
+  .day-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);padding:0 18px;background:var(--surf-detail);border-radius:var(--radius) var(--radius) 0 0}
+  .day-tab{padding:12px 16px;font-size:12px;color:var(--text-muted);cursor:pointer;border:none;border-bottom:2px solid transparent;font-family:inherit;background:transparent;transition:all .15s;font-weight:500;margin-bottom:-1px}
+  .day-tab:hover{color:var(--text-secondary)}
+  .day-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+  .day-panel{display:none;padding:20px 18px;background:var(--surf-detail);border-radius:0 0 var(--radius) var(--radius)}
+  .day-panel.active{display:block}
+  .panels-wrap{margin-bottom:14px}
+
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:14px;margin-bottom:18px;padding:14px 16px;background:var(--surf-stats);border:1px solid var(--surf-stats-border);border-radius:8px}
+  .stats>div{display:flex;flex-direction:column;gap:2px}
+  .stat-label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;font-weight:600}
+  .stat-value{font-family:var(--mono);font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.2px}
+
+  .charts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+  .chart-box{background:var(--surf-chart);border:1px solid var(--surf-chart-border);border-radius:8px;padding:14px}
+  .chart-box.wide{grid-column:1/-1}
+  .chart-box h3{color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px;font-weight:600}
+
+  .no-book{color:var(--text-muted);font-size:10.5px;font-style:italic;padding:6px 10px;background:var(--bg-raised);border-radius:4px;border:1px dashed var(--border)}
+
+  /* === inventory visualizer (replaces the old trades scrollable card) === */
+  .invvis{background:var(--surf-trades);border:1px solid var(--surf-trades-border);border-radius:8px;padding:14px;margin-bottom:16px}
+  .invvis-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+  .invvis-head h3{color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.6px;font-weight:600;margin:0}
+  .invvis-ts{font-family:var(--mono);font-size:12px;color:var(--text-secondary);font-weight:600}
+  .invvis-grid{display:grid;grid-template-columns:280px 1fr;gap:14px}
+  @media(max-width:900px){.invvis-grid{grid-template-columns:1fr}}
+  .invvis-snapshot{padding:10px;background:var(--bg-surface);border-radius:6px;border:1px solid var(--border-subtle);font-family:var(--mono);font-size:11.5px;display:flex;flex-direction:column;gap:5px;max-height:340px;overflow-y:auto}
+  .invvis-row{display:grid;grid-template-columns:1fr 56px 88px;gap:8px;align-items:center;padding:5px 8px;border-radius:4px;border:1px solid var(--border-subtle);background:#fff}
+  .invvis-row.active{background:#dbeafe;border-color:#2563eb;box-shadow:inset 2px 0 0 #2563eb}
+  .invvis-row.flat{opacity:.55}
+  .invvis-sym{font-weight:600;font-size:11px;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .invvis-pos{font-variant-numeric:tabular-nums;font-weight:700;text-align:right}
+  .invvis-pos.long{color:#059669}.invvis-pos.short{color:#dc2626}.invvis-pos.flat{color:var(--text-muted)}
+  .invvis-bar{position:relative;height:8px;border-radius:3px;background:var(--bg-raised);overflow:hidden}
+  .invvis-bar::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--border-strong)}
+  .invvis-bar-fill{position:absolute;top:0;height:100%;border-radius:2px}
+  .invvis-bar-fill.long{background:#10b981;left:50%}
+  .invvis-bar-fill.short{background:#ef4444;right:50%}
+  .invvis-chart{padding:6px 10px 4px;background:var(--bg-surface);border-radius:6px;border:1px solid var(--border-subtle);min-height:300px;position:relative}
+  .invvis-chart canvas{width:100%!important;height:300px!important}
+  .invvis-empty{color:var(--text-muted);font-style:italic;padding:30px 10px;text-align:center;font-size:11.5px}
+
+  .code-box{background:var(--surf-code);border:1px solid var(--surf-code-border);border-radius:8px;overflow:hidden}
+  .code-box h3{color:var(--text-muted);font-size:11px;margin:0;padding:10px 14px;border-bottom:1px solid var(--surf-code-border);display:flex;justify-content:space-between;align-items:center;font-weight:600;font-family:var(--mono)}
+  .code-box pre{color:var(--surf-code-pre-text);font-family:var(--mono);font-size:11.5px;line-height:1.65;overflow-x:auto;white-space:pre;max-height:440px;overflow-y:auto;padding:14px;background:var(--surf-code-pre)}
+  .copy-btn{background:var(--bg-surface);border:1px solid var(--border);border-radius:6px;color:var(--text-secondary);font-size:10px;padding:3px 10px;cursor:pointer;font-family:inherit;transition:all .15s;font-weight:500}
+  .copy-btn:hover{color:var(--text-primary);border-color:var(--border-strong);background:var(--bg-hover)}
+
+  .loading{color:var(--text-muted);padding:60px 20px;text-align:center}
+
+  /* === price chart with trade markers === */
+  .pchart{background:var(--surf-trades);border:1px solid var(--surf-trades-border);border-radius:8px;padding:14px;margin-bottom:16px}
+  .pchart-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+  .pchart-head h3{color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.6px;font-weight:600;margin:0}
+  .pchart-legend{display:flex;gap:14px;font-size:10.5px;color:var(--text-muted)}
+  .pchart-legend span{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono)}
+  .pchart-legend .swatch{display:inline-block;width:10px;height:10px;border-radius:50%}
+  .pchart-canvas-wrap{position:relative;height:280px}
+  .pchart-canvas-wrap canvas{width:100%!important;height:100%!important}
+
+  /* === tick-navigator (book viewer) === */
+  .obnav{background:var(--surf-trades);border:1px solid var(--surf-trades-border);border-radius:8px;padding:14px;margin-bottom:16px}
+  .obnav-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+  .obnav-head h3{color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.6px;font-weight:600;margin:0}
+  .obnav-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .obnav-controls select,.obnav-controls input[type=number]{font-family:var(--mono);font-size:11px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg-surface)}
+  .obnav-slider{flex:1;min-width:200px;display:flex;gap:10px;align-items:center;margin:8px 0 14px}
+  .obnav-slider input[type=range]{flex:1;height:18px}
+  .obnav-tick{font-family:var(--mono);font-size:13px;font-weight:700;min-width:120px}
+  .obnav-step{background:var(--bg-surface);border:1px solid var(--border);color:var(--text-secondary);font-family:var(--mono);font-size:13px;padding:4px 10px;border-radius:6px;cursor:pointer;min-width:32px}
+  .obnav-step:hover{background:var(--bg-hover);color:var(--text-primary)}
+  .obnav-mark{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;font-weight:900;font-size:13px;color:#fff;margin-right:4px;line-height:1}
+  .obnav-mark.buy{background:#059669}
+  .obnav-mark.sell{background:#dc2626}
+  .obnav-row{display:grid;grid-template-columns:24px 60px 1fr 60px;gap:6px;align-items:center;padding:3px 6px;border-radius:4px}
+  .obnav-grid{display:grid;grid-template-columns:1fr 1.2fr;gap:14px}
+  @media(max-width:900px){.obnav-grid{grid-template-columns:1fr}}
+  .obnav-book{display:flex;flex-direction:column;gap:2px;padding:10px;background:var(--bg-surface);border-radius:6px;border:1px solid var(--border-subtle);font-family:var(--mono);font-size:12px}
+  .obnav-row.ask{color:#dc2626}
+  .obnav-row.bid{color:#059669}
+  .obnav-row.mid{background:#fef3c7;color:#78350f;font-weight:700;padding:6px 8px;margin:4px 0;border-radius:5px;text-align:center;grid-template-columns:1fr}
+  .obnav-row.empty{color:var(--text-muted);opacity:.5}
+  .obnav-row.own.buy{background:#d1fae5;border-left:3px solid #059669;font-weight:700}
+  .obnav-row.own.sell{background:#fee2e2;border-left:3px solid #dc2626;font-weight:700}
+  .obnav-bar{height:14px;border-radius:3px;position:relative}
+  .obnav-bar.ask{background:linear-gradient(90deg,#fecaca 0%,#fee2e2 100%)}
+  .obnav-bar.bid{background:linear-gradient(90deg,#bbf7d0 0%,#dcfce7 100%)}
+  .obnav-px{font-weight:600;text-align:right}
+  .obnav-vol{text-align:left;color:var(--text-muted)}
+  .obnav-fills{padding:10px;background:var(--bg-surface);border-radius:6px;border:1px solid var(--border-subtle);min-height:160px}
+  .obnav-fill{padding:8px 10px;margin-bottom:6px;background:#fff;border:1px solid var(--border-subtle);border-left:3px solid;border-radius:5px;font-size:12px;line-height:1.5}
+  .obnav-fill.buy{border-left-color:#059669}
+  .obnav-fill.sell{border-left-color:#dc2626}
+  .obnav-fill .head{font-family:var(--mono);font-weight:700;display:flex;justify-content:space-between;margin-bottom:4px}
+  .obnav-fill .head .side{font-size:10px;letter-spacing:.5px;padding:2px 6px;border-radius:3px;color:#fff}
+  .obnav-fill.buy .head .side{background:#059669}
+  .obnav-fill.sell .head .side{background:#dc2626}
+  .obnav-fill .why{color:var(--text-muted);font-size:11px}
+  .obnav-empty{color:var(--text-muted);font-style:italic;padding:30px 10px;text-align:center;font-size:11.5px}
+
+  @media(max-width:900px){
+    .topbar{padding:0 16px;height:48px}
+    .content{padding:14px 16px 40px}
+    .charts{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <a class="logo" href="./index.html">
+      <img src="./billiken-logo.jpg" alt="SLU" class="logo-img">
+      <h1><span>Prosperity</span></h1>
+    </a>
+    <nav class="nav">
+      <a class="nav-link active" href="./index.html">Traders</a>
+      <a class="nav-link" href="./manual-trading.html">Manual Trading</a>
+      <a class="nav-link" href="./discord-intel.html">Discord Bot</a>
+      <a class="nav-link" href="./round5.html">Round 5 Explorer</a>
+    </nav>
+  </div>
+</div>
+
+<div class="content" id="root">
+  <div class="loading">Loading…</div>
+</div>
+
+<script src="./shared.js"></script>
+<script>
+const BASE='./runs';
+const VIS='https://kevin-fu1.github.io/imc-prosperity-4-visualizer/';
+
+function mkChart(t,w){const b=document.createElement('div');b.className='chart-box'+(w?' wide':'');b.innerHTML=`<h3>${t}</h3><canvas></canvas>`;return b}
+function co(){return{responsive:true,animation:false,plugins:{legend:{labels:{color:'#6b7280',font:{size:10,family:'Inter'}}}},scales:{x:{type:'linear',grid:{color:'#e5e7eb'},ticks:{color:'#9ca3af',maxTicksLimit:8,font:{size:10}}},y:{grid:{color:'#e5e7eb'},ticks:{color:'#9ca3af',font:{size:10}}}},interaction:{intersect:false,mode:'index'}}}
+function ds(d,m){if(d.length<=m)return d;const s=Math.floor(d.length/m);return d.filter((_,i)=>i%s===0||i===d.length-1)}
+
+// === Price chart with trade markers (jmerle-style) ==========================
+function renderPriceChart(parent, actCsv, tradesCsv, initialSym){
+  const symbols=[...new Set((actCsv||[]).map(r=>r.product))].sort();
+  if(!symbols.length) return null;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'pchart';
+  wrap.innerHTML = `
+    <div class="pchart-head">
+      <h3>Price &amp; trades</h3>
+      <div class="pchart-legend">
+        <span><span class="swatch" style="background:#111827"></span>mid</span>
+        <span><span class="swatch" style="background:#94a3b8"></span>best bid / ask</span>
+        <span><span class="swatch" style="background:#059669"></span>our buy</span>
+        <span><span class="swatch" style="background:#dc2626"></span>our sell</span>
+      </div>
+    </div>
+    <div class="pchart-canvas-wrap"><canvas></canvas></div>
+  `;
+  parent.appendChild(wrap);
+  const canvas = wrap.querySelector('canvas');
+
+  let chart = null;
+  let curSym = initialSym || symbols[0];
+
+  function rebuild(sym){
+    curSym = sym;
+    // Build series for this symbol
+    const series = (actCsv||[]).filter(r=>r.product===sym).map(r=>({
+      x:+r.timestamp,
+      mid: r.mid_price ? +r.mid_price : null,
+      bid: r.bid_price_1 ? +r.bid_price_1 : null,
+      ask: r.ask_price_1 ? +r.ask_price_1 : null,
+    })).sort((a,b)=>a.x-b.x);
+    // Decimate for performance: keep ~600 points max
+    const stride = Math.max(1, Math.floor(series.length/600));
+    const sampled = series.filter((_,i)=>i%stride===0||i===series.length-1);
+
+    // Our trades
+    const buys=[], sells=[];
+    for(const t of (tradesCsv||[])){
+      if(t.symbol!==sym) continue;
+      const isBuy = t.buyer==='SUBMISSION';
+      const isSell = t.seller==='SUBMISSION';
+      if(!isBuy && !isSell) continue;
+      const pt = {x:+t.timestamp, y:+t.price, qty:+t.quantity};
+      (isBuy ? buys : sells).push(pt);
+    }
+
+    if(chart) chart.destroy();
+    chart = new Chart(canvas, {
+      type:'line',
+      data:{datasets:[
+        {label:'mid', data:sampled.filter(s=>s.mid!=null).map(s=>({x:s.x,y:s.mid})),
+         borderColor:'#111827', borderWidth:1.5, pointRadius:0, tension:.05, fill:false, order:1},
+        {label:'best bid', data:sampled.filter(s=>s.bid!=null).map(s=>({x:s.x,y:s.bid})),
+         borderColor:'#94a3b8', borderWidth:1, pointRadius:0, tension:.05, fill:false, borderDash:[2,3], order:2},
+        {label:'best ask', data:sampled.filter(s=>s.ask!=null).map(s=>({x:s.x,y:s.ask})),
+         borderColor:'#cbd5e1', borderWidth:1, pointRadius:0, tension:.05, fill:false, borderDash:[2,3], order:3},
+        {label:'buy', type:'scatter', data:buys, backgroundColor:'#059669', borderColor:'#059669',
+         pointStyle:'triangle', pointRadius:5, pointHoverRadius:8, rotation:0, order:0,
+         showLine:false},
+        {label:'sell', type:'scatter', data:sells, backgroundColor:'#dc2626', borderColor:'#dc2626',
+         pointStyle:'triangle', pointRadius:5, pointHoverRadius:8, rotation:180, order:0,
+         showLine:false},
+      ]},
+      options:{
+        responsive:true, maintainAspectRatio:false, animation:false,
+        plugins:{
+          legend:{display:false},
+          tooltip:{
+            mode:'nearest', intersect:false,
+            callbacks:{
+              label(ctx){
+                if(ctx.dataset.label==='buy' || ctx.dataset.label==='sell'){
+                  const r = ctx.raw;
+                  return `${ctx.dataset.label.toUpperCase()} ${r.qty} @ ${r.y.toLocaleString()}`;
+                }
+                return `${ctx.dataset.label}: ${ctx.parsed.y?.toLocaleString()}`;
+              }
+            }
+          },
+        },
+        scales:{
+          x:{type:'linear', grid:{color:'#e5e7eb'}, ticks:{color:'#9ca3af', maxTicksLimit:10, font:{size:10}}},
+          y:{grid:{color:'#e5e7eb'}, ticks:{color:'#9ca3af', font:{size:10}}, title:{display:true, text:`${sym} price`, color:'#6b7280', font:{size:10}}},
+        },
+        interaction:{intersect:false, mode:'nearest'},
+      },
+      plugins:[{
+        id:'tickMarker',
+        afterDraw(c){
+          const ts = c.$markerTs;
+          if(ts == null) return;
+          const xs = c.scales.x, ys = c.scales.y;
+          const x = xs.getPixelForValue(ts);
+          if(x < xs.left || x > xs.right) return;
+          c.ctx.save();
+          c.ctx.strokeStyle = '#2563eb';
+          c.ctx.lineWidth = 1.5;
+          c.ctx.setLineDash([5,4]);
+          c.ctx.beginPath();
+          c.ctx.moveTo(x, ys.top);
+          c.ctx.lineTo(x, ys.bottom);
+          c.ctx.stroke();
+          c.ctx.restore();
+        }
+      }]
+    });
+    if(pendingTs != null){ chart.$markerTs = pendingTs; chart.update('none'); }
+  }
+
+  let pendingTs = null;
+  rebuild(curSym);
+
+  return {
+    setTick(ts){ pendingTs = ts; if(chart){ chart.$markerTs = ts; chart.update('none'); } },
+    setSymbol(s){ if(symbols.includes(s) && s !== curSym) rebuild(s); },
+  };
+}
+
+// === Order book tick navigator ============================================
+function buildSymbolBookSeries(actCsv, sym){
+  // Returns sorted [{ts, bids:[{p,v}], asks:[{p,v}], mid}]
+  const out=[];
+  for(const r of actCsv||[]){
+    if(r.product!==sym) continue;
+    const bids=[],asks=[];
+    for(let i=1;i<=3;i++){
+      const bp=r[`bid_price_${i}`],bv=r[`bid_volume_${i}`];
+      if(bp&&bp!=='')bids.push({p:+bp,v:+bv});
+      const ap=r[`ask_price_${i}`],av=r[`ask_volume_${i}`];
+      if(ap&&ap!=='')asks.push({p:+ap,v:+av});
+    }
+    bids.sort((a,b)=>b.p-a.p);
+    asks.sort((a,b)=>a.p-b.p);
+    out.push({ts:+r.timestamp, bids, asks, mid:r.mid_price?+r.mid_price:null});
+  }
+  return out.sort((a,b)=>a.ts-b.ts);
+}
+
+function buildSymbolFillIndex(tradesCsv, sym){
+  // Returns Map(timestamp -> [{side, price, qty, why}])
+  const m=new Map();
+  for(const t of tradesCsv||[]){
+    if(t.symbol!==sym) continue;
+    const isBuy = t.buyer==='SUBMISSION';
+    const isSell = t.seller==='SUBMISSION';
+    if(!isBuy && !isSell) continue;
+    const ts=+t.timestamp;
+    if(!m.has(ts)) m.set(ts,[]);
+    m.get(ts).push({side:isBuy?'BUY':'SELL', price:+t.price, qty:+t.quantity});
+  }
+  return m;
+}
+
+// Per-product hardcoded fair value — overrides mid for profit calculation.
+const FAIR_BY_SYMBOL = {
+  'HYDROGEL_PACK': 10000,
+};
+
+function explainFill(fill, book, symbol){
+  // Classify each fill from OUR perspective:
+  //   BUY  + fill.price >= bestAsk → we crossed up to lift their ask  (TAKER)
+  //   BUY  + otherwise            → someone hit our resting bid       (MAKER)
+  //   SELL + fill.price <= bestBid → we crossed down to hit their bid (TAKER)
+  //   SELL + otherwise            → someone lifted our resting ask    (MAKER)
+  // The book snapshot is post-fill, so a maker fill at our touch quote may
+  // sit inside the now-displayed spread — still us making the market.
+  const fair = FAIR_BY_SYMBOL[symbol];
+  const ref = fair != null ? fair : book?.mid;
+  const refLabel = fair != null ? 'fair' : 'mid';
+  const profit = ref != null ? (fill.side==='BUY' ? ref - fill.price : fill.price - ref) : null;
+
+  const bestAsk = book?.asks?.[0];
+  const bestBid = book?.bids?.[0];
+  const isTaker = (fill.side === 'BUY')
+    ? (bestAsk != null && fill.price >= bestAsk.p)
+    : (bestBid != null && fill.price <= bestBid.p);
+
+  // Action from OUR perspective — what we did, plain English.
+  // BUY + maker = our resting BID was hit (we bought at our bid).
+  // SELL + maker = our resting ASK was lifted (we sold at our ask).
+  // BUY + taker = we crossed up and lifted their best ask.
+  // SELL + taker = we crossed down and hit their best bid.
+  let role, action;
+  if(isTaker){
+    role = 'TAKER';
+    action = (fill.side === 'BUY')
+      ? `we lifted the ask @ ${fill.price.toLocaleString()} (paid the spread to buy)`
+      : `we hit the bid @ ${fill.price.toLocaleString()} (paid the spread to sell)`;
+  } else {
+    role = 'MAKER';
+    action = (fill.side === 'BUY')
+      ? `we bought at our resting bid @ ${fill.price.toLocaleString()} (someone sold to us)`
+      : `we sold at our resting ask @ ${fill.price.toLocaleString()} (someone bought from us)`;
+  }
+
+  const parts = [`<b>${role}</b> ${fill.qty} lots — ${action}`];
+  if(profit != null){
+    const sign = profit > 0 ? '+' : (profit < 0 ? '−' : '±');
+    const word = profit > 0 ? 'profit' : profit < 0 ? 'LOSS' : 'breakeven';
+    parts.push(`(${sign}${Math.abs(profit).toFixed(1)}/lot vs ${refLabel}=${ref.toLocaleString()} → ${word} ${fill.qty * profit >= 0 ? '+' : ''}${(fill.qty * profit).toFixed(0)})`);
+  }
+  return parts.join(' ');
+}
+
+function findBookAt(series, ts){
+  // Find the snapshot at or just before ts (binary search on ts).
+  if(!series.length) return null;
+  let lo=0, hi=series.length-1;
+  while(lo<hi){
+    const mid=(lo+hi+1)>>1;
+    if(series[mid].ts<=ts) lo=mid; else hi=mid-1;
+  }
+  return series[lo].ts<=ts ? series[lo] : null;
+}
+
+function renderObnav(parent, runId, actCsv, tradesCsv, onTick){
+  const symbols=[...new Set((actCsv||[]).map(r=>r.product))].sort();
+  if(!symbols.length) return null;
+
+  const tsAll=[...new Set((actCsv||[]).map(r=>+r.timestamp))].sort((a,b)=>a-b);
+  if(!tsAll.length) return null;
+
+  const wrap=document.createElement('div'); wrap.className='obnav';
+  const nbsp = ' ';
+  wrap.innerHTML = `
+    <div class="obnav-head">
+      <h3>Order book navigator</h3>
+      <div class="obnav-controls">
+        <label style="font-size:10px;color:var(--text-muted)">symbol</label>
+        <select class="ob-sym">${symbols.map(s=>`<option value="${s}">${s}</option>`).join('')}</select>
+      </div>
+    </div>
+    <div class="obnav-slider">
+      <button class="obnav-step ob-prev">‹</button>
+      <input type="range" class="ob-range" min="0" max="${tsAll.length-1}" value="0" step="1">
+      <button class="obnav-step ob-next">›</button>
+      <div class="obnav-tick">tick <span class="ob-ts">0</span></div>
+    </div>
+    <div class="obnav-grid">
+      <div class="obnav-book ob-book"></div>
+      <div class="obnav-fills">
+        <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">our fills at this tick</div>
+        <div class="ob-fills-body"></div>
+      </div>
+    </div>
+  `;
+  parent.appendChild(wrap);
+
+  const symSel = wrap.querySelector('.ob-sym');
+  const range  = wrap.querySelector('.ob-range');
+  const tsLbl  = wrap.querySelector('.ob-ts');
+  const bookEl = wrap.querySelector('.ob-book');
+  const fillsEl= wrap.querySelector('.ob-fills-body');
+  const btnPrev= wrap.querySelector('.ob-prev');
+  const btnNext= wrap.querySelector('.ob-next');
+
+  let curSym = symbols[0];
+  let series = buildSymbolBookSeries(actCsv, curSym);
+  let fillIdx = buildSymbolFillIndex(tradesCsv, curSym);
+
+  function paint(idx){
+    const ts = tsAll[idx];
+    tsLbl.textContent = ts.toLocaleString();
+    const book = findBookAt(series, ts);
+    if(!book){
+      bookEl.innerHTML = '<div class="obnav-empty">no book at this tick for this symbol</div>';
+      fillsEl.innerHTML = '<div class="obnav-empty">—</div>';
+      return;
+    }
+    // Volume scale for bars
+    const vols = [...book.bids.map(b=>b.v), ...book.asks.map(a=>a.v)];
+    const vmax = vols.length ? Math.max(...vols) : 1;
+    const fillsHere = (fillIdx.get(ts)||[]);
+    // Per-price aggregate trade size & direction at this tick
+    const ownAtPrice = new Map();
+    for(const f of fillsHere){
+      const cur = ownAtPrice.get(f.price);
+      if(!cur) ownAtPrice.set(f.price, {side:f.side, qty:f.qty});
+      else { cur.qty += f.qty; if(cur.side !== f.side) cur.side = 'MIXED'; }
+    }
+
+    const mkRow=(side, lvl)=>{
+      if(!lvl) return `<div class="obnav-row ${side} empty"><span></span><span class="obnav-px">—</span><span class="obnav-bar empty"></span><span class="obnav-vol">—</span></div>`;
+      const own = ownAtPrice.get(lvl.p);
+      let ownClass = '', mark = '<span></span>';
+      if(own){
+        ownClass = ' own ' + (own.side === 'BUY' ? 'buy' : own.side === 'SELL' ? 'sell' : 'buy');
+        const arrow = own.side === 'BUY' ? '↑' : own.side === 'SELL' ? '↓' : '⇅';
+        const cls = own.side === 'BUY' ? 'buy' : 'sell';
+        mark = `<span class="obnav-mark ${cls}" title="our ${own.side} ${own.qty} @ ${lvl.p}">${arrow}</span>`;
+      }
+      const w = (lvl.v/vmax*100).toFixed(1);
+      return `<div class="obnav-row ${side}${ownClass}">${mark}<span class="obnav-px">${lvl.p.toLocaleString()}</span><span class="obnav-bar ${side}" style="width:${w}%"></span><span class="obnav-vol">×${lvl.v}</span></div>`;
+    };
+    // Asks shown high → low (so lowest ask sits next to mid), then mid, then bids high → low
+    const asksDesc = [book.asks[2],book.asks[1],book.asks[0]];
+    const bidsDesc = [book.bids[0],book.bids[1],book.bids[2]];
+    bookEl.innerHTML =
+      asksDesc.map(l=>mkRow('ask',l)).join('') +
+      `<div class="obnav-row mid">mid ${book.mid!=null?book.mid.toLocaleString():'—'}</div>` +
+      bidsDesc.map(l=>mkRow('bid',l)).join('');
+
+    // Fill explanations
+    if(!fillsHere.length){
+      fillsEl.innerHTML = '<div class="obnav-empty">no fills this tick</div>';
+    } else {
+      fillsEl.innerHTML = fillsHere.map(f=>{
+        const why = explainFill(f, book, curSym);
+        return `<div class="obnav-fill ${f.side.toLowerCase()}"><div class="head"><span>${f.side}</span><span class="side">${f.side}</span></div><div class="why">${why}</div></div>`;
+      }).join('');
+    }
+  }
+
+  function broadcast(idx){
+    const ts = tsAll[idx];
+    if(onTick) onTick(ts, curSym);
+  }
+
+  symSel.addEventListener('change', e=>{
+    curSym = e.target.value;
+    series = buildSymbolBookSeries(actCsv, curSym);
+    fillIdx = buildSymbolFillIndex(tradesCsv, curSym);
+    paint(+range.value); broadcast(+range.value);
+  });
+  range.addEventListener('input', e=>{ paint(+e.target.value); broadcast(+e.target.value); });
+  btnPrev.addEventListener('click', ()=>{ const v=Math.max(0,+range.value-1); range.value=v; paint(v); broadcast(v); });
+  btnNext.addEventListener('click', ()=>{ const v=Math.min(+range.max,+range.value+1); range.value=v; paint(v); broadcast(v); });
+
+  paint(0); broadcast(0);
+  return { tsAll, getSymbol(){return curSym;}, getTickIndex(){return +range.value;} };
+}
+
+// === Inventory time-series ================================================
+const POS_LIMITS = {
+  'HYDROGEL_PACK':200, 'VELVETFRUIT_EXTRACT':200,
+  'VEV_4000':300, 'VEV_4500':300, 'VEV_5000':300, 'VEV_5100':300,
+  'VEV_5200':300, 'VEV_5300':300, 'VEV_5400':300, 'VEV_5500':300,
+  'VEV_6000':300, 'VEV_6500':300,
+  'INTARIAN_PEPPER':80, 'ASH_COATED_OSMIUM':80,
+};
+
+function buildPositionSeries(tradesCsv){
+  // Per symbol cumulative position from SUBMISSION trades. Map(sym → [{ts,pos}]).
+  const events = (tradesCsv||[])
+    .filter(t=>t.buyer==='SUBMISSION'||t.seller==='SUBMISSION')
+    .map(t=>({ts:+t.timestamp, sym:t.symbol,
+              d:(t.buyer==='SUBMISSION' ? +t.quantity : -t.quantity)}))
+    .sort((a,b)=>a.ts-b.ts);
+  const out = new Map();
+  for(const e of events){
+    let arr = out.get(e.sym);
+    if(!arr){ arr=[{ts:e.ts-1, pos:0}]; out.set(e.sym, arr); } // anchor at zero
+    const prev = arr[arr.length-1].pos;
+    arr.push({ts:e.ts, pos:prev + e.d});
+  }
+  return out;
+}
+
+function findPosAt(arr, ts){
+  if(!arr || !arr.length || ts < arr[0].ts) return 0;
+  let lo=0, hi=arr.length-1;
+  while(lo<hi){
+    const mid=(lo+hi+1)>>1;
+    if(arr[mid].ts<=ts) lo=mid; else hi=mid-1;
+  }
+  return arr[lo].pos;
+}
+
+function renderInventory(parent, tradesCsv){
+  const series = buildPositionSeries(tradesCsv);
+  const symbols = [...series.keys()].sort();
+
+  const wrap = document.createElement('div');
+  wrap.className = 'invvis';
+  wrap.innerHTML = `
+    <div class="invvis-head">
+      <h3>Inventory &amp; fills</h3>
+      <div>tick <span class="invvis-ts">—</span></div>
+    </div>
+    <div class="invvis-grid">
+      <div class="invvis-snapshot"></div>
+      <div class="invvis-chart"><canvas></canvas></div>
+    </div>
+  `;
+  parent.appendChild(wrap);
+
+  if(!symbols.length){
+    wrap.querySelector('.invvis-grid').innerHTML = '<div class="invvis-empty">no SUBMISSION trades for this run</div>';
+    return { setTick(){}, setSymbol(){} };
+  }
+
+  const snapEl = wrap.querySelector('.invvis-snapshot');
+  const tsLbl = wrap.querySelector('.invvis-ts');
+  const canvas = wrap.querySelector('canvas');
+
+  const colors=['#2563eb','#059669','#d97706','#7c3aed','#dc2626','#0891b2','#db2777','#65a30d','#0284c7','#ea580c','#7e22ce','#0d9488','#1e293b'];
+  const datasets = symbols.map((s,i)=>{
+    const pts = series.get(s)||[];
+    return {
+      label:s,
+      data: pts.map(p=>({x:p.ts, y:p.pos})),
+      borderColor: colors[i%colors.length],
+      backgroundColor: colors[i%colors.length],
+      borderWidth:1.4, pointRadius:0, stepped:true, tension:0,
+    };
+  });
+
+  // Per-symbol buy/sell markers, plotted at (trade_ts, position_after_trade).
+  // Filtered to the active symbol so the chart doesn't get crowded — swapped
+  // by setSymbol below.
+  const fills = { buys:new Map(), sells:new Map() };
+  {
+    const events = (tradesCsv||[])
+      .filter(t=>t.buyer==='SUBMISSION'||t.seller==='SUBMISSION')
+      .map(t=>({ts:+t.timestamp, sym:t.symbol,
+                side:t.buyer==='SUBMISSION'?'buy':'sell',
+                d:(t.buyer==='SUBMISSION' ? +t.quantity : -t.quantity),
+                qty:+t.quantity, price:+t.price}))
+      .sort((a,b)=>a.ts-b.ts);
+    const cum = new Map();
+    for(const e of events){
+      const after = (cum.get(e.sym)||0) + e.d;
+      cum.set(e.sym, after);
+      const bag = e.side==='buy' ? fills.buys : fills.sells;
+      if(!bag.has(e.sym)) bag.set(e.sym, []);
+      bag.get(e.sym).push({x:e.ts, y:after, qty:e.qty, price:e.price});
+    }
+  }
+  datasets.push({
+    label:'our buy', type:'scatter', data:[],
+    backgroundColor:'#059669', borderColor:'#059669',
+    pointStyle:'triangle', pointRadius:5, pointHoverRadius:8, rotation:0,
+    showLine:false,
+  });
+  datasets.push({
+    label:'our sell', type:'scatter', data:[],
+    backgroundColor:'#dc2626', borderColor:'#dc2626',
+    pointStyle:'triangle', pointRadius:5, pointHoverRadius:8, rotation:180,
+    showLine:false,
+  });
+  const BUY_IDX = datasets.length - 2;
+  const SELL_IDX = datasets.length - 1;
+
+  let chart;
+  setTimeout(()=>{
+    chart = new Chart(canvas, {
+      type:'line',
+      data:{datasets},
+      options:{
+        responsive:true, animation:false, maintainAspectRatio:false,
+        plugins:{
+          legend:{position:'bottom', labels:{color:'#6b7280', font:{size:9.5, family:'Inter'}, boxWidth:10, boxHeight:10, padding:6,
+            usePointStyle:true}},
+          tooltip:{intersect:false, mode:'nearest',
+            callbacks:{label(ctx){
+              const lab = ctx.dataset.label;
+              if(lab==='our buy' || lab==='our sell'){
+                const r = ctx.raw;
+                return `${lab.toUpperCase()} ${r.qty} @ ${r.price?.toLocaleString()}  → pos ${r.y>0?'+':''}${r.y}`;
+              }
+              return `${lab}: ${ctx.parsed.y}`;
+            }}},
+        },
+        scales:{
+          x:{type:'linear', grid:{color:'#e5e7eb'}, ticks:{color:'#9ca3af', maxTicksLimit:8, font:{size:10}}},
+          y:{grid:{color:'#e5e7eb'}, ticks:{color:'#9ca3af', font:{size:10}}, title:{display:true, text:'position', color:'#6b7280', font:{size:10}}},
+        },
+        interaction:{intersect:false, mode:'nearest'}
+      },
+      plugins:[{
+        id:'tickMarker',
+        afterDraw(c){
+          const xs = c.scales.x, ys = c.scales.y;
+          // Per-symbol position-limit reference lines (max & min pos)
+          c.ctx.save();
+          c.ctx.strokeStyle = '#fca5a5';
+          c.ctx.setLineDash([2,3]);
+          c.ctx.lineWidth = 1;
+          // The largest limit among visible symbols sets the reference
+          let maxLim = 0;
+          for(const s of symbols){
+            const lim = POS_LIMITS[s] || 200;
+            if(lim > maxLim) maxLim = lim;
+          }
+          if(maxLim > 0){
+            for(const v of [maxLim, -maxLim]){
+              const y = ys.getPixelForValue(v);
+              if(y >= ys.top && y <= ys.bottom){
+                c.ctx.beginPath();
+                c.ctx.moveTo(xs.left, y); c.ctx.lineTo(xs.right, y);
+                c.ctx.stroke();
+                c.ctx.fillStyle = '#dc2626';
+                c.ctx.font = '10px Inter, sans-serif';
+                c.ctx.textAlign = 'right';
+                c.ctx.fillText(`limit ${v > 0 ? '+' : ''}${v}`, xs.right - 4, y - 3);
+              }
+            }
+          }
+          c.ctx.restore();
+
+          // Selected-tick vertical line
+          const ts = c.$markerTs;
+          if(ts == null) return;
+          const x = xs.getPixelForValue(ts);
+          if(x < xs.left || x > xs.right) return;
+          c.ctx.save();
+          c.ctx.strokeStyle = '#2563eb';
+          c.ctx.lineWidth = 1.5;
+          c.ctx.setLineDash([5,4]);
+          c.ctx.beginPath();
+          c.ctx.moveTo(x, ys.top);
+          c.ctx.lineTo(x, ys.bottom);
+          c.ctx.stroke();
+          c.ctx.restore();
+        }
+      }]
+    });
+    chart.data.datasets[BUY_IDX].data  = fills.buys.get(curSym)  || [];
+    chart.data.datasets[SELL_IDX].data = fills.sells.get(curSym) || [];
+    if(pendingTs != null){ chart.$markerTs = pendingTs; }
+    chart.update('none');
+  }, 60);
+
+  let curSym = symbols[0];
+  let pendingTs = null;
+
+  function paintSnapshot(ts){
+    snapEl.innerHTML='';
+    for(const s of symbols){
+      const pos = findPosAt(series.get(s), ts);
+      const lim = POS_LIMITS[s] || 200;
+      const pct = Math.max(-1, Math.min(1, pos/lim));
+      const fillW = (Math.abs(pct)*50).toFixed(1);
+      const cls = pos>0?'long':pos<0?'short':'flat';
+      const row = document.createElement('div');
+      row.className = 'invvis-row' + (s===curSym?' active':'') + (pos===0?' flat':'');
+      row.innerHTML = `
+        <span class="invvis-sym" title="${s}">${s}</span>
+        <span class="invvis-pos ${cls}">${pos>0?'+':''}${pos}</span>
+        <span class="invvis-bar"><span class="invvis-bar-fill ${cls}" style="width:${fillW}%"></span></span>
+      `;
+      snapEl.appendChild(row);
+    }
+  }
+
+  return {
+    setTick(ts){
+      tsLbl.textContent = ts.toLocaleString();
+      paintSnapshot(ts);
+      pendingTs = ts;
+      if(chart){ chart.$markerTs = ts; chart.update('none'); }
+    },
+    setSymbol(s){
+      if(!series.has(s)) return;
+      curSym = s;
+      paintSnapshot(pendingTs != null ? pendingTs : 0);
+      if(chart){
+        chart.data.datasets[BUY_IDX].data  = fills.buys.get(s)  || [];
+        chart.data.datasets[SELL_IDX].data = fills.sells.get(s) || [];
+        chart.update('none');
+      }
+    }
+  };
+}
+
+async function init(){
+  const root=document.getElementById('root');
+  const params=new URLSearchParams(location.search);
+  const key=params.get('g');
+  if(!key){root.innerHTML='<div class="loading">Missing ?g=&lt;author|strategy|commit&gt;</div>';return}
+
+  const manifest=await fetch('./results.json',{cache:'no-cache'}).then(r=>r.json()).catch(()=>null);
+  if(!manifest){root.innerHTML='<div class="loading">Failed to load manifest</div>';return}
+
+  const [author,strategy,commit]=key.split('|');
+  const runs=manifest.filter(r=>r.author===author&&r.strategy===strategy&&r.commit===commit);
+  if(!runs.length){root.innerHTML='<div class="loading">Run not found</div>';return}
+
+  document.title=`${strategy} — Prosperity`;
+
+  const total=runs.reduce((s,r)=>s+(r.pnl||0),0);
+  const avg=runs.length?total/runs.length:0;
+  const sub=runs.find(r=>String(r.dataset).includes('submission'));
+  const subPnl=sub?sub.pnl:avg;
+  const time=runs[0].timestamp?new Date(runs[0].timestamp).toLocaleString():'';
+
+  root.innerHTML='';
+  const head=document.createElement('div');head.className='run-head';
+  head.innerHTML=`
+    <a class="back-link" href="./index.html">← Back</a>
+    <div class="run-title">
+      <div class="run-strat">${strategy}</div>
+      <div class="run-meta"><span>by <b>${author}</b></span><span>commit <b>${commit}</b></span><span>${time}</span></div>
+    </div>
+    <div style="text-align:right">
+      <div class="stat-label">Avg PnL / day</div>
+      <div style="font-family:var(--mono);font-size:22px;font-weight:700;letter-spacing:-.4px" class="${pc(subPnl)}">${fp(subPnl)}</div>
+    </div>
+  `;
+  root.appendChild(head);
+
+  const wrap=document.createElement('div');wrap.className='panels-wrap';
+  const tabs=document.createElement('div');tabs.className='day-tabs';
+  const panels=document.createElement('div');
+
+  const runData=await Promise.all(runs.map(async r=>({
+    ...r,
+    pnlCsv:await fetchCsv(`${BASE}/${r.id}/pnl_by_product.csv`),
+    tradesCsv:await fetchCsv(`${BASE}/${r.id}/trades.csv`),
+    actCsv:await fetchCsv(`${BASE}/${r.id}/activity.csv`),
+  })));
+
+  const charts=[];
+  runData.forEach((r,ri)=>{
+    const lbl=String(r.dataset).includes('submission')?'Submission':`Day ${r.day}`;
+    const t=document.createElement('button');t.className='day-tab'+(ri===0?' active':'');
+    t.innerHTML=`${lbl} <span class="${pc(r.pnl)}" style="margin-left:6px;font-family:var(--mono);font-weight:600;font-size:11px">${fp(r.pnl)}</span>`;
+    t.onclick=()=>{
+      tabs.querySelectorAll('.day-tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');
+      panels.querySelectorAll('.day-panel').forEach(x=>x.classList.remove('active'));document.getElementById(`p-${ri}`).classList.add('active');
+    };
+    tabs.appendChild(t);
+
+    const p=document.createElement('div');p.className='day-panel'+(ri===0?' active':'');p.id=`p-${ri}`;
+    const prods=Object.entries(r.pnl_by_product||{}).map(([k,v])=>`<div><span class="stat-label">${k}</span><div class="stat-value ${pc(v)}">${fp(v)}</div></div>`).join('');
+    let visBtn='';
+    if(r.has_log){
+      const logAbs=new URL(`${BASE}/${r.id}/submission.log`,location.href).href;
+      const visUrl=`${VIS}?open=${encodeURIComponent(logAbs)}`;
+      visBtn=`<a href="${visUrl}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;padding:5px 11px;font-size:11.5px;font-weight:600;font-family:var(--mono);color:var(--accent);background:var(--accent-soft);border:1px solid var(--accent);border-radius:6px;text-decoration:none">Open in visualizer ↗</a>`;
+    }else{
+      visBtn=`<span title="Log retained only for the 10 most recent runs per author; this one was rotated out." style="display:inline-flex;align-items:center;gap:5px;padding:5px 11px;font-size:11.5px;font-weight:600;font-family:var(--mono);color:var(--text-muted);background:var(--bg-raised);border:1px solid var(--border);border-radius:6px;cursor:help">Log expired</span>`;
+    }
+    p.innerHTML=`<div class="stats"><div><span class="stat-label">PnL</span><div class="stat-value ${pc(r.pnl)}">${fp(r.pnl)}</div></div><div><span class="stat-label">Trades</span><div class="stat-value">${r.trades||'?'}</div></div><div><span class="stat-label">Ticks</span><div class="stat-value">${(r.ticks||0).toLocaleString()}</div></div>${prods}</div><div style="margin:-8px 0 14px;text-align:right">${visBtn}</div>`;
+
+    if(r.pnlCsv.length>0){
+      const cd=document.createElement('div');cd.className='charts';
+      const box=mkChart('Cumulative PnL',true);cd.appendChild(box);p.appendChild(cd);
+      const products=Object.keys(r.pnlCsv[0]).filter(k=>k!=='timestamp'&&k!=='total');
+      const sam=ds(r.pnlCsv,400);
+      const colors=['#2563eb','#059669','#d97706','#7c3aed','#dc2626','#0891b2'];
+      setTimeout(()=>{charts.push(new Chart(box.querySelector('canvas'),{type:'line',
+        data:{datasets:[{label:'Total',data:sam.map(x=>({x:+x.timestamp,y:+x.total})),borderColor:'#111827',borderWidth:2,pointRadius:0,tension:.1},
+          ...products.map((q,i)=>({label:q,data:sam.map(x=>({x:+x.timestamp,y:+(x[q]||0)})),borderColor:colors[i%colors.length],borderWidth:1.5,pointRadius:0,tension:.1}))]},
+        options:co()}))},50);
+    }
+
+    // === Price chart + Order book + Inventory (all synced to obnav slider) ===
+    let priceViz = null, invViz = null;
+    if(r.actCsv && r.actCsv.length > 0){
+      // Initial symbol is whatever the obnav defaults to (alphabetically first product)
+      const firstSym = [...new Set(r.actCsv.map(x=>x.product))].sort()[0];
+      priceViz = renderPriceChart(p, r.actCsv, r.tradesCsv, firstSym);
+      renderObnav(p, r.id, r.actCsv, r.tradesCsv, (ts, sym)=>{
+        if(priceViz){ priceViz.setSymbol(sym); priceViz.setTick(ts); }
+        if(invViz){ invViz.setSymbol(sym); invViz.setTick(ts); }
+      });
+    }
+    if(r.tradesCsv && r.tradesCsv.length > 0){
+      invViz = renderInventory(p, r.tradesCsv);
+      if(r.actCsv && r.actCsv.length > 0){
+        invViz.setTick(+r.actCsv[0].timestamp);
+      }
+    }
+    panels.appendChild(p);
+  });
+
+  wrap.appendChild(tabs);wrap.appendChild(panels);
+  root.appendChild(wrap);
+
+  const code=await fetchText(`${BASE}/${runs[0].id}/strategy.py`);
+  if(code){
+    const box=document.createElement('div');box.className='code-box';
+    const esc=code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    box.innerHTML=`<h3><span>${strategy}.py</span><button class="copy-btn" id="copy-btn">Copy</button></h3><pre>${esc}</pre>`;
+    root.appendChild(box);
+    document.getElementById('copy-btn').addEventListener('click',e=>{navigator.clipboard.writeText(code);e.target.textContent='Copied!';setTimeout(()=>e.target.textContent='Copy',1500)});
+  }
+}
+
+init();
+</script>
+</body>
+</html>

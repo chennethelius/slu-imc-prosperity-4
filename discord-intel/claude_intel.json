@@ -1,0 +1,537 @@
+{
+  "generated_at": "2026-04-19T03:15:22.156977+00:00",
+  "round": 1,
+  "total_messages_scraped": 2767,
+  "total_parameters_extracted": 58,
+  "total_code_blocks": 7,
+  "products": {
+    "ASH_COATED_OSMIUM": {
+      "strategy_consensus": "market_making",
+      "parameters": {
+        "basket_weight": {
+          "value": 0.0,
+          "confidence": 0.62,
+          "sources": 5,
+          "all_values": [
+            {
+              "value": 0.0,
+              "count": 3
+            },
+            {
+              "value": 926.0,
+              "count": 1
+            },
+            {
+              "value": 50.0,
+              "count": 1
+            }
+          ]
+        },
+        "fair_value": {
+          "value": 10.0,
+          "confidence": 0.8,
+          "sources": 1,
+          "all_values": [
+            {
+              "value": 10.0,
+              "count": 1
+            }
+          ]
+        }
+      },
+      "key_observations": [
+        {
+          "text": "```\n➜  prosperity_rust_backtester git:(main) ✗ rust_backtester --trader traders/round1-portal-v2-corrected.py --dataset round1 --day=-2 --persist --artifact-mode full --products full\nrust_backteste...",
+          "author": "t3chg0d",
+          "score": 100,
+          "timestamp": "2026-04-17T05:15:37.074000+00:00"
+        },
+        {
+          "text": "100%|#######################################| 10000/10000 [00:01<00:00, 9901.58it/s] ASH_COATED_OSMIUM: 21,234 INTARIAN_PEPPER_ROOT: 79,543 Total profit: 100,777\nBacktesting C:\\Users\\kylel\\OneDrive...",
+          "author": "quillua",
+          "score": 84,
+          "timestamp": "2026-04-17T04:26:51.168000+00:00"
+        },
+        {
+          "text": "for the ASH_COATED_OSMIUM they say ASH_COATED_OSMIUM is rumored to be a bit more volatile, but empirically that doesnt seem to be the case, its barely volatile at all and swings around a fv of 10k,...",
+          "author": "kami1432",
+          "score": 60,
+          "timestamp": "2026-04-16T02:11:40.530000+00:00"
+        },
+        {
+          "text": "I can't get past:\n\nASH_COATED_OSMIUM 2337.6875\nINTARIAN_PEPPER_ROOT 7106.0000\n\nI give up",
+          "author": "cynter01",
+          "score": 54,
+          "timestamp": "2026-04-17T06:34:17.927000+00:00"
+        },
+        {
+          "text": "what are u guys opening the lgos on for it to be readable rn my json is one long line on vs code?\n\"positions\":[{\"symbol\":\"ASH_COATED_OSMIUM\",\"quantity\":38},{\"symbol\":\"INTARIAN_PEPPER_ROOT\",\"quantit...",
+          "author": "sumiseraaa",
+          "score": 42,
+          "timestamp": "2026-04-16T18:50:26.312000+00:00"
+        }
+      ],
+      "code_snippets": [
+        {
+          "code": "➜  prosperity_rust_backtester git:(main) ✗ rust_backtester --trader traders/round1-portal-v2-corrected.py --dataset round1 --day=-2 --persist --artifact-mode full --products full\nrust_backtester --trader traders/round1-portal-v2-corrected.py --dataset round1 --day=-1 --persist --artifact-mode full --products full\nrust_backtester --trader traders/round1-portal-v2-corrected.py --dataset round1 --day=0  --persist --artifact-mode full --products full\n\nrust_backtester --trader traders/round1-porta...",
+          "language": "python",
+          "strategy_type": null,
+          "author": "t3chg0d",
+          "relevance": 100
+        }
+      ],
+      "message_count": 9
+    },
+    "EMERALDS": {
+      "strategy_consensus": null,
+      "parameters": {},
+      "key_observations": [],
+      "code_snippets": [],
+      "message_count": 10
+    },
+    "INTARIAN_PEPPER_ROOT": {
+      "strategy_consensus": "market_making",
+      "parameters": {
+        "basket_weight": {
+          "value": 6875.0,
+          "confidence": 0.52,
+          "sources": 6,
+          "all_values": [
+            {
+              "value": 6875.0,
+              "count": 1
+            },
+            {
+              "value": 381.0,
+              "count": 1
+            },
+            {
+              "value": 234.0,
+              "count": 1
+            },
+            {
+              "value": 2.0,
+              "count": 1
+            },
+            {
+              "value": 1.0,
+              "count": 1
+            },
+            {
+              "value": 0.0,
+              "count": 1
+            }
+          ]
+        }
+      },
+      "key_observations": [
+        {
+          "text": "```\n➜  prosperity_rust_backtester git:(main) ✗ rust_backtester --trader traders/round1-portal-v2-corrected.py --dataset round1 --day=-2 --persist --artifact-mode full --products full\nrust_backteste...",
+          "author": "t3chg0d",
+          "score": 100,
+          "timestamp": "2026-04-17T05:15:37.074000+00:00"
+        },
+        {
+          "text": "100%|#######################################| 10000/10000 [00:01<00:00, 9901.58it/s] ASH_COATED_OSMIUM: 21,234 INTARIAN_PEPPER_ROOT: 79,543 Total profit: 100,777\nBacktesting C:\\Users\\kylel\\OneDrive...",
+          "author": "quillua",
+          "score": 84,
+          "timestamp": "2026-04-17T04:26:51.168000+00:00"
+        },
+        {
+          "text": "I can't get past:\n\nASH_COATED_OSMIUM 2337.6875\nINTARIAN_PEPPER_ROOT 7106.0000\n\nI give up",
+          "author": "cynter01",
+          "score": 54,
+          "timestamp": "2026-04-17T06:34:17.927000+00:00"
+        },
+        {
+          "text": "what are u guys opening the lgos on for it to be readable rn my json is one long line on vs code?\n\"positions\":[{\"symbol\":\"ASH_COATED_OSMIUM\",\"quantity\":38},{\"symbol\":\"INTARIAN_PEPPER_ROOT\",\"quantit...",
+          "author": "sumiseraaa",
+          "score": 42,
+          "timestamp": "2026-04-16T18:50:26.312000+00:00"
+        }
+      ],
+      "code_snippets": [
+        {
+          "code": "➜  prosperity_rust_backtester git:(main) ✗ rust_backtester --trader traders/round1-portal-v2-corrected.py --dataset round1 --day=-2 --persist --artifact-mode full --products full\nrust_backtester --trader traders/round1-portal-v2-corrected.py --dataset round1 --day=-1 --persist --artifact-mode full --products full\nrust_backtester --trader traders/round1-portal-v2-corrected.py --dataset round1 --day=0  --persist --artifact-mode full --products full\n\nrust_backtester --trader traders/round1-porta...",
+          "language": "python",
+          "strategy_type": null,
+          "author": "t3chg0d",
+          "relevance": 100
+        }
+      ],
+      "message_count": 9
+    },
+    "OSMIUM": {
+      "strategy_consensus": "market_making",
+      "parameters": {
+        "basket_weight": {
+          "value": 1390.0,
+          "confidence": 0.54,
+          "sources": 8,
+          "all_values": [
+            {
+              "value": 1390.0,
+              "count": 2
+            },
+            {
+              "value": 9507.0,
+              "count": 1
+            },
+            {
+              "value": 3295.0,
+              "count": 1
+            },
+            {
+              "value": 3200.0,
+              "count": 1
+            },
+            {
+              "value": 2200.0,
+              "count": 1
+            },
+            {
+              "value": 1672.0,
+              "count": 1
+            },
+            {
+              "value": 1.0,
+              "count": 1
+            }
+          ]
+        },
+        "fair_value": {
+          "value": 10000.0,
+          "confidence": 0.68,
+          "sources": 2,
+          "all_values": [
+            {
+              "value": 10000.0,
+              "count": 1
+            },
+            {
+              "value": 10.0,
+              "count": 1
+            }
+          ]
+        }
+      },
+      "key_observations": [
+        {
+          "text": "```\n➜  prosperity_rust_backtester git:(main) ✗ rust_backtester --trader traders/round1-portal-v2-corrected.py --dataset round1 --day=-2 --persist --artifact-mode full --products full\nrust_backteste...",
+          "author": "t3chg0d",
+          "score": 100,
+          "timestamp": "2026-04-17T05:15:37.074000+00:00"
+        },
+        {
+          "text": "100%|#######################################| 10000/10000 [00:01<00:00, 9901.58it/s] ASH_COATED_OSMIUM: 21,234 INTARIAN_PEPPER_ROOT: 79,543 Total profit: 100,777\nBacktesting C:\\Users\\kylel\\OneDrive...",
+          "author": "quillua",
+          "score": 84,
+          "timestamp": "2026-04-17T04:26:51.168000+00:00"
+        },
+        {
+          "text": "Pepper is currently negative edge. It’s not a clean mean-reversion asset in this run, so the benchmark is basically ~0 PnL. My current strategy is overtrading it and losing ~25k total. I’m going to...",
+          "author": "spartan_35961",
+          "score": 66,
+          "timestamp": "2026-04-16T18:52:04.706000+00:00"
+        },
+        {
+          "text": "keeping a position of 70, and then doing the same thing as osmium, where you buy and sell undervalued/overvalued asks/bids, then market make as well for pepper. I used a regression line on mid to g...",
+          "author": "tribesdev",
+          "score": 66,
+          "timestamp": "2026-04-17T10:11:31.647000+00:00"
+        },
+        {
+          "text": "for the ASH_COATED_OSMIUM they say ASH_COATED_OSMIUM is rumored to be a bit more volatile, but empirically that doesnt seem to be the case, its barely volatile at all and swings around a fv of 10k,...",
+          "author": "kami1432",
+          "score": 60,
+          "timestamp": "2026-04-16T02:11:40.530000+00:00"
+        },
+        {
+          "text": "last hint i would ask this variable order book situation can be solved by basic market making or there is a different way (for both osmium and pepper since both have variable order book situation)",
+          "author": "sbmxz1143",
+          "score": 60,
+          "timestamp": "2026-04-16T13:19:22.305000+00:00"
+        },
+        {
+          "text": "Btw the backtester you sent here has 80 as position limit for osmium and pepper, isnt it 50?",
+          "author": "mannansaood",
+          "score": 60,
+          "timestamp": "2026-04-16T15:41:20.793000+00:00"
+        },
+        {
+          "text": "I mean profit of pepper root is ~2x that of osmium and the strat has very high sharpe so makes sense that total pnl does as well",
+          "author": "chrono55",
+          "score": 60,
+          "timestamp": "2026-04-16T18:09:12.069000+00:00"
+        },
+        {
+          "text": "id expect it to be higher tbh. sharpe for mm on osmium is already high and sharpe for pepper root is wild so 18 seems low",
+          "author": "chrono55",
+          "score": 60,
+          "timestamp": "2026-04-16T19:10:37.361000+00:00"
+        },
+        {
+          "text": "6 peppers and 7 for osmium",
+          "author": "gxvaher",
+          "score": 54,
+          "timestamp": "2026-04-15T22:00:07.405000+00:00"
+        }
+      ],
+      "code_snippets": [
+        {
+          "code": "➜  prosperity_rust_backtester git:(main) ✗ rust_backtester --trader traders/round1-portal-v2-corrected.py --dataset round1 --day=-2 --persist --artifact-mode full --products full\nrust_backtester --trader traders/round1-portal-v2-corrected.py --dataset round1 --day=-1 --persist --artifact-mode full --products full\nrust_backtester --trader traders/round1-portal-v2-corrected.py --dataset round1 --day=0  --persist --artifact-mode full --products full\n\nrust_backtester --trader traders/round1-porta...",
+          "language": "python",
+          "strategy_type": null,
+          "author": "t3chg0d",
+          "relevance": 100
+        }
+      ],
+      "message_count": 50
+    },
+    "PEPPER": {
+      "strategy_consensus": "market_making",
+      "parameters": {
+        "basket_weight": {
+          "value": 80.0,
+          "confidence": 0.56,
+          "sources": 19,
+          "all_values": [
+            {
+              "value": 80.0,
+              "count": 6
+            },
+            {
+              "value": 6.0,
+              "count": 4
+            },
+            {
+              "value": 9.0,
+              "count": 2
+            },
+            {
+              "value": 7300.0,
+              "count": 1
+            },
+            {
+              "value": 7232.0,
+              "count": 1
+            },
+            {
+              "value": 994.0,
+              "count": 1
+            },
+            {
+              "value": 70.0,
+              "count": 1
+            },
+            {
+              "value": 69.0,
+              "count": 1
+            },
+            {
+              "value": 25.0,
+              "count": 1
+            },
+            {
+              "value": 7.0,
+              "count": 1
+            }
+          ]
+        }
+      },
+      "key_observations": [
+        {
+          "text": "```\n➜  prosperity_rust_backtester git:(main) ✗ rust_backtester --trader traders/round1-portal-v2-corrected.py --dataset round1 --day=-2 --persist --artifact-mode full --products full\nrust_backteste...",
+          "author": "t3chg0d",
+          "score": 100,
+          "timestamp": "2026-04-17T05:15:37.074000+00:00"
+        },
+        {
+          "text": "100%|#######################################| 10000/10000 [00:01<00:00, 9901.58it/s] ASH_COATED_OSMIUM: 21,234 INTARIAN_PEPPER_ROOT: 79,543 Total profit: 100,777\nBacktesting C:\\Users\\kylel\\OneDrive...",
+          "author": "quillua",
+          "score": 84,
+          "timestamp": "2026-04-17T04:26:51.168000+00:00"
+        },
+        {
+          "text": "Pepper is currently negative edge. It’s not a clean mean-reversion asset in this run, so the benchmark is basically ~0 PnL. My current strategy is overtrading it and losing ~25k total. I’m going to...",
+          "author": "spartan_35961",
+          "score": 66,
+          "timestamp": "2026-04-16T18:52:04.706000+00:00"
+        },
+        {
+          "text": "keeping a position of 70, and then doing the same thing as osmium, where you buy and sell undervalued/overvalued asks/bids, then market make as well for pepper. I used a regression line on mid to g...",
+          "author": "tribesdev",
+          "score": 66,
+          "timestamp": "2026-04-17T10:11:31.647000+00:00"
+        },
+        {
+          "text": "last hint i would ask this variable order book situation can be solved by basic market making or there is a different way (for both osmium and pepper since both have variable order book situation)",
+          "author": "sbmxz1143",
+          "score": 60,
+          "timestamp": "2026-04-16T13:19:22.305000+00:00"
+        },
+        {
+          "text": "Btw the backtester you sent here has 80 as position limit for osmium and pepper, isnt it 50?",
+          "author": "mannansaood",
+          "score": 60,
+          "timestamp": "2026-04-16T15:41:20.793000+00:00"
+        },
+        {
+          "text": "I mean profit of pepper root is ~2x that of osmium and the strat has very high sharpe so makes sense that total pnl does as well",
+          "author": "chrono55",
+          "score": 60,
+          "timestamp": "2026-04-16T18:09:12.069000+00:00"
+        },
+        {
+          "text": "id expect it to be higher tbh. sharpe for mm on osmium is already high and sharpe for pepper root is wild so 18 seems low",
+          "author": "chrono55",
+          "score": 60,
+          "timestamp": "2026-04-16T19:10:37.361000+00:00"
+        },
+        {
+          "text": "6 peppers and 7 for osmium",
+          "author": "gxvaher",
+          "score": 54,
+          "timestamp": "2026-04-15T22:00:07.405000+00:00"
+        },
+        {
+          "text": "bro actual tech is just 7300 pepper and 3200 osmium",
+          "author": "tal.58",
+          "score": 54,
+          "timestamp": "2026-04-16T05:15:00.527000+00:00"
+        }
+      ],
+      "code_snippets": [
+        {
+          "code": "➜  prosperity_rust_backtester git:(main) ✗ rust_backtester --trader traders/round1-portal-v2-corrected.py --dataset round1 --day=-2 --persist --artifact-mode full --products full\nrust_backtester --trader traders/round1-portal-v2-corrected.py --dataset round1 --day=-1 --persist --artifact-mode full --products full\nrust_backtester --trader traders/round1-portal-v2-corrected.py --dataset round1 --day=0  --persist --artifact-mode full --products full\n\nrust_backtester --trader traders/round1-porta...",
+          "language": "python",
+          "strategy_type": null,
+          "author": "t3chg0d",
+          "relevance": 100
+        }
+      ],
+      "message_count": 50
+    },
+    "PEPPER_ROOT": {
+      "strategy_consensus": "market_making",
+      "parameters": {},
+      "key_observations": [
+        {
+          "text": "```\n➜  prosperity_rust_backtester git:(main) ✗ rust_backtester --trader traders/round1-portal-v2-corrected.py --dataset round1 --day=-2 --persist --artifact-mode full --products full\nrust_backteste...",
+          "author": "t3chg0d",
+          "score": 100,
+          "timestamp": "2026-04-17T05:15:37.074000+00:00"
+        },
+        {
+          "text": "100%|#######################################| 10000/10000 [00:01<00:00, 9901.58it/s] ASH_COATED_OSMIUM: 21,234 INTARIAN_PEPPER_ROOT: 79,543 Total profit: 100,777\nBacktesting C:\\Users\\kylel\\OneDrive...",
+          "author": "quillua",
+          "score": 84,
+          "timestamp": "2026-04-17T04:26:51.168000+00:00"
+        },
+        {
+          "text": "I can't get past:\n\nASH_COATED_OSMIUM 2337.6875\nINTARIAN_PEPPER_ROOT 7106.0000\n\nI give up",
+          "author": "cynter01",
+          "score": 54,
+          "timestamp": "2026-04-17T06:34:17.927000+00:00"
+        },
+        {
+          "text": "what are u guys opening the lgos on for it to be readable rn my json is one long line on vs code?\n\"positions\":[{\"symbol\":\"ASH_COATED_OSMIUM\",\"quantity\":38},{\"symbol\":\"INTARIAN_PEPPER_ROOT\",\"quantit...",
+          "author": "sumiseraaa",
+          "score": 42,
+          "timestamp": "2026-04-16T18:50:26.312000+00:00"
+        }
+      ],
+      "code_snippets": [
+        {
+          "code": "➜  prosperity_rust_backtester git:(main) ✗ rust_backtester --trader traders/round1-portal-v2-corrected.py --dataset round1 --day=-2 --persist --artifact-mode full --products full\nrust_backtester --trader traders/round1-portal-v2-corrected.py --dataset round1 --day=-1 --persist --artifact-mode full --products full\nrust_backtester --trader traders/round1-portal-v2-corrected.py --dataset round1 --day=0  --persist --artifact-mode full --products full\n\nrust_backtester --trader traders/round1-porta...",
+          "language": "python",
+          "strategy_type": null,
+          "author": "t3chg0d",
+          "relevance": 100
+        }
+      ],
+      "message_count": 10
+    },
+    "TOMATOES": {
+      "strategy_consensus": "market_making",
+      "parameters": {},
+      "key_observations": [
+        {
+          "text": "ok so if you dont mind i have one Q in tutorial round we had these tomatoes i could only think of order book imbalance market making and inventory management but other than those i couldnt understa...",
+          "author": "sbmxz1143",
+          "score": 48,
+          "timestamp": "2026-04-16T13:14:03.587000+00:00"
+        }
+      ],
+      "code_snippets": [],
+      "message_count": 10
+    }
+  },
+  "potential_new_products": [
+    {
+      "name": "SET",
+      "mentions": 4
+    },
+    {
+      "name": "DAY",
+      "mentions": 4
+    },
+    {
+      "name": "TICKS",
+      "mentions": 4
+    },
+    {
+      "name": "OWN_TRADES",
+      "mentions": 4
+    },
+    {
+      "name": "FINAL_PNL",
+      "mentions": 4
+    },
+    {
+      "name": "RUN_DIR",
+      "mentions": 4
+    },
+    {
+      "name": "PRODUCT",
+      "mentions": 4
+    }
+  ],
+  "top_contributors": [
+    {
+      "name": "sins2207",
+      "credibility": 2.0,
+      "messages": 2,
+      "code_messages": 0,
+      "avg_relevance": 42.0
+    },
+    {
+      "name": "squilly42",
+      "credibility": 2.0,
+      "messages": 2,
+      "code_messages": 0,
+      "avg_relevance": 42.0
+    },
+    {
+      "name": "_jd96_",
+      "credibility": 2.0,
+      "messages": 2,
+      "code_messages": 0,
+      "avg_relevance": 40.5
+    },
+    {
+      "name": "quillua",
+      "credibility": 2.0,
+      "messages": 3,
+      "code_messages": 0,
+      "avg_relevance": 40.0
+    },
+    {
+      "name": "corentin2696",
+      "credibility": 2.0,
+      "messages": 2,
+      "code_messages": 0,
+      "avg_relevance": 36.0
+    }
+  ]
+}
